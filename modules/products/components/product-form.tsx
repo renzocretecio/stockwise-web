@@ -9,52 +9,66 @@ import {
 import {
   useCreateProduct,
   useSuppliers,
+  useUpdateProduct,
   type FormData,
 } from "@/modules/products/services";
-import { useAllCategories } from "../categories/services";
+import { useAllCategories } from "../services/category";
 import { Button } from "@/components/ui/button";
 
 type ProductFormProps = {
+    productId?: string;
+    initialData?: Partial<FormData>;
     onSuccess?: () => void;
     onCancel?: () => void;
 };
 
 export function ProductForm({
+  productId,
+  initialData,
   onSuccess,
   onCancel,
 }: ProductFormProps) {
+  
     const {
         mutateAsync: createProduct,
-        isPending,
-        error,
+        isPending: isCreating,
+        error: createError,
     } = useCreateProduct();
 
     const {
-    data: suppliersData,
-    isLoading: suppliersLoading,
-} = useSuppliers();
+        data: suppliersData,
+        isLoading: suppliersLoading,
+    } = useSuppliers();
 
     const suppliers = suppliersData?.suppliers ?? [];
 
     const { data: categoriesData, isLoading: isCategoriesLoading } = useAllCategories();
-	const categories = categoriesData?.categories ?? []
-	
-    const [formData, setFormData] =
-        useState<FormData>({
-            name: "",
-            sku: "",
-            barcode: "",
-            supplier_id: "",
-            cost_price: 0,
-            selling_price: 0,
-            reorder_point: 0,
-            safety_stock: 0,
-            category: "",
-            brand: "",
-            unit: "unit",
-            lead_time_days: 3,
-            is_perishable: false,
-            description: "",
+	  const categories = categoriesData?.categories ?? []
+
+    const {
+        mutateAsync: updateProduct,
+        isPending: isUpdating,
+        error: updateError,
+    } = useUpdateProduct(productId ?? "");
+
+    const isEditMode = Boolean(productId);
+    const isPending = isCreating || isUpdating;
+    const error = createError || updateError;
+    const [formData, setFormData] = useState<FormData>({
+        name: initialData?.name ?? "",
+        sku: initialData?.sku ?? "",
+        barcode: initialData?.barcode ?? "",
+        supplier_id: initialData?.supplier_id ?? "",
+        cost_price: initialData?.cost_price ?? 0,
+        selling_price: initialData?.selling_price ?? 0,
+        reorder_point: initialData?.reorder_point ?? 0,
+        safety_stock: initialData?.safety_stock ?? 0,
+        category_id: initialData?.category_id ?? "",
+        brand: initialData?.brand ?? "",
+        unit: initialData?.unit ?? "unit",
+        lead_time_days: initialData?.lead_time_days ?? 3,
+        is_perishable: initialData?.is_perishable ?? false,
+        description: initialData?.description ?? "",
     });
 
     const handleChange = (
@@ -83,20 +97,24 @@ export function ProductForm({
         }));
     };
 
-  const handleSubmit = async (
-    event: FormEvent<HTMLFormElement>,
-  ) => {
-    event.preventDefault();
+    const handleSubmit = async (
+        event: FormEvent<HTMLFormElement>,
+    ) => {
+        event.preventDefault();
 
-    try {
-        await createProduct(formData);
+        try {
+            if (isEditMode) {
+                await updateProduct(formData);
+            } else {
+                await createProduct(formData);
+            }
 
-        onSuccess?.();
-    } catch {
-      // The mutation error is already available
-      // through the `error` value above.
-    }
-  };
+            onSuccess?.();
+        } catch {
+            // Mutation error is already available
+            // through the error value above.
+        }
+    };
 
   return (
     <form
@@ -104,11 +122,13 @@ export function ProductForm({
       className="space-y-6"
     >
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
-          {error instanceof Error
-            ? error.message
-            : "An error occurred while creating the product."}
-        </div>
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+              {error instanceof Error
+                  ? error.message
+                  : isEditMode
+                      ? "An error occurred while updating the product."
+                      : "An error occurred while creating the product."}
+          </div>
       )}
 
       <section className="space-y-4">
@@ -342,7 +362,7 @@ export function ProductForm({
             id="reorder_point"
             label="Reorder point"
             name="reorder_point"
-            value={formData.reorder_point}
+            value={formData.reorder_point || 0}
             onChange={handleChange}
           />
 
@@ -350,7 +370,7 @@ export function ProductForm({
             id="safety_stock"
             label="Safety stock"
             name="safety_stock"
-            value={formData.safety_stock}
+            value={formData.safety_stock || 0}
             onChange={handleChange}
           />
 
@@ -358,7 +378,7 @@ export function ProductForm({
             id="lead_time_days"
             label="Lead time (days)"
             name="lead_time_days"
-            value={formData.lead_time_days}
+            value={formData.lead_time_days || 0}
             onChange={handleChange}
             min={1}
           />
@@ -394,8 +414,10 @@ export function ProductForm({
 				<select
 					id="category"
 					name="category"
-					value={formData.category}
-					onChange={handleChange}
+					value={formData.category_id}
+					onChange={(e) =>
+            setFormData({...formData, category_id: e.target.value})
+          }
 					disabled={isCategoriesLoading}
 					className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary disabled:bg-muted disabled:cursor-not-allowed"
 				>
@@ -403,7 +425,7 @@ export function ProductForm({
 						{isCategoriesLoading ? "Loading categories..." : "Select a category"}
 					</option>
 						{categories.map((category) => (
-					<option key={category.id} value={category.name}>
+					<option key={category.id} value={category.id}>
 						{category.name}
 					</option>
 					))}
@@ -436,7 +458,7 @@ export function ProductForm({
           type="button"
           variant="outline"
           onClick={onCancel}
-          disabled={isPending}
+          disabled={isCreating}
         >
           Cancel
         </Button>
@@ -445,9 +467,11 @@ export function ProductForm({
             type="submit"
             disabled={isPending}
         >
-        {isPending
-            ? "Saving..."
-            : "Create product"}
+            {isPending
+                ? "Saving..."
+                : isEditMode
+                    ? "Update product"
+                    : "Create product"}
         </Button>
       </div>
     </form>

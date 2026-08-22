@@ -1,15 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from "@/lib/api-client";
 import Cookies from 'js-cookie';
+import { OverallStatusResponse } from '../types';
 
 export const productKeys = {
     all: ['products'] as const,
     lists: () => [...productKeys.all, 'list'] as const,
-    list: (businessId: string) => [...productKeys.lists(), businessId] as const,
+    list: () => [...productKeys.lists()] as const,
     details: () => [...productKeys.all, 'detail'] as const,
-    detail: (businessId: string, id: string) => [...productKeys.details(), businessId, id] as const,
+    detail: (id: string) => [...productKeys.details(), id] as const,
     suppliers: () => ['suppliers'] as const,
-    suppliersList: (businessId: string) => [...productKeys.suppliers(), businessId] as const,
+    suppliersList: () => [...productKeys.suppliers()] as const,
 };
 
 export interface FormData {
@@ -21,7 +22,7 @@ export interface FormData {
     selling_price: number;
     reorder_point?: number;
     safety_stock?: number;
-    category?: string;
+    category_id?: string;
     brand?: string;
     unit?: string;
     lead_time_days?: number;
@@ -56,15 +57,6 @@ interface ProductResponse {
     message: string;
 }
 
-// Get business ID from cookie
-export const getBusinessIdFromCookie = (): string => {
-    const businessId = Cookies.get('active_business_id');
-    if (!businessId) {
-        throw new Error('No active business selected');
-    }
-    return businessId;
-};
-
 // Create product mutation
 export const useCreateProduct = () => {
     const queryClient = useQueryClient();
@@ -89,10 +81,9 @@ export const useCreateProduct = () => {
 
 // Get single product
 export const useProduct = (productId: string) => {
-    const businessId = getBusinessIdFromCookie();
 
     return useQuery({
-        queryKey: productKeys.detail(businessId, productId),
+        queryKey: productKeys.detail(productId),
         queryFn: () =>
             apiClient(`/api/products/${productId}`),
         enabled: !!productId,
@@ -102,20 +93,14 @@ export const useProduct = (productId: string) => {
 
 // Get all products
 export const useProducts = (page: number = 1, pageSize: number = 20, search?: string) => {
-    const businessId = getBusinessIdFromCookie();
 
     return useQuery({
-        queryKey: [...productKeys.list(businessId), page, pageSize, search],
+        queryKey: [...productKeys.list(), page, pageSize, search],
         queryFn: () =>
             apiClient(
                 `/api/products?page=${page}&page_size=${pageSize}${
                     search ? `&search=${encodeURIComponent(search)}` : ""
                 }`,
-                {
-                    headers: {
-                        'X-Business-ID': businessId,
-                    },
-                }
             ),
         staleTime: 5 * 60 * 1000,
     });
@@ -123,10 +108,8 @@ export const useProducts = (page: number = 1, pageSize: number = 20, search?: st
 
 // Get suppliers
 export const useSuppliers = () => {
-    const businessId = getBusinessIdFromCookie();
-
     return useQuery({
-        queryKey: productKeys.suppliersList(businessId),
+        queryKey: productKeys.suppliersList(),
         queryFn: () => apiClient<SupplierResponse>('/api/suppliers'),
         staleTime: 10 * 60 * 1000,
     });
@@ -135,7 +118,6 @@ export const useSuppliers = () => {
 // Update product
 export const useUpdateProduct = (productId: string) => {
     const queryClient = useQueryClient();
-    const businessId = getBusinessIdFromCookie();
 
     return useMutation({
         mutationFn: (payload: Partial<FormData>) =>
@@ -145,10 +127,10 @@ export const useUpdateProduct = (productId: string) => {
             }),
         onSuccess: () => {
             queryClient.invalidateQueries({
-                queryKey: productKeys.detail(businessId, productId),
+                queryKey: productKeys.detail(productId),
             });
             queryClient.invalidateQueries({
-                queryKey: productKeys.list(businessId),
+                queryKey: productKeys.list(),
             });
         },
     });
@@ -157,7 +139,6 @@ export const useUpdateProduct = (productId: string) => {
 // Delete product
 export const useDeleteProduct = () => {
     const queryClient = useQueryClient();
-    const businessId = getBusinessIdFromCookie();
 
     return useMutation({
         mutationFn: (productId: string) =>
@@ -166,8 +147,16 @@ export const useDeleteProduct = () => {
             }),
         onSuccess: () => {
             queryClient.invalidateQueries({
-                queryKey: productKeys.list(businessId),
+                queryKey: productKeys.list(),
             });
         },
     });
 };
+
+export const useProductOverallStats = () => {
+    return useQuery({
+        queryKey: ["overall-status-products"],
+        queryFn: () => apiClient<OverallStatusResponse>('/api/products/status/overview'),
+        staleTime: 10 * 60 * 1000,
+    })
+}

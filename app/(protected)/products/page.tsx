@@ -1,21 +1,20 @@
 "use client";
-import React, { useState, useMemo, useEffect } from "react";
+
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import {
-  Package,
-  Search,
-  Plus,
-  Upload,
-  RefreshCw,
-  AlertTriangle,
-  CheckCircle2,
-  XCircle,
-  LayoutGrid,
-  List,
-  Boxes,
-  Tag,
-  Barcode,
+    Package,
+    Search,
+    Plus,
+    Upload,
+    RefreshCw,
+    AlertTriangle,
+    CheckCircle2,
+    XCircle,
+    LayoutGrid,
+    List,
+    Boxes,
 } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
 import { Product, ProductsResponse } from "@/modules/products/types";
@@ -26,32 +25,58 @@ import { cn } from "@/lib/utils";
 import Cookies from "js-cookie";
 import { ProductForm } from "@/modules/products/components/product-form";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
 } from "@/components/ui/dialog";
-import { useQueryClient } from "@tanstack/react-query";
-import { productKeys } from "@/modules/products/services";
+import {
+    productKeys,
+    useProductOverallStats,
+    useDeleteProduct,
+} from "@/modules/products/services";
+import { getProductColumns } from "@/modules/products/columns/Product";
+import { DataTable } from "@/components/DataTable";
+import { Pagination } from "@/components/Pagination";
+import { usePagination } from "@/hooks/use-pagination";
+import { DeleteConfirmDialog } from "@/components/DeleteDialog";
 
 export default function ProductsPage() {
-    const [isMounted, setIsMounted] = useState(false);
+    const [isProductFormOpen, setIsProductFormOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedCategory, setSelectedCategory] = useState<string>("all");
     const [selectedStatus, setSelectedStatus] = useState<string>("all");
     const [sortBy, setSortBy] = useState<string>("name-asc");
     const [viewMode, setViewMode] = useState<"table" | "grid">("table");
-    const [isProductFormOpen, setIsProductFormOpen] = useState(false);
-    const [businessId, setBusinessId] = useState<string | null>(null);
-    const [page, setPage] = useState(1);
-    const [pageSize] = useState(10);
 
-    useEffect(() => {
-        setIsMounted(true);
-        const id = Cookies.get("active_business_id");
-        setBusinessId(id || null);
-    }, []);
+    const [productToDelete, setProductToDelete] =
+        useState<Product | null>(null);
+
+    const [selectedProduct, setSelectedProduct] =
+        useState<Product | null>(null);
+
+    const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+
+    const {
+        page,
+        pageSize,
+        setPage,
+        setPageSize,
+    } = usePagination();
+
+    const { mutateAsync: deleteProduct } = useDeleteProduct();
+
+    const columns = getProductColumns({
+        onEdit: (product) => {
+            setSelectedProduct(product);
+            setIsProductFormOpen(true);
+        },
+        onDelete: (product) => {
+            setProductToDelete(product);
+            setIsDeleteConfirmOpen(true);
+        },
+    });
 
     const {
         data: productsData,
@@ -61,116 +86,171 @@ export default function ProductsPage() {
         refetch,
         isFetching,
     } = useQuery<ProductsResponse>({
-        queryKey: [...productKeys.list(businessId || ""), page, pageSize],
+        queryKey: [...productKeys.list(), page, pageSize],
         queryFn: () =>
             apiClient<ProductsResponse>(
                 `/api/products?page=${page}&page_size=${pageSize}` +
-                (searchQuery ? `&search=${encodeURIComponent(searchQuery)}` : "") +
-                (selectedCategory !== "all" ? `&category=${encodeURIComponent(selectedCategory)}` : "")
+                    (searchQuery
+                        ? `&search=${encodeURIComponent(searchQuery)}`
+                        : "") +
+                    (selectedCategory !== "all"
+                        ? `&category=${encodeURIComponent(selectedCategory)}`
+                        : ""),
             ),
-        enabled: Boolean(businessId),
         staleTime: 1000 * 60 * 2,
     });
 
     const products: Product[] = productsData?.products ?? [];
     const pagination = productsData?.pagination;
 
-    useEffect(() => {
-        setPage(1);
-    }, [searchQuery, selectedCategory, selectedStatus]);
+    const {
+        data: overviewData,
+        isLoading: isOverviewDataLoading,
+    } = useProductOverallStats();
 
     const categories = useMemo(() => {
         const set = new Set<string>();
-        products.forEach((p) => {
-        const cat = p.category || p.category_name;
-        if (cat) set.add(cat);
-    });
-    return Array.from(set);
-    }, [products]);
 
-    // Helper to determine product stock count
-    const getProductStock = (p: Product) => p.stock_quantity ?? p.quantity ?? 0;
-    const getProductMinStock = (p: Product) => p.min_stock_level ?? p.reorder_point ?? 5;
-    const getProductPrice = (p: Product) => p.selling_price ?? p.price ?? 0;
-    const getProductCost = (p: Product) => p.cost_price ?? 0;
+        products.forEach((product) => {
+            const category =
+                product.category || product.category_name;
 
-    const stats = useMemo(() => {
-        const total = products.length;
-        let inStock = 0;
-        let lowStock = 0;
-        let outOfStock = 0;
-        let totalValue = 0;
-        products.forEach((p) => {
-            const stock = getProductStock(p);
-            const minStock = getProductMinStock(p);
-            const price = getProductPrice(p);
-            totalValue += stock * price;
-
-            if (stock <= 0) {
-                outOfStock++;
-            } else if (stock <= minStock) {
-                lowStock++;
-            } else {
-                inStock++;
+            if (category) {
+                set.add(category);
             }
         });
-        return { total, inStock, lowStock, outOfStock, totalValue };
+
+        return Array.from(set);
     }, [products]);
 
     const filteredProducts = useMemo(() => {
-        return products.filter(p => {
-            // Search query filter
-            if (searchQuery.trim()) {
-                const q = searchQuery.toLowerCase().trim();
-                const nameMatch = p.name?.toLowerCase().includes(q);
-                const skuMatch = p.sku?.toLowerCase().includes(q);
-                const barcodeMatch = p.barcode?.toLowerCase().includes(q);
-                const catMatch = (p.category || p.category_name)?.toLowerCase().includes(q);
-                if (!nameMatch && !skuMatch && !barcodeMatch && !catMatch) return false;
-            }
+        return products
+            .filter((product) => {
+                if (searchQuery.trim()) {
+                    const query = searchQuery.toLowerCase().trim();
 
-            if (selectedCategory !== "all") {
-                const cat = p.category || p.category_name;
-                if (cat !== selectedCategory) return false;
-            }
+                    const nameMatch = product.name
+                        ?.toLowerCase()
+                        .includes(query);
 
-            if (selectedStatus !== "all") {
-                const stock = getProductStock(p);
-                const minStock = getProductMinStock(p);
-                if (selectedStatus === "in_stock" && stock <= minStock) return false;
-                if (selectedStatus === "low_stock" && (stock > minStock || stock <= 0)) return false;
-                if (selectedStatus === "out_of_stock" && stock > 0) return false;
-            }
+                    const skuMatch = product.sku
+                        ?.toLowerCase()
+                        .includes(query);
 
-            return true;
-        }).sort((a, b) => {
-            const nameA = a.name || "";
-            const nameB = b.name || "";
-            const priceA = getProductPrice(a);
-            const priceB = getProductPrice(b);
-            const stockA = getProductStock(a);
-            const stockB = getProductStock(b);
+                    const barcodeMatch = product.barcode
+                        ?.toLowerCase()
+                        .includes(query);
 
-            switch (sortBy) {
-                case "name-asc":
-                    return nameA.localeCompare(nameB);
-                case "name-desc":
-                    return nameB.localeCompare(nameA);
-                case "price-asc":
-                    return priceA - priceB;
-                case "price-desc":
-                    return priceB - priceA;
-                case "stock-asc":
-                    return stockA - stockB;
-                case "stock-desc":
-                    return stockB - stockA;
-                default:
-                    return 0;
-            }
-        })
-    }, [products, searchQuery, selectedCategory, selectedStatus, sortBy])
+                    const categoryMatch = (
+                        product.category ||
+                        product.category_name
+                    )
+                        ?.toLowerCase()
+                        .includes(query);
 
-    const isPageLoading = !isMounted || businessId === null || isProductsLoading;
+                    if (
+                        !nameMatch &&
+                        !skuMatch &&
+                        !barcodeMatch &&
+                        !categoryMatch
+                    ) {
+                        return false;
+                    }
+                }
+
+                if (selectedCategory !== "all") {
+                    const category =
+                        product.category ||
+                        product.category_name;
+
+                    if (category !== selectedCategory) {
+                        return false;
+                    }
+                }
+
+                if (selectedStatus !== "all") {
+                    const stock =
+                        product.stock_quantity ??
+                        product.quantity ??
+                        0;
+
+                    const minStock =
+                        product.min_stock_level ??
+                        product.reorder_point ??
+                        5;
+
+                    if (
+                        selectedStatus === "in_stock" &&
+                        stock <= minStock
+                    ) {
+                        return false;
+                    }
+
+                    if (
+                        selectedStatus === "low_stock" &&
+                        (stock > minStock || stock <= 0)
+                    ) {
+                        return false;
+                    }
+
+                    if (
+                        selectedStatus === "out_of_stock" &&
+                        stock > 0
+                    ) {
+                        return false;
+                    }
+                }
+
+                return true;
+            })
+            .sort((a, b) => {
+                const nameA = a.name || "";
+                const nameB = b.name || "";
+
+                const priceA =
+                    a.selling_price ?? a.price ?? 0;
+
+                const priceB =
+                    b.selling_price ?? b.price ?? 0;
+
+                const stockA =
+                    a.stock_quantity ?? a.quantity ?? 0;
+
+                const stockB =
+                    b.stock_quantity ?? b.quantity ?? 0;
+
+                switch (sortBy) {
+                    case "name-asc":
+                        return nameA.localeCompare(nameB);
+
+                    case "name-desc":
+                        return nameB.localeCompare(nameA);
+
+                    case "price-asc":
+                        return priceA - priceB;
+
+                    case "price-desc":
+                        return priceB - priceA;
+
+                    case "stock-asc":
+                        return stockA - stockB;
+
+                    case "stock-desc":
+                        return stockB - stockA;
+
+                    default:
+                        return 0;
+                }
+            });
+    }, [
+        products,
+        searchQuery,
+        selectedCategory,
+        selectedStatus,
+        sortBy,
+    ]);
+
+    const isPageLoading = isProductsLoading || isOverviewDataLoading;
 
     return(
         <div className="space-y-6 pb-12">
@@ -224,7 +304,7 @@ export default function ProductsPage() {
                         </div>
                     </div>
                     <div className="mt-2 text-2xl font-bold text-foreground">
-                        {isPageLoading ? "…" : stats.total}
+                        {isPageLoading ? "…" : overviewData?.total_products}
                     </div>
                     <span className="text-xs text-muted-foreground mt-1 block">
                         Catalog inventory
@@ -241,7 +321,7 @@ export default function ProductsPage() {
                         </div>
                     </div>
                     <div className="mt-2 text-2xl font-bold text-emerald-600">
-                        {isPageLoading ? "…" : stats.inStock}
+                        {isPageLoading ? "…" : overviewData?.in_stock}
                     </div>
                     <span className="text-xs text-muted-foreground mt-1 block">
                         Healthy stock levels
@@ -258,7 +338,7 @@ export default function ProductsPage() {
                         </div>
                     </div>
                     <div className="mt-2 text-2xl font-bold text-amber-600">
-                        {isPageLoading ? "…" : stats.lowStock}
+                        {isPageLoading ? "…" : overviewData?.low_stock}
                     </div>
                     <span className="text-xs text-muted-foreground mt-1 block">
                         Needs replenishment
@@ -276,7 +356,7 @@ export default function ProductsPage() {
                         </div>
                     </div>
                     <div className="mt-2 text-2xl font-bold text-rose-600">
-                        {isPageLoading ? "…" : stats.outOfStock}
+                        {isPageLoading ? "…" : overviewData?.out_of_stock}
                     </div>
                     <span className="text-xs text-muted-foreground mt-1 block">
                         Unavailable items
@@ -407,285 +487,24 @@ export default function ProductsPage() {
                 </div>
             )}
 
-            {!isPageLoading && !isError && viewMode === "table" && (
-                <Card className="overflow-hidden border-border/80">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm">
-                            <thead className="bg-muted/50 border-b border-border/80 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                                <tr>
-                                    <th scope="col" className="px-6 py-3.5">
-                                        Product
-                                    </th>
-                                    <th scope="col" className="px-6 py-3.5">
-                                        Category
-                                    </th>
-                                    <th scope="col" className="px-6 py-3.5">
-                                        Pricing
-                                    </th>
-                                    <th scope="col" className="px-6 py-3.5">
-                                        Stock Level
-                                    </th>
-                                    <th scope="col" className="px-6 py-3.5">
-                                        Status
-                                    </th>
-                                    <th scope="col" className="px-6 py-3.5 text-right">
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-border/60">
-                                {filteredProducts.map((product) => {
-                                    const stock = getProductStock(product);
-                                    const minStock = getProductMinStock(product);
-                                    const price = getProductPrice(product);
-                                    const cost = getProductCost(product);
-                                    const category = product.category || product.category_name || "Uncategorized";
-                                    const isOutOfStock = stock <= 0;
-                                    const isLowStock = stock > 0 && stock <= minStock;
-
-                                    return(
-                                        <tr key={product.id} className="hover:bg-muted/30 transition-colors group">
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center gap-3">
-                                                <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-sm shrink-0">
-                                                    <Package className="h-5 w-5" />
-                                                </div>
-                                                <div className="flex flex-col">
-                                                    <span className="font-semibold text-foreground group-hover:text-primary transition-colors">
-                                                    {product.name}
-                                                    </span>
-                                                    <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
-                                                    {product.sku && (
-                                                        <span className="font-mono bg-muted px-1.5 py-0.5 rounded">
-                                                        SKU: {product.sku}
-                                                        </span>
-                                                    )}
-                                                    {product.barcode && (
-                                                        <span className="flex items-center gap-1 font-mono text-[11px]">
-                                                        <Barcode className="h-3 w-3" />
-                                                        {product.barcode}
-                                                        </span>
-                                                    )}
-                                                    </div>
-                                                </div>
-                                                </div>
-                                            </td>
-
-                                            {/* Category */}
-                                            <td className="px-6 py-4">
-                                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-secondary text-secondary-foreground">
-                                                <Tag className="h-3 w-3 text-muted-foreground" />
-                                                {category}
-                                                </span>
-                                            </td>
-                                            {/* Price */}
-                                            <td className="px-6 py-4">
-                                                <div className="flex flex-col">
-                                                <span className="font-semibold text-foreground">
-                                                    ${price.toFixed(2)}
-                                                </span>
-                                                {cost > 0 && (
-                                                    <span className="text-xs text-muted-foreground">
-                                                    Cost: ${cost.toFixed(2)}
-                                                    </span>
-                                                )}
-                                                </div>
-                                            </td>
-
-                                            {/* Stock Level */}
-                                            <td className="px-6 py-4">
-                                                <div className="flex flex-col gap-1.5 min-w-[120px]">
-                                                <div className="flex items-center justify-between text-xs font-medium">
-                                                    <span
-                                                    className={cn(
-                                                        isOutOfStock
-                                                        ? "text-rose-600 font-semibold"
-                                                        : isLowStock
-                                                        ? "text-amber-600 font-semibold"
-                                                        : "text-foreground"
-                                                    )}
-                                                    >
-                                                    {stock} {product.unit || "units"}
-                                                    </span>
-                                                    <span className="text-[11px] text-muted-foreground">
-                                                    Min: {minStock}
-                                                    </span>
-                                                </div>
-                                                {/* Stock Health Bar */}
-                                                <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
-                                                    <div
-                                                    className={cn(
-                                                        "h-full rounded-full transition-all duration-300",
-                                                        isOutOfStock
-                                                        ? "bg-rose-500 w-full"
-                                                        : isLowStock
-                                                        ? "bg-amber-500 w-1/3"
-                                                        : "bg-emerald-500 w-full"
-                                                    )}
-                                                    />
-                                                </div>
-                                                </div>
-                                            </td>
-
-                                            {/* Status Badge */}
-                                            <td className="px-6 py-4">
-                                                {isOutOfStock ? (
-                                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-600 border border-rose-500/20">
-                                                    <XCircle className="h-3 w-3" />
-                                                    Out of Stock
-                                                </span>
-                                                ) : isLowStock ? (
-                                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 border border-amber-500/20">
-                                                    <AlertTriangle className="h-3 w-3" />
-                                                    Low Stock
-                                                </span>
-                                                ) : (
-                                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
-                                                    <CheckCircle2 className="h-3 w-3" />
-                                                    In Stock
-                                                </span>
-                                                )}
-                                            </td>
-
-                                            {/* Actions */}
-                                            <td className="px-6 py-4 text-right">
-                                                <div className="flex items-center justify-end gap-1.5">
-                                                <Link href={`/products/${product.id}`}>
-                                                    <Button variant="ghost" size="sm" className="h-8 px-2.5 cursor-pointer text-xs">
-                                                    View
-                                                    </Button>
-                                                </Link>
-                                                <Link href={`/products/${product.id}/edit`}>
-                                                    <Button variant="outline" size="sm" className="h-8 px-2.5 cursor-pointer text-xs">
-                                                    Edit
-                                                    </Button>
-                                                </Link>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    )
-                                })}
-                            </tbody>
-                        </table>
-                        {!isPageLoading && !isError && pagination && pagination.total_pages > 1 && (
-                            <div className="flex items-center justify-between px-2">
-                                <p className="text-sm text-muted-foreground">
-                                    Showing page {pagination.page} of {pagination.total_pages} ({pagination.total} total products)
-                                </p>
-                                <div className="flex items-center gap-2">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => setPage((p) => Math.max(1, p - 1))}
-                                        disabled={!pagination.has_previous || isFetching}
-                                        className="cursor-pointer"
-                                    >
-                                        Previous
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => setPage((p) => p + 1)}
-                                        disabled={!pagination.has_next || isFetching}
-                                        className="cursor-pointer"
-                                    >
-                                        Next
-                                    </Button>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </Card>
+            {!isPageLoading && !isError && (
+                // <ProductsConsole products={products} />
+                <>
+                    <DataTable columns={columns} data={products} getRowId={(p) => p.id} isLoading={isProductsLoading} />
+                    {pagination && (
+                        <Pagination
+                            pagination={pagination}
+                            onPageChange={setPage}
+                            onPageSizeChange={setPageSize}
+                            className="mt-4"
+                        />
+                    )}
+                </>
+                
+                
             )}
+            
 
-            {!isPageLoading && !isError && viewMode === "grid" && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                    {filteredProducts.map((product) => {
-                        const stock = getProductStock(product);
-                        const minStock = getProductMinStock(product);
-                        const price = getProductPrice(product);
-                        const category = product.category || product.category_name || "Uncategorized";
-                        const isOutOfStock = stock <= 0;
-                        const isLowStock = stock > 0 && stock <= minStock;
-                        
-                        return(
-                            <Card
-                                key={product.id}
-                                className="p-5 border-border/80 hover:border-primary/40 hover:shadow-md transition-all flex flex-col justify-between group"
-                            >
-                                <div>
-                                    <div className="flex items-start justify-between gap-2 mb-3">
-                                        <div className="h-11 w-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                                            <Package className="h-6 w-6" />
-                                        </div>
-                                        {isOutOfStock ? (
-                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-500/10 text-rose-600">
-                                                Out of Stock
-                                            </span>
-                                            ) : isLowStock ? (
-                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-600">
-                                                Low Stock
-                                            </span>
-                                            ) : (
-                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-600">
-                                                In Stock
-                                            </span>
-                                        )}
-
-                                        <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1">
-                                            {product.name}
-                                        </h3>
-                                    </div>
-                                    <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                                        {product.sku && (
-                                        <span className="font-mono bg-muted px-1.5 py-0.5 rounded text-[11px]">
-                                            SKU: {product.sku}
-                                        </span>
-                                        )}
-                                        <span className="truncate">{category}</span>
-                                    </div>
-
-                                    <div className="mt-4 pt-3 border-t border-border/60 flex items-center justify-between">
-                                        <div>
-                                            <span className="text-xs text-muted-foreground block">Price</span>
-                                            <span className="text-lg font-bold text-foreground">
-                                                ${price.toFixed(2)}
-                                            </span>
-                                            </div>
-                                            <div className="text-right">
-                                            <span className="text-xs text-muted-foreground block">Stock</span>
-                                            <span
-                                                className={cn(
-                                                "text-sm font-semibold",
-                                                isOutOfStock
-                                                    ? "text-rose-600"
-                                                    : isLowStock
-                                                    ? "text-amber-600"
-                                                    : "text-foreground"
-                                                )}
-                                            >
-                                                {stock} {product.unit || "units"}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="mt-4 pt-3 border-t border-border/40 flex items-center gap-2">
-                                    <Link href={`/products/${product.id}`} className="flex-1">
-                                        <Button variant="outline" size="sm" className="w-full text-xs cursor-pointer">
-                                        Details
-                                        </Button>
-                                    </Link>
-                                    <Link href={`/products/${product.id}/edit`} className="flex-1">
-                                        <Button size="sm" className="w-full text-xs cursor-pointer">
-                                        Edit
-                                        </Button>
-                                    </Link>
-                                </div>
-                            </Card>
-                        )
-                    })}
-                </div> 
-            )}
             {/* 8. EMPTY STATE */}
             {!isPageLoading && !isError && filteredProducts.length === 0 && (
                 <Card className="p-12 text-center border-dashed border-2">
@@ -731,29 +550,65 @@ export default function ProductsPage() {
 
             <Dialog
                 open={isProductFormOpen}
-                onOpenChange={setIsProductFormOpen}
-                >
+                onOpenChange={(open) => {
+                    setIsProductFormOpen(open);
+
+                    if (!open) {
+                        setSelectedProduct(null);
+                    }
+                }}
+            >
                 <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
                     <DialogHeader>
                         <DialogTitle>
-                            Add product
+                            {selectedProduct
+                                ? "Update Product"
+                                : "Add Product"}
                         </DialogTitle>
 
                         <DialogDescription>
-                            Add a new product to your inventory catalog.
+                            {selectedProduct
+                                ? "Update existing product."
+                                : "Add a new product to your inventory catalog."}
                         </DialogDescription>
                     </DialogHeader>
 
-                    <ProductForm
-                        onSuccess={() => {
-                            setIsProductFormOpen(false);
-                        }}
-                        onCancel={() => {
-                            setIsProductFormOpen(false);
-                        }}
-                    />
+                    {selectedProduct ? (
+                        <ProductForm
+                            productId={selectedProduct.id}
+                            initialData={selectedProduct}
+                            onSuccess={() => {
+                                setIsProductFormOpen(false);
+                                setSelectedProduct(null);
+                            }}
+                            onCancel={() => {
+                                setIsProductFormOpen(false);
+                                setSelectedProduct(null);
+                            }}
+                        />
+                    ) : (
+                        <ProductForm
+                            onSuccess={() => {
+                                setIsProductFormOpen(false);
+                            }}
+                            onCancel={() => {
+                                setIsProductFormOpen(false);
+                            }}
+                        />
+                    )}
                 </DialogContent>
             </Dialog>
+
+            <DeleteConfirmDialog<Product>
+                open={isDeleteConfirmOpen}
+                onOpenChange={setIsDeleteConfirmOpen}
+                item={productToDelete}
+                itemLabel="product"
+                getItemName={(product) => product.name}
+                onConfirm={async (product) => {
+                    await deleteProduct(product.id);
+                }}
+            />
         </div>
-    )
+    );
 }
