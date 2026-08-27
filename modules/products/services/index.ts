@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from "@/lib/api-client";
-import Cookies from 'js-cookie';
-import { OverallStatusResponse } from '../types';
+import {ProductsResponse, OverallStatusResponse } from '../types';
 
 export const productKeys = {
     all: ['products'] as const,
@@ -82,7 +81,7 @@ export const useCreateProduct = () => {
 // Get single product
 export const useProduct = (productId: string) => {
 
-    return useQuery({
+    return useQuery<ProductsResponse>({
         queryKey: productKeys.detail(productId),
         queryFn: () =>
             apiClient(`/api/products/${productId}`),
@@ -97,7 +96,7 @@ export const useProducts = (page: number = 1, pageSize: number = 20, search?: st
     return useQuery({
         queryKey: [...productKeys.list(), page, pageSize, search],
         queryFn: () =>
-            apiClient(
+            apiClient<ProductsResponse>(
                 `/api/products?page=${page}&page_size=${pageSize}${
                     search ? `&search=${encodeURIComponent(search)}` : ""
                 }`,

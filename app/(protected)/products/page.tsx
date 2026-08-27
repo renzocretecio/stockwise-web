@@ -41,6 +41,7 @@ import { DataTable } from "@/components/DataTable";
 import { Pagination } from "@/components/Pagination";
 import { usePagination } from "@/hooks/use-pagination";
 import { DeleteConfirmDialog } from "@/components/DeleteDialog";
+import { ProductImportDialog } from "@/modules/products/components/product-import-dialog";
 
 export default function ProductsPage() {
     const [isProductFormOpen, setIsProductFormOpen] = useState(false);
@@ -49,7 +50,7 @@ export default function ProductsPage() {
     const [selectedStatus, setSelectedStatus] = useState<string>("all");
     const [sortBy, setSortBy] = useState<string>("name-asc");
     const [viewMode, setViewMode] = useState<"table" | "grid">("table");
-
+    const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
     const [productToDelete, setProductToDelete] =
         useState<Product | null>(null);
 
@@ -106,6 +107,7 @@ export default function ProductsPage() {
     const {
         data: overviewData,
         isLoading: isOverviewDataLoading,
+        refetch: refetchOverall
     } = useProductOverallStats();
 
     const categories = useMemo(() => {
@@ -122,133 +124,6 @@ export default function ProductsPage() {
 
         return Array.from(set);
     }, [products]);
-
-    const filteredProducts = useMemo(() => {
-        return products
-            .filter((product) => {
-                if (searchQuery.trim()) {
-                    const query = searchQuery.toLowerCase().trim();
-
-                    const nameMatch = product.name
-                        ?.toLowerCase()
-                        .includes(query);
-
-                    const skuMatch = product.sku
-                        ?.toLowerCase()
-                        .includes(query);
-
-                    const barcodeMatch = product.barcode
-                        ?.toLowerCase()
-                        .includes(query);
-
-                    const categoryMatch = (
-                        product.category ||
-                        product.category_name
-                    )
-                        ?.toLowerCase()
-                        .includes(query);
-
-                    if (
-                        !nameMatch &&
-                        !skuMatch &&
-                        !barcodeMatch &&
-                        !categoryMatch
-                    ) {
-                        return false;
-                    }
-                }
-
-                if (selectedCategory !== "all") {
-                    const category =
-                        product.category ||
-                        product.category_name;
-
-                    if (category !== selectedCategory) {
-                        return false;
-                    }
-                }
-
-                if (selectedStatus !== "all") {
-                    const stock =
-                        product.stock_quantity ??
-                        product.quantity ??
-                        0;
-
-                    const minStock =
-                        product.min_stock_level ??
-                        product.reorder_point ??
-                        5;
-
-                    if (
-                        selectedStatus === "in_stock" &&
-                        stock <= minStock
-                    ) {
-                        return false;
-                    }
-
-                    if (
-                        selectedStatus === "low_stock" &&
-                        (stock > minStock || stock <= 0)
-                    ) {
-                        return false;
-                    }
-
-                    if (
-                        selectedStatus === "out_of_stock" &&
-                        stock > 0
-                    ) {
-                        return false;
-                    }
-                }
-
-                return true;
-            })
-            .sort((a, b) => {
-                const nameA = a.name || "";
-                const nameB = b.name || "";
-
-                const priceA =
-                    a.selling_price ?? a.price ?? 0;
-
-                const priceB =
-                    b.selling_price ?? b.price ?? 0;
-
-                const stockA =
-                    a.stock_quantity ?? a.quantity ?? 0;
-
-                const stockB =
-                    b.stock_quantity ?? b.quantity ?? 0;
-
-                switch (sortBy) {
-                    case "name-asc":
-                        return nameA.localeCompare(nameB);
-
-                    case "name-desc":
-                        return nameB.localeCompare(nameA);
-
-                    case "price-asc":
-                        return priceA - priceB;
-
-                    case "price-desc":
-                        return priceB - priceA;
-
-                    case "stock-asc":
-                        return stockA - stockB;
-
-                    case "stock-desc":
-                        return stockB - stockA;
-
-                    default:
-                        return 0;
-                }
-            });
-    }, [
-        products,
-        searchQuery,
-        selectedCategory,
-        selectedStatus,
-        sortBy,
-    ]);
 
     const isPageLoading = isProductsLoading || isOverviewDataLoading;
 
@@ -273,19 +148,17 @@ export default function ProductsPage() {
                     <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => refetch()}
+                        onClick={() => {refetch(), refetchOverall()}}
                         disabled={isFetching}
                         className="cursor-pointer gap-1.5"
                     >
                         <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} />
                         <span>Refresh</span>
                     </Button>
-                    <Link href="/products/import">
-                        <Button variant="outline" size="sm" className="cursor-pointer gap-1.5">
+                    <Button variant="outline" size="sm" className="cursor-pointer gap-1.5" onClick={() => setIsImportDialogOpen(true)}>
                         <Upload className="h-4 w-4" />
                         <span>Import</span>
-                        </Button>
-                    </Link>
+                    </Button>
                     <Button size="sm" className="cursor-pointer gap-1.5 bg-primary text-primary-foreground shadow-sm" onClick={() => setIsProductFormOpen(true)}>
                         <Plus className="h-4 w-4" />
                         <span>Add Product</span>
@@ -506,7 +379,7 @@ export default function ProductsPage() {
             
 
             {/* 8. EMPTY STATE */}
-            {!isPageLoading && !isError && filteredProducts.length === 0 && (
+            {!isPageLoading && !isError && products.length === 0 && (
                 <Card className="p-12 text-center border-dashed border-2">
                 <div className="h-12 w-12 rounded-full bg-primary/10 text-primary mx-auto flex items-center justify-center mb-4">
                     <Package className="h-6 w-6" />
@@ -607,6 +480,14 @@ export default function ProductsPage() {
                 getItemName={(product) => product.name}
                 onConfirm={async (product) => {
                     await deleteProduct(product.id);
+                }}
+            />
+            <ProductImportDialog
+                open={isImportDialogOpen}
+                onOpenChange={setIsImportDialogOpen}
+                onSuccess={() => {
+                    refetch();
+                    refetchOverall();
                 }}
             />
         </div>

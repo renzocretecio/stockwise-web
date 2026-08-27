@@ -113,12 +113,6 @@ export const menuConfig: MenuItem[] = [
         permission: "sales.read",
       },
       {
-        label: "New Sale",
-        href: "/sales/new",
-        icon: PlusCircle,
-        permission: "sales.create",
-      },
-      {
         label: "Returns",
         href: "/sales/returns",
         icon: RotateCcw,
@@ -128,34 +122,9 @@ export const menuConfig: MenuItem[] = [
   },
   {
     label: "Purchases",
+    href: "/purchases",
     icon: ShoppingCart,
     permission: "purchases.read",
-    children: [
-      {
-        label: "All Purchases",
-        href: "/purchases",
-        icon: ClipboardList,
-        permission: "purchases.read",
-      },
-      {
-        label: "New Purchase",
-        href: "/purchases/new",
-        icon: PlusCircle,
-        permission: "purchases.create",
-      },
-      {
-        label: "Purchase Orders",
-        href: "/purchases/orders",
-        icon: FileText,
-        permission: "purchases.read",
-      },
-      {
-        label: "Receiving",
-        href: "/purchases/receiving",
-        icon: PackageCheck,
-        permission: "purchases.receive",
-      },
-    ],
   },
   {
     label: "Suppliers",
