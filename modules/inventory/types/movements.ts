@@ -2,12 +2,9 @@ export interface StockMovementItem {
     id: string;
     product_id: string;
     product_name: string;
-    movement_type:
-        | "purchase_receive"
-        | "sale"
-        | "adjustment"
-        | "count_adjustment"
-        | "return";
+    // The API intentionally returns a string so historical/custom movement
+    // values remain readable even when new movement types are introduced.
+    movement_type: string;
     quantity_change: number;
     reason: string | null;
     reference_type: string | null;

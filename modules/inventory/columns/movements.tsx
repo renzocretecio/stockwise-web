@@ -1,10 +1,12 @@
 import type { DataTableColumn } from "@/components/DataTable";
 import { StockMovementItem } from "../types/movements";
 
-const movementTypeLabel: Record<
-    StockMovementItem["movement_type"],
-    { label: string; className: string }
-> = {
+const movementTypeLabel: Record<string, { label: string; className: string }> = {
+    purchase: {
+        label: "Purchase received",
+        className: "text-emerald-600 bg-emerald-500/10",
+    },
+    // Kept for older rows created before the backend standardized on purchase.
     purchase_receive: {
         label: "Purchase received",
         className: "text-emerald-600 bg-emerald-500/10",
@@ -25,7 +27,28 @@ const movementTypeLabel: Record<
         label: "Return",
         className: "text-cyan-600 bg-cyan-500/10",
     },
-    };
+    damage: {
+        label: "Damage",
+        className: "text-red-600 bg-red-500/10",
+    },
+    expired: {
+        label: "Expired",
+        className: "text-orange-600 bg-orange-500/10",
+    },
+    transfer_in: {
+        label: "Transfer in",
+        className: "text-teal-600 bg-teal-500/10",
+    },
+    transfer_out: {
+        label: "Transfer out",
+        className: "text-indigo-600 bg-indigo-500/10",
+    },
+};
+
+const formatMovementType = (value: string) => ({
+    label: value.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase()),
+    className: "text-muted-foreground bg-muted",
+});
 
 export function getStockMovementColumns(): DataTableColumn<StockMovementItem>[] {
     return [
@@ -57,7 +80,7 @@ export function getStockMovementColumns(): DataTableColumn<StockMovementItem>[] 
             key: "movement_type",
             header: "Type",
             cell: (r) => {
-                const type = movementTypeLabel[r.movement_type];
+                const type = movementTypeLabel[r.movement_type] ?? formatMovementType(r.movement_type);
                 return (
                 <span
                     className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${type.className}`}

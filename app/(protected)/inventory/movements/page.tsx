@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeftRight, RefreshCw, AlertTriangle } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -14,14 +14,22 @@ import { getStockMovementColumns } from "@/modules/inventory/columns/movements";
 
 const MOVEMENT_TYPES = [
     { value: "", label: "All types" },
-    { value: "purchase_receive", label: "Purchase received" },
+    { value: "purchase", label: "Purchase received" },
     { value: "sale", label: "Sale" },
     { value: "adjustment", label: "Adjustment" },
     { value: "count_adjustment", label: "Count adjustment" },
     { value: "return", label: "Return" },
+    { value: "damage", label: "Damage" },
+    { value: "expired", label: "Expired" },
+    { value: "transfer_in", label: "Transfer in" },
+    { value: "transfer_out", label: "Transfer out" },
 ];
 
 export default function StockMovementsPage() {
+    return <Suspense fallback={<Card className="h-64 animate-pulse bg-muted/40" />}><StockMovementsContent /></Suspense>;
+}
+
+function StockMovementsContent() {
     // Supports deep-linking from Stock Overview, e.g. /inventory/movements?product_id=xxx
     const searchParams = useSearchParams();
     const productIdFilter = searchParams.get("product_id") ?? undefined;
