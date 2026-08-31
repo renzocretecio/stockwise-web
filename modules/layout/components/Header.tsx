@@ -32,6 +32,7 @@ interface Business {
   role: string;
   slug?: string;
   permissions?: string[];
+  currency_code?: string;
 }
 
 interface AuthMeResponse {
@@ -146,7 +147,7 @@ export function Header() {
     }
     if (item.children) {
       return item.children.some(
-        (child) => child.href && pathname.startsWith(child.href)
+        (child) => child.href && pathname.startsWith(child.href),
       );
     }
     return false;
@@ -156,10 +157,10 @@ export function Header() {
     user?.first_name && user?.last_name
       ? `${user.first_name[0]}${user.last_name[0]}`.toUpperCase()
       : user?.first_name
-      ? user.first_name.slice(0, 2).toUpperCase()
-      : user?.email
-      ? user.email.slice(0, 2).toUpperCase()
-      : "SW";
+        ? user.first_name.slice(0, 2).toUpperCase()
+        : user?.email
+          ? user.email.slice(0, 2).toUpperCase()
+          : "SW";
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/80 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80">
@@ -203,14 +204,14 @@ export function Header() {
                     type="button"
                     onClick={() =>
                       setOpenDropdown((prev) =>
-                        prev === item.label ? null : item.label
+                        prev === item.label ? null : item.label,
                       )
                     }
                     className={cn(
                       "flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer",
                       isOpen || active
                         ? "bg-accent text-accent-foreground font-semibold"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/60",
                     )}
                     aria-expanded={isOpen}
                   >
@@ -219,7 +220,7 @@ export function Header() {
                     <ChevronDown
                       className={cn(
                         "h-3.5 w-3.5 text-muted-foreground transition-transform duration-200",
-                        isOpen && "rotate-180"
+                        isOpen && "rotate-180",
                       )}
                     />
                   </button>
@@ -240,7 +241,7 @@ export function Header() {
                                 "flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors duration-150",
                                 childActive
                                   ? "bg-primary/10 text-primary font-medium"
-                                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                                  : "text-muted-foreground hover:text-foreground hover:bg-muted",
                               )}
                             >
                               <ChildIcon className="h-4 w-4 shrink-0" />
@@ -268,7 +269,7 @@ export function Header() {
                   "flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary",
                   active
                     ? "bg-primary/10 text-primary font-semibold"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/60",
                 )}
               >
                 <Icon className="h-4 w-4 shrink-0" />
@@ -299,7 +300,7 @@ export function Header() {
               <ChevronDown
                 className={cn(
                   "h-3.5 w-3.5 text-muted-foreground hidden sm:block transition-transform duration-200",
-                  isProfileOpen && "rotate-180"
+                  isProfileOpen && "rotate-180",
                 )}
               />
             </button>
@@ -393,7 +394,7 @@ export function Header() {
                       "w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-colors cursor-pointer",
                       active
                         ? "bg-accent text-accent-foreground"
-                        : "text-muted-foreground hover:bg-muted"
+                        : "text-muted-foreground hover:bg-muted",
                     )}
                   >
                     <div className="flex items-center gap-2.5">
@@ -403,7 +404,7 @@ export function Header() {
                     <ChevronDown
                       className={cn(
                         "h-4 w-4 transition-transform duration-200",
-                        isExpanded && "rotate-180"
+                        isExpanded && "rotate-180",
                       )}
                     />
                   </button>
@@ -423,7 +424,7 @@ export function Header() {
                               "flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors",
                               childActive
                                 ? "bg-primary/10 text-primary font-medium"
-                                : "text-muted-foreground hover:bg-muted"
+                                : "text-muted-foreground hover:bg-muted",
                             )}
                           >
                             <ChildIcon className="h-4 w-4 shrink-0" />
@@ -446,7 +447,7 @@ export function Header() {
                   "flex items-center gap-2.5 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors",
                   active
                     ? "bg-primary/10 text-primary font-medium"
-                    : "text-muted-foreground hover:bg-muted"
+                    : "text-muted-foreground hover:bg-muted",
                 )}
               >
                 <Icon className="h-4 w-4 shrink-0" />

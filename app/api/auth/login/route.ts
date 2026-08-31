@@ -4,27 +4,21 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    const apiResponse = await fetch(
-      `${process.env.API_URL}/auth/login`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body),
-        cache: "no-store",
+    const apiResponse = await fetch(`${process.env.API_URL}/auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-    );
+      body: JSON.stringify(body),
+      cache: "no-store",
+    });
 
     const data = await apiResponse.json();
 
     if (!apiResponse.ok) {
       return NextResponse.json(
         {
-          error:
-            data.detail ??
-            data.error ??
-            "Invalid credentials",
+          error: data.detail ?? data.error ?? "Invalid credentials",
         },
         {
           status: apiResponse.status,
@@ -57,15 +51,12 @@ export async function POST(request: Request) {
       },
     );
 
-    const businessesData =
-      await businessesResponse.json();
+    const businessesData = await businessesResponse.json();
 
     if (!businessesResponse.ok) {
       return NextResponse.json(
         {
-          error:
-            businessesData.detail ??
-            "Failed to load businesses",
+          error: businessesData.detail ?? "Failed to load businesses",
         },
         {
           status: businessesResponse.status,
@@ -73,11 +64,9 @@ export async function POST(request: Request) {
       );
     }
 
-    const businesses = Array.isArray(
-      businessesData,
-    )
+    const businesses = Array.isArray(businessesData)
       ? businessesData
-      : businessesData.businesses ?? [];
+      : (businessesData.businesses ?? []);
 
     const firstBusiness = businesses[0];
 
@@ -111,10 +100,17 @@ export async function POST(request: Request) {
 
     response.cookies.set({
       name: "active_business_id",
-      value: String(
-        firstBusiness.id ??
-        firstBusiness.business_id,
-      ),
+      value: String(firstBusiness.id ?? firstBusiness.business_id),
+      httpOnly: false,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7,
+      path: "/",
+    });
+
+    response.cookies.set({
+      name: "active_business_currency",
+      value: String(firstBusiness.currency_code || "PHP"),
       httpOnly: false,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",

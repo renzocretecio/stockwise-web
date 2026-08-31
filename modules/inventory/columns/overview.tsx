@@ -1,5 +1,6 @@
 import type { DataTableColumn } from "@/components/DataTable";
 import { InventoryOverviewItem } from "../types/overview";
+import { formatCurrency } from "@/lib/currency";
 
 const inventoryStatusLabel: Record<
     string,
@@ -17,10 +18,6 @@ const inventoryStatusLabel: Record<
         label: "Out of stock",
         className: "text-destructive bg-destructive/10",
     },
-};
-
-const formatCurrency = (value: number) => {
-    return `${value.toFixed(2)}`;
 };
 
 export function getInventoryOverviewColumns(): DataTableColumn<InventoryOverviewItem>[] {

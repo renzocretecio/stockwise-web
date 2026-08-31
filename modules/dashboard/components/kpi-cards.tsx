@@ -1,12 +1,7 @@
-import { AlertTriangle, Package, PhilippinePeso } from "lucide-react";
+import { AlertTriangle, CircleDollarSign, Package } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { currency } from "@/lib/currency";
 import type { DashboardKpis } from "@/modules/dashboard/types";
-
-const currency = new Intl.NumberFormat("en-PH", {
-  style: "currency",
-  currency: "PHP",
-  maximumFractionDigits: 0,
-});
 
 export function KpiCards({ kpis }: { kpis: DashboardKpis }) {
   const change = kpis.sales_change_percent;
@@ -20,7 +15,7 @@ export function KpiCards({ kpis }: { kpis: DashboardKpis }) {
           : `${change >= 0 ? "↑" : "↓"} ${Math.abs(change).toFixed(
               1,
             )}% vs yesterday`,
-      icon: PhilippinePeso,
+      icon: CircleDollarSign,
       tone:
         change !== null && change < 0 ? "text-destructive" : "text-emerald-600",
     },

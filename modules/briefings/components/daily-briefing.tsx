@@ -62,79 +62,97 @@ export function DailyBriefing() {
     );
 
   return (
-    <Card className="overflow-hidden">
-      <div
-        className={
-          "border-b bg-gradient-to-r from-primary/10 via-primary/5 " +
-          "to-transparent p-6"
-        }
-      >
+    <div className={"grid gap-4 lg:grid-cols-[minmax(0,7fr)_minmax(0,3fr)]"}>
+      <Card className="h-[26rem] gap-0 py-0">
         <div
           className={
-            "flex flex-col justify-between gap-4 sm:flex-row " +
-            "sm:items-start"
+            "flex h-full flex-col bg-gradient-to-br from-primary/10 " +
+            "via-primary/5 to-transparent p-6"
           }
         >
-          <div className="flex gap-3">
-            <div
-              className={
-                "flex h-11 w-11 shrink-0 items-center justify-center " +
-                "rounded-xl bg-primary text-primary-foreground"
-              }
-            >
-              <Bot className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-xl font-semibold">
-                  Daily Inventory Briefing
-                </h2>
-                <Badge variant="secondary">
-                  {briefing.narrator_provider === "gemini"
-                    ? "Gemini"
-                    : "Rules-based"}
-                </Badge>
+          <div
+            className={
+              "flex flex-col justify-between gap-4 sm:flex-row " +
+              "sm:items-start"
+            }
+          >
+            <div className="flex gap-3">
+              <div
+                className={
+                  "flex h-11 w-11 shrink-0 items-center justify-center " +
+                  "rounded-xl bg-primary text-primary-foreground"
+                }
+              >
+                <Bot className="h-5 w-5" />
               </div>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Generated {new Date(briefing.generated_at).toLocaleString()}
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-xl font-semibold">
+                    Daily Inventory Briefing
+                  </h2>
+                  <Badge variant="secondary">
+                    {briefing.narrator_provider === "gemini"
+                      ? "Gemini"
+                      : "Rules-based"}
+                  </Badge>
+                </div>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Generated {new Date(briefing.generated_at).toLocaleString()}
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={generate.isPending}
+              onClick={() => generate.mutate(true)}
+            >
+              <RefreshCw
+                className={`mr-2 h-4 w-4 ${
+                  generate.isPending ? "animate-spin" : ""
+                }`}
+              />
+              Regenerate
+            </Button>
+          </div>
+          <div className="my-auto py-6">
+            <h3 className="text-2xl font-semibold leading-tight">
+              {briefing.headline}
+            </h3>
+            <ul className="mt-5 space-y-3 text-sm leading-6">
+              {briefing.summary.map((line) => (
+                <li key={line} className="flex gap-2">
+                  <ChevronRight
+                    className={"mt-1 h-4 w-4 shrink-0 text-primary"}
+                  />
+                  <span>{line}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </Card>
+
+      <Card className="h-[26rem] gap-0 py-0">
+        <div className="border-b p-5">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h3 className="font-semibold">Recommendations</h3>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Prioritized actions for today
               </p>
             </div>
+            <Badge variant="secondary">{active.length}</Badge>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={generate.isPending}
-            onClick={() => generate.mutate(true)}
-          >
-            <RefreshCw
-              className={
-                `mr-2 h-4 w-4 ${
-                  generate.isPending ? "animate-spin" : ""
-                }`
-              }
-            />
-            Regenerate
-          </Button>
         </div>
-        <h3 className="mt-5 text-lg font-semibold">{briefing.headline}</h3>
-        <ul className="mt-3 space-y-2 text-sm">
-          {briefing.summary.map((line) => (
-            <li key={line} className="flex gap-2">
-              <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-              <span>{line}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-      <div className="divide-y">
-        {active.length === 0 ? (
-          <p className="p-6 text-center text-sm text-muted-foreground">
-            All recommendations have been handled.
-          </p>
-        ) : (
-          active.map((item) => (
-            <div key={item.id} className="p-5">
-              <div className="flex flex-col justify-between gap-4 md:flex-row">
+        <div className="min-h-0 flex-1 overflow-y-auto divide-y">
+          {active.length === 0 ? (
+            <p className="p-6 text-center text-sm text-muted-foreground">
+              All recommendations have been handled.
+            </p>
+          ) : (
+            active.map((item) => (
+              <div key={item.id} className="p-5">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge
@@ -159,9 +177,7 @@ export function DailyBriefing() {
                       Why this was recommended
                     </summary>
                     <ul
-                      className={
-                        "mt-2 space-y-1 text-sm text-muted-foreground"
-                      }
+                      className={"mt-2 space-y-1 text-sm text-muted-foreground"}
                     >
                       {item.evidence.map((evidence) => (
                         <li key={evidence}>• {evidence}</li>
@@ -169,7 +185,7 @@ export function DailyBriefing() {
                     </ul>
                   </details>
                 </div>
-                <div className="flex shrink-0 items-start gap-2">
+                <div className="mt-4 flex flex-wrap items-center gap-2">
                   <Button
                     variant="outline"
                     size="sm"
@@ -213,10 +229,10 @@ export function DailyBriefing() {
                   )}
                 </div>
               </div>
-            </div>
-          ))
-        )}
-      </div>
-    </Card>
+            ))
+          )}
+        </div>
+      </Card>
+    </div>
   );
 }

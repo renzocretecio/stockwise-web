@@ -2,6 +2,7 @@ import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { DataTableColumn } from "@/components/DataTable";
 import { Product } from "../types";
+import { formatCurrency } from "@/lib/currency";
 
 const stockStatusLabel: Record<
     Product["stock_status"],
@@ -80,7 +81,7 @@ export function getProductColumns({
             header: "Price",
             align: "right",
             sortable: true,
-            cell: (p) => <span>${p.selling_price && p.selling_price.toFixed(2)}</span>,
+            cell: (p) => <span>{p.selling_price && formatCurrency(p.selling_price)}</span>,
             },
         {
             key: "margin_percent",

@@ -1,5 +1,6 @@
 "use client";
 
+import { useSyncExternalStore } from "react";
 import Link from "next/link";
 import {
   ArrowLeftRight,
@@ -27,19 +28,35 @@ const links = [
   { href: "/reports/sales", label: "Reports", icon: BarChart3 },
 ];
 
+const subscribe = () => () => {};
+
+function getGreeting() {
+  const hour = new Date().getHours();
+
+  if (hour < 12) return "Good morning";
+  if (hour < 18) return "Good afternoon";
+  return "Good evening";
+}
+
 export default function DashboardPage() {
   const { data, isLoading, error } = useDashboard();
+  const greeting = useSyncExternalStore(
+    subscribe,
+    getGreeting,
+    () => "Good morning",
+  );
   const today = new Intl.DateTimeFormat("en-PH", {
     month: "short",
     day: "numeric",
     year: "numeric",
   }).format(new Date());
+
   return (
     <div className="space-y-6 pb-12">
       <div className="flex items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            Good morning 👋
+            {greeting}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Here is what needs attention in your inventory today.
@@ -50,6 +67,7 @@ export default function DashboardPage() {
         </p>
       </div>
       <DailyBriefing />
+
       {isLoading ? (
         <div className="grid gap-4 md:grid-cols-3">
           {[1, 2, 3].map((item) => (

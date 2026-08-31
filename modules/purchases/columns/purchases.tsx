@@ -2,6 +2,7 @@ import { PackageCheck, Eye, Pencil, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { DataTableColumn } from "@/components/DataTable";
 import { Purchase, PurchaseStatus } from "@/modules/purchases/types";
+import { formatCurrency } from "@/lib/currency";
 
 const statusLabel: Record<PurchaseStatus, { label: string; className: string }> = {
     draft: {
@@ -77,7 +78,7 @@ export function getPurchaseColumns({
             align: "right",
             sortable: true,
             cell: (p) => (
-                <span className="font-medium">{p.total_amount.toFixed(2)}</span>
+                <span className="font-medium">{formatCurrency(p.total_amount)}</span>
             ),
         },
         {
