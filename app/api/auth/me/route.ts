@@ -37,7 +37,13 @@ export async function GET(request: NextRequest) {
 
     const businesses = Array.isArray(data) ? data : (data.businesses ?? []);
 
-    const firstBusiness = businesses[0];
+    const requestedBusinessId =
+      request.cookies.get("active_business_id")?.value;
+    const firstBusiness =
+      businesses.find(
+        (business: { id?: string; business_id?: string }) =>
+          String(business.id ?? business.business_id) === requestedBusinessId,
+      ) ?? businesses[0];
 
     if (!firstBusiness) {
       return NextResponse.json(
@@ -60,9 +66,30 @@ export async function GET(request: NextRequest) {
       success: true,
     });
     response.cookies.set({
+      name: "active_business_id",
+      value: String(firstBusiness.id ?? firstBusiness.business_id),
+      httpOnly: false,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7,
+      path: "/",
+    });
+    response.cookies.set({
       name: "active_business_currency",
       value: String(firstBusiness.currency_code || "PHP"),
       httpOnly: false,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7,
+      path: "/",
+    });
+    response.cookies.set({
+      name: "business_onboarding_completed",
+      value: String(
+        firstBusiness.onboarding_completed !== false ||
+          firstBusiness.role?.toLowerCase() !== "owner",
+      ),
+      httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 60 * 60 * 24 * 7,
@@ -81,4 +108,22 @@ export async function GET(request: NextRequest) {
       },
     );
   }
+}
+
+export async function PATCH(request: NextRequest) {
+  const token = request.cookies.get("access_token")?.value;
+  if (!token) {
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+  const apiResponse = await fetch(`${process.env.API_URL}/auth/me`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(await request.json()),
+    cache: "no-store",
+  });
+  const data = await apiResponse.json();
+  return NextResponse.json(data, { status: apiResponse.status });
 }

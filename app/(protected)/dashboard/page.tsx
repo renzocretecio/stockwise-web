@@ -15,7 +15,6 @@ import { DemandForecastCard } from
   "@/modules/dashboard/components/demand-forecast-card";
 import { KpiCards } from "@/modules/dashboard/components/kpi-cards";
 import { useDashboard } from "@/modules/dashboard/services/dashboard";
-import { AskAi } from "@/modules/intelligence/components/ask-ai";
 
 const links = [
   { href: "/inventory/overview", label: "Stock overview", icon: Package },
@@ -86,7 +85,6 @@ export default function DashboardPage() {
           <AnomalyList anomalies={data.anomalies} />
         </>
       )}
-      <AskAi />
       <div>
         <h2
           className={

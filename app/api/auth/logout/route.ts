@@ -26,5 +26,11 @@ export async function POST() {
     expires: new Date(0),
     path: "/",
   });
+  response.cookies.set({
+    name: "business_onboarding_completed",
+    value: "",
+    expires: new Date(0),
+    path: "/",
+  });
   return response;
 }

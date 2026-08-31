@@ -1,113 +1,112 @@
+"use client";
+
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  XAxis,
+  YAxis,
+} from "recharts";
+
+import {
+  type ChartConfig,
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
 import type { ForecastPoint } from "@/modules/dashboard/types";
 
+const chartConfig = {
+  actual: {
+    label: "Net sales",
+    color: "var(--primary)",
+  },
+  forecast: {
+    label: "Forecast",
+    color: "var(--color-amber-500)",
+  },
+} satisfies ChartConfig;
+
+const formatDate = (value: string) =>
+  new Date(`${value}T00:00:00`).toLocaleDateString("en-PH", {
+    month: "short",
+    day: "numeric",
+  });
+
 export function ForecastChart({ points }: { points: ForecastPoint[] }) {
-  const width = 720,
-    height = 220,
-    left = 42,
-    right = 16,
-    top = 18,
-    bottom = 34;
-  const values = points
-    .flatMap((point) => [point.actual, point.forecast])
-    .filter((value): value is number => value !== null);
-  const maximum = Math.max(1, ...values);
-  const x = (index: number) =>
-    left + index * ((width - left - right) / Math.max(1, points.length - 1));
-  const y = (value: number) =>
-    top + (maximum - value) * ((height - top - bottom) / maximum);
-  const line = (field: "actual" | "forecast") =>
-    points
-      .map((point, index) =>
-        point[field] === null
-          ? null
-          : `${x(index)},${y(point[field] as number)}`,
-      )
-      .filter(Boolean)
-      .join(" ");
-  const labels = [0, Math.floor((points.length - 1) / 2), points.length - 1];
-  return (
-    <div className="w-full overflow-hidden">
-      <svg
-        viewBox={`0 0 ${width} ${height}`}
-        className="h-auto w-full"
-        role="img"
-        aria-label="Historical and forecast daily demand"
+  if (!points.length) {
+    return (
+      <div
+        className={
+          "flex h-[240px] items-center justify-center text-sm " +
+          "text-muted-foreground"
+        }
       >
-        <line
-          x1={left}
-          y1={height - bottom}
-          x2={width - right}
-          y2={height - bottom}
-          className="stroke-border"
-        />
-        {[0, 0.5, 1].map((ratio) => (
-          <g key={ratio}>
-            <line
-              x1={left}
-              y1={top + ratio * (height - top - bottom)}
-              x2={width - right}
-              y2={top + ratio * (height - top - bottom)}
-              className="stroke-border/60"
-              strokeDasharray="3 5"
-            />
-            <text
-              x={left - 8}
-              y={top + ratio * (height - top - bottom) + 4}
-              textAnchor="end"
-              className="fill-muted-foreground text-[10px]"
-            >
-              {Math.round(maximum * (1 - ratio))}
-            </text>
-          </g>
-        ))}
-        <polyline
-          points={line("actual")}
-          fill="none"
-          className="stroke-primary"
-          strokeWidth="3"
-          strokeLinejoin="round"
-          strokeLinecap="round"
-        />
-        <polyline
-          points={line("forecast")}
-          fill="none"
-          className="stroke-amber-500"
-          strokeWidth="3"
-          strokeDasharray="7 6"
-          strokeLinejoin="round"
-          strokeLinecap="round"
-        />
-        {labels.map((index) => (
-          <text
-            key={index}
-            x={x(index)}
-            y={height - 10}
-            textAnchor={
-              index === 0
-                ? "start"
-                : index === points.length - 1
-                  ? "end"
-                  : "middle"
-            }
-            className="fill-muted-foreground text-[10px]"
-          >
-            {new Date(`${points[index].date}T00:00:00`).toLocaleDateString(
-              "en-PH",
-              { month: "short", day: "numeric" },
-            )}
-          </text>
-        ))}
-      </svg>
-      <div className="flex justify-center gap-5 text-xs text-muted-foreground">
-        <span className="flex items-center gap-2">
-          <i className="h-0.5 w-5 bg-primary" />
-          Net sales
-        </span>
-        <span className="flex items-center gap-2">
-          <i className="h-0.5 w-5 border-t-2 border-dashed border-amber-500" />
-          Forecast
-        </span>
+        No forecast series available.
       </div>
-    </div>
+    );
+  }
+
+  return (
+    <ChartContainer
+      config={chartConfig}
+      className="h-[240px] min-h-[220px] w-full"
+    >
+      <LineChart
+        accessibilityLayer
+        data={points}
+        margin={{ top: 8, right: 12, left: 0, bottom: 0 }}
+      >
+        <CartesianGrid vertical={false} strokeDasharray="3 5" />
+        <XAxis
+          dataKey="date"
+          axisLine={false}
+          tickLine={false}
+          tickMargin={10}
+          minTickGap={28}
+          tickFormatter={formatDate}
+        />
+        <YAxis
+          axisLine={false}
+          tickLine={false}
+          tickMargin={8}
+          width={36}
+          allowDecimals={false}
+        />
+        <ChartTooltip
+          cursor={{ stroke: "var(--border)", strokeDasharray: "3 5" }}
+          content={
+            <ChartTooltipContent
+              indicator="line"
+              labelFormatter={(value) => formatDate(String(value))}
+            />
+          }
+        />
+        <ChartLegend content={<ChartLegendContent />} />
+        <Line
+          dataKey="actual"
+          name="actual"
+          type="monotone"
+          stroke="var(--color-actual)"
+          strokeWidth={2}
+          dot={false}
+          activeDot={{ r: 4 }}
+          connectNulls={false}
+        />
+        <Line
+          dataKey="forecast"
+          name="forecast"
+          type="monotone"
+          stroke="var(--color-forecast)"
+          strokeWidth={2}
+          strokeDasharray="7 6"
+          dot={false}
+          activeDot={{ r: 4 }}
+          connectNulls={false}
+        />
+      </LineChart>
+    </ChartContainer>
   );
 }

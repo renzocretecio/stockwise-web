@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ChevronDown,
   User,
@@ -13,6 +13,7 @@ import {
   Menu,
   X,
   Boxes,
+  Plus,
 } from "lucide-react";
 import { MenuItem, menuConfig } from "@/lib/menu-config";
 import { getFilteredMenu } from "@/lib/menu-utils";
@@ -49,11 +50,13 @@ interface AuthMeResponse {
 export function Header() {
   const pathname = usePathname();
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   // Active state for desktop dropdowns and mobile menu
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSwitchingBusiness, setIsSwitchingBusiness] = useState(false);
   const [mobileExpanded, setMobileExpanded] = useState<Set<string>>(new Set());
 
   const navRef = useRef<HTMLDivElement>(null);
@@ -82,16 +85,15 @@ export function Header() {
   // Active user role (derived from active business, user object, or response root)
   const userRole =
     activeBusiness?.role || authData?.role || user?.role || "admin";
-  const userPermissions =
-    authData?.permissions || activeBusiness?.permissions || [];
-
   // Filter menu items directly based on user's role and permissions
   const filteredMenuItems = useMemo(() => {
+    const userPermissions =
+      authData?.permissions || activeBusiness?.permissions || [];
     return getFilteredMenu(menuConfig, {
       role: userRole,
       permissions: userPermissions,
     });
-  }, [userRole, userPermissions]);
+  }, [activeBusiness?.permissions, authData?.permissions, userRole]);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -112,8 +114,11 @@ export function Header() {
 
   // Close mobile menu on route change
   useEffect(() => {
-    setIsMobileMenuOpen(false);
-    setOpenDropdown(null);
+    const frame = requestAnimationFrame(() => {
+      setIsMobileMenuOpen(false);
+      setOpenDropdown(null);
+    });
+    return () => cancelAnimationFrame(frame);
   }, [pathname]);
 
   const handleLogout = async () => {
@@ -122,7 +127,29 @@ export function Header() {
     } catch (error) {
       console.error("Logout request failed", error);
     } finally {
-      window.location.href = "/login";
+      router.replace("/login");
+      router.refresh();
+    }
+  };
+
+  const handleBusinessChange = async (businessId: string) => {
+    if (!businessId || businessId === activeBusiness?.id) return;
+    setIsSwitchingBusiness(true);
+    try {
+      const response = await fetch("/api/auth/business", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ business_id: businessId }),
+      });
+      if (!response.ok) throw new Error("Unable to switch business");
+      await queryClient.invalidateQueries();
+      setIsProfileOpen(false);
+      setIsSwitchingBusiness(false);
+      router.replace("/dashboard");
+      router.refresh();
+    } catch (error) {
+      console.error("Business switch failed", error);
+      setIsSwitchingBusiness(false);
     }
   };
 
@@ -317,6 +344,28 @@ export function Header() {
                     {user?.email || "Signed in"}
                   </p>
 
+                  {(authData?.businesses?.length ?? 0) > 1 && (
+                    <label className="mt-3 block text-xs font-medium">
+                      <span className="mb-1 block text-muted-foreground">
+                        Active business
+                      </span>
+                      <select
+                        value={activeBusiness?.id ?? ""}
+                        disabled={isSwitchingBusiness}
+                        onChange={(event) =>
+                          handleBusinessChange(event.target.value)
+                        }
+                        className="h-8 w-full rounded-md border bg-background px-2"
+                      >
+                        {authData?.businesses?.map((business) => (
+                          <option key={business.id} value={business.id}>
+                            {business.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
+
                   <div className="mt-2 flex items-center gap-1.5">
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-secondary text-[11px] font-medium text-secondary-foreground capitalize">
                       <Shield className="h-3 w-3 text-primary" />
@@ -332,6 +381,14 @@ export function Header() {
                 </div>
 
                 <div className="space-y-0.5">
+                  <Link
+                    href="/settings/businesses"
+                    onClick={() => setIsProfileOpen(false)}
+                    className="flex items-center gap-2.5 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>Add business</span>
+                  </Link>
                   <Link
                     href="/settings/profile"
                     onClick={() => setIsProfileOpen(false)}

@@ -1,5 +1,10 @@
 export type CountScope = "all" | "category" | "custom";
-export type CountStatus = "in_progress" | "finalized" | "cancelled";
+export type CountStatus =
+    | "draft"
+    | "in_progress"
+    | "finalized"
+    | "completed"
+    | "cancelled";
 
 export interface InventoryCountListItem {
     id: string;

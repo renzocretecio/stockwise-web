@@ -118,6 +118,19 @@ export async function POST(request: Request) {
       path: "/",
     });
 
+    response.cookies.set({
+      name: "business_onboarding_completed",
+      value: String(
+        firstBusiness.onboarding_completed !== false ||
+          firstBusiness.role?.toLowerCase() !== "owner",
+      ),
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7,
+      path: "/",
+    });
+
     return response;
   } catch (error) {
     console.error("Login error:", error);

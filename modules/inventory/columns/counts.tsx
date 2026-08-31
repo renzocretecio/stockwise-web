@@ -7,11 +7,19 @@ const statusLabel: Record<
     InventoryCountListItem["status"],
     { label: string; className: string }
 > = {
+    draft: {
+        label: "Draft",
+        className: "text-slate-600 bg-slate-500/10",
+    },
     in_progress: {
         label: "In progress",
         className: "text-amber-600 bg-amber-500/10",
     },
     finalized: {
+        label: "Completed",
+        className: "text-emerald-600 bg-emerald-500/10",
+    },
+    completed: {
         label: "Completed",
         className: "text-emerald-600 bg-emerald-500/10",
     },
@@ -39,7 +47,10 @@ export function getCountColumns({
             key: "status",
             header: "Status",
             cell: (c) => {
-                const status = statusLabel[c.status];
+                const status = statusLabel[c.status] ?? {
+                    label: c.status.replaceAll("_", " "),
+                    className: "text-muted-foreground bg-muted",
+                };
                 return (
                 <span
                     className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${status.className}`}

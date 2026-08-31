@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/input-group";
 import { EyeOffIcon, EyeIcon, AlertCircle } from "lucide-react";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import Link from "next/link";
 
@@ -28,6 +28,7 @@ const formSchema = z.object({
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const toggleVisibility = () => setIsVisible((prevState) => !prevState);
@@ -67,8 +68,13 @@ export function LoginForm() {
           return;
         }
 
-        // Let middleware handle role-based redirection
-        router.replace("/");
+        const callbackUrl = searchParams.get("callbackUrl");
+        const destination =
+          callbackUrl?.startsWith("/") && !callbackUrl.startsWith("//")
+            ? callbackUrl
+            : "/dashboard";
+        router.replace(destination);
+        router.refresh();
       } catch {
         setError("Network error. Please try again.");
       } finally {
@@ -189,6 +195,12 @@ export function LoginForm() {
           {loading ? "Signing in…" : "Sign in"}
         </Button>
       </div>
+      <p className="text-center text-sm text-muted-foreground">
+        New to StockWise?{" "}
+        <Link href="/signup" className="font-medium text-primary">
+          Create an account
+        </Link>
+      </p>
     </div>
   );
 }
