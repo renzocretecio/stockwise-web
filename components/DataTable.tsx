@@ -67,7 +67,7 @@ export function DataTable<T>({
   className,
 }: DataTableProps<T>) {
   return (
-    <Card className={cn("overflow-hidden border-border/80", className)}>
+    <Card className={cn("overflow-hidden border-border/80 py-0", className)}>
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm">
           <thead className="bg-muted/50 border-b border-border/80 text-xs font-semibold text-muted-foreground uppercase tracking-wider">

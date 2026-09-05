@@ -1,11 +1,11 @@
 import { PaginationMeta } from "@/types/pagination";
 export interface Supplier {
-    id: string; 
-    business_id: string; 
+    id: string;
+    business_id: string;
     name: string;
     contact_person: string | null;
     email: string | null;
-    phone: string | null; 
+    phone: string | null;
     address: string | null;
     payment_terms: string | null;
     lead_time_days: number;
@@ -27,9 +27,7 @@ export interface CreateSupplierInput {
     notes?: string | null;
 }
 
-
 export type UpdateSupplierInput = Partial<CreateSupplierInput>;
-
 
 export type SuppliersResponse = {
     success: boolean;

@@ -44,9 +44,7 @@ export function getInventoryOverviewColumns(): DataTableColumn<InventoryOverview
             key: "unit",
             header: "Unit",
             cell: (item) => (
-                <span className="text-muted-foreground">
-                    {item.unit}
-                </span>
+                <span className="text-muted-foreground">{item.unit}</span>
             ),
         },
         {
@@ -55,9 +53,7 @@ export function getInventoryOverviewColumns(): DataTableColumn<InventoryOverview
             align: "right",
             sortable: true,
             cell: (item) => (
-                <span className="font-medium">
-                    {item.quantity}
-                </span>
+                <span className="font-medium">{item.quantity}</span>
             ),
         },
         {
@@ -77,9 +73,7 @@ export function getInventoryOverviewColumns(): DataTableColumn<InventoryOverview
             align: "right",
             sortable: true,
             cell: (item) => (
-                <span className="font-medium">
-                    {item.available_quantity}
-                </span>
+                <span className="font-medium">{item.available_quantity}</span>
             ),
         },
         {
@@ -87,11 +81,7 @@ export function getInventoryOverviewColumns(): DataTableColumn<InventoryOverview
             header: "Avg. Cost",
             align: "right",
             sortable: true,
-            cell: (item) => (
-                <span>
-                    {formatCurrency(item.average_cost)}
-                </span>
-            ),
+            cell: (item) => <span>{formatCurrency(item.average_cost)}</span>,
         },
         {
             key: "stock_value",
@@ -109,22 +99,14 @@ export function getInventoryOverviewColumns(): DataTableColumn<InventoryOverview
             header: "Reorder Point",
             align: "right",
             sortable: true,
-            cell: (item) => (
-                <span>
-                    {item.reorder_point}
-                </span>
-            ),
+            cell: (item) => <span>{item.reorder_point}</span>,
         },
         {
             key: "safety_stock",
             header: "Safety Stock",
             align: "right",
             sortable: true,
-            cell: (item) => (
-                <span>
-                    {item.safety_stock}
-                </span>
-            ),
+            cell: (item) => <span>{item.safety_stock}</span>,
         },
         {
             key: "status",

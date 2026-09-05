@@ -59,7 +59,7 @@ export function CreateBusinessForm() {
     });
     if (response.ok) {
       await queryClient.invalidateQueries();
-      router.replace("/dashboard");
+      router.replace("/dashboard/overview");
       router.refresh();
     }
   };

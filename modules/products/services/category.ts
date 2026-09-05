@@ -29,7 +29,6 @@ interface CategoriesAllResponse {
 
 // Paginated list — for a categories management page/table
 export const useCategories = (
-    businessId: string,
     page: number = 1,
     page_size: number = 10,
     search?: string
@@ -41,7 +40,6 @@ export const useCategories = (
                 `/api/categories?page=${page}&page_size=${page_size}${search ? `&search=${encodeURIComponent(search)}` : ""}`
             ),
         staleTime: 5 * 60 * 1000,
-        enabled: !!businessId,
     });
 };
 

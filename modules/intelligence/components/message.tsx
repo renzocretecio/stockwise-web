@@ -17,7 +17,7 @@ export function IntelligenceMessageView({
     <div className="space-y-3 rounded-xl border bg-muted/30 p-4">
       <div className="flex items-center gap-2">
         <Badge variant="secondary">
-          {response.provider === "gemini" ? "Gemini" : "Rules-based"}
+          {response.provider === "groq" ? "Groq" : "Rules-based"}
         </Badge>
         <span className="text-xs text-muted-foreground">
           Calculations supplied by Stockwise

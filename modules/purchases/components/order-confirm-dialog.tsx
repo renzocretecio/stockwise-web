@@ -44,7 +44,10 @@ export function OrderConfirmDialog({
     };
 
     return (
-        <Dialog open={open} onOpenChange={(nextOpen) => !isPending && onOpenChange(nextOpen)}>
+        <Dialog
+            open={open}
+            onOpenChange={(nextOpen) => !isPending && onOpenChange(nextOpen)}
+        >
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                     <div className="flex items-center gap-3">
@@ -57,23 +60,38 @@ export function OrderConfirmDialog({
 
                 {purchase && (
                     <p className="text-sm text-muted-foreground">
-                        Place <span className="font-medium text-foreground">
-                            {purchase.reference_number ?? purchase.id.slice(0, 8)}
-                        </span> with {purchase.supplier_name}? It will move to Awaiting Receipt and can no longer be edited.
+                        Place{" "}
+                        <span className="font-medium text-foreground">
+                            {purchase.reference_number ??
+                                purchase.id.slice(0, 8)}
+                        </span>{" "}
+                        with {purchase.supplier_name}? It will move to Awaiting
+                        Receipt and can no longer be edited.
                     </p>
                 )}
 
                 {error && (
                     <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
-                        {error instanceof Error ? error.message : "Failed to place this purchase order."}
+                        {error instanceof Error
+                            ? error.message
+                            : "Failed to place this purchase order."}
                     </div>
                 )}
 
                 <DialogFooter className="gap-2 sm:gap-2">
-                    <Button type="button" variant="outline" disabled={isPending} onClick={() => onOpenChange(false)}>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        disabled={isPending}
+                        onClick={() => onOpenChange(false)}
+                    >
                         Cancel
                     </Button>
-                    <Button type="button" disabled={isPending} onClick={handleConfirm}>
+                    <Button
+                        type="button"
+                        disabled={isPending}
+                        onClick={handleConfirm}
+                    >
                         {isPending ? "Placing…" : "Place order"}
                     </Button>
                 </DialogFooter>

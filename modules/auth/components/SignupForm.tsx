@@ -38,7 +38,7 @@ export function SignupForm() {
         setError(data.error || "Unable to create account");
         return;
       }
-      router.replace("/dashboard");
+      router.replace("/dashboard/overview");
       router.refresh();
     } catch {
       setError("Network error. Please try again.");

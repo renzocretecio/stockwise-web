@@ -1,10 +1,6 @@
 import { PaginationMeta } from "@/types/pagination";
 
-export type PurchaseStatus =
-    | "draft"
-    | "ordered"
-    | "received"
-    | "cancelled";
+export type PurchaseStatus = "draft" | "ordered" | "received" | "cancelled";
 
 export type PurchaseItem = {
     id?: string;
@@ -22,6 +18,7 @@ export type Purchase = {
     supplier_name: string;
     reference_number: string | null;
     status: PurchaseStatus;
+    expected_delivery_date?: string | null;
     items: PurchaseItem[];
     item_count: number;
     subtotal: number;
@@ -37,6 +34,7 @@ export type Purchase = {
 export type PurchaseFormData = {
     supplier_id: string;
     reference_number: string;
+    expected_delivery_date: string | null;
     items: {
         product_id: string;
         quantity: number;

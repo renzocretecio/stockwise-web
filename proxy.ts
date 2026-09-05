@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 
 const PROTECTED_ROUTES = [
   "/dashboard",
+  "/intelligence",
   "/profile",
   "/products",
   "/suppliers",
@@ -73,7 +74,9 @@ export function proxy(request: NextRequest) {
   }
 
   if (isOnboardingRoute && onboardingCompleted === "true") {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    return NextResponse.redirect(
+      new URL("/dashboard/overview", request.url),
+    );
   }
 
   if (request.nextUrl.pathname === "/") {
@@ -82,7 +85,9 @@ export function proxy(request: NextRequest) {
 
   // kapag authenticated at inaccess ang login/signup page, redirect to dashboard
   if (isAuthRoute && sessionToken && !isExpired) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    return NextResponse.redirect(
+      new URL("/dashboard/overview", request.url),
+    );
   }
 
   return NextResponse.next();

@@ -17,6 +17,10 @@ const examples = [
   "What should I reorder this week?",
   "Which products are not selling?",
   "Did we have unusual stock losses?",
+  "What are my top-selling products?",
+  "Why were sales lower this week?",
+  "Which products have the best profit?",
+  "Which supplier has the longest lead time?"
 ];
 
 type AuthContext = {

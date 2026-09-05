@@ -1,20 +1,13 @@
 "use client";
 
-import {
-    ChangeEvent,
-    FormEvent,
-    useState,
-} from "react";
+import { ChangeEvent, FormEvent, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
     useCreateSupplier,
     useUpdateSupplier,
 } from "@/modules/suppliers/services/suppliers";
-import {
-    Supplier,
-    SupplierFormData,
-} from "@/modules/suppliers/types";
+import { Supplier, SupplierFormData } from "@/modules/suppliers/types";
 
 type SupplierFormProps = {
     supplier?: Supplier | null;
@@ -39,55 +32,35 @@ export function SupplierForm({
         mutateAsync: updateSupplier,
         isPending: isUpdating,
         error: updateError,
-    } = useUpdateSupplier(
-        supplier?.id ?? "",
-    );
+    } = useUpdateSupplier(supplier?.id ?? "");
 
-    const [formData, setFormData] =
-        useState<SupplierFormData>({
-            name: supplier?.name ?? "",
-            contact_person:
-                supplier?.contact_person ?? "",
-            email: supplier?.email ?? "",
-            phone: supplier?.phone ?? "",
-            address: supplier?.address ?? "",
-            payment_terms:
-                supplier?.payment_terms ?? "",
-            lead_time_days:
-                supplier?.lead_time_days ?? 0,
-            notes: supplier?.notes ?? "",
-        });
+    const [formData, setFormData] = useState<SupplierFormData>({
+        name: supplier?.name ?? "",
+        contact_person: supplier?.contact_person ?? "",
+        email: supplier?.email ?? "",
+        phone: supplier?.phone ?? "",
+        address: supplier?.address ?? "",
+        payment_terms: supplier?.payment_terms ?? "",
+        lead_time_days: supplier?.lead_time_days ?? 0,
+        notes: supplier?.notes ?? "",
+    });
 
-    const isPending =
-        isCreating || isUpdating;
+    const isPending = isCreating || isUpdating;
 
-    const error =
-        createError || updateError;
+    const error = createError || updateError;
 
     const handleChange = (
-        event: ChangeEvent<
-            HTMLInputElement |
-            HTMLTextAreaElement
-        >,
+        event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     ) => {
-        const {
-            name,
-            value,
-            type,
-        } = event.target;
+        const { name, value, type } = event.target;
 
         setFormData((previous) => ({
             ...previous,
-            [name]:
-                type === "number"
-                    ? Number(value) || 0
-                    : value,
+            [name]: type === "number" ? Number(value) || 0 : value,
         }));
     };
 
-    const handleSubmit = async (
-        event: FormEvent<HTMLFormElement>,
-    ) => {
+    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
         try {
@@ -104,12 +77,9 @@ export function SupplierForm({
     };
 
     return (
-        <form
-            onSubmit={handleSubmit}
-            className="space-y-6"
-        >
+        <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
-                <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+                <div className="border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
                     {error instanceof Error
                         ? error.message
                         : "An error occurred while saving the supplier."}
@@ -149,9 +119,7 @@ export function SupplierForm({
                         id="contact_person"
                         name="contact_person"
                         type="text"
-                        value={
-                            formData.contact_person
-                        }
+                        value={formData.contact_person}
                         onChange={handleChange}
                         placeholder="Contact person"
                         className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
@@ -219,9 +187,7 @@ export function SupplierForm({
             </section>
 
             <section className="space-y-4 border-t pt-6">
-                <h2 className="text-base font-semibold">
-                    Terms
-                </h2>
+                <h2 className="text-base font-semibold">Terms</h2>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
@@ -236,9 +202,7 @@ export function SupplierForm({
                             id="payment_terms"
                             name="payment_terms"
                             type="text"
-                            value={
-                                formData.payment_terms
-                            }
+                            value={formData.payment_terms}
                             onChange={handleChange}
                             placeholder="e.g. Net 30"
                             className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
@@ -259,9 +223,7 @@ export function SupplierForm({
                             type="number"
                             min="0"
                             step="1"
-                            value={
-                                formData.lead_time_days
-                            }
+                            value={formData.lead_time_days}
                             onChange={handleChange}
                             className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
                         />
@@ -298,15 +260,12 @@ export function SupplierForm({
                     Cancel
                 </Button>
 
-                <Button
-                    type="submit"
-                    disabled={isPending}
-                >
+                <Button type="submit" disabled={isPending}>
                     {isPending
                         ? "Saving..."
                         : isEditMode
-                            ? "Update supplier"
-                            : "Create supplier"}
+                          ? "Update supplier"
+                          : "Create supplier"}
                 </Button>
             </div>
         </form>

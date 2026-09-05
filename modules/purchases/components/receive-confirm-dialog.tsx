@@ -38,7 +38,7 @@ export function ReceiveConfirmDialog({
     const handleConfirm = async () => {
         if (!purchase) return;
         try {
-            await receivePurchase();   // ← no argument — id is already bound
+            await receivePurchase(); // ← no argument — id is already bound
             onOpenChange(false);
             onSuccess?.();
         } catch {
@@ -63,15 +63,16 @@ export function ReceiveConfirmDialog({
                         <p>
                             Receiving{" "}
                             <span className="font-medium text-foreground">
-                                {purchase.reference_number ?? purchase.id.slice(0, 8)}
+                                {purchase.reference_number ??
+                                    purchase.id.slice(0, 8)}
                             </span>{" "}
                             from{" "}
                             <span className="font-medium text-foreground">
                                 {purchase.supplier_name}
                             </span>{" "}
                             will add {purchase.item_count} item
-                            {purchase.item_count === 1 ? "" : "s"} to your stock and
-                            update average cost. This cannot be undone.
+                            {purchase.item_count === 1 ? "" : "s"} to your stock
+                            and update average cost. This cannot be undone.
                         </p>
                     </div>
                 )}

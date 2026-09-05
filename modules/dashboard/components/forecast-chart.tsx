@@ -21,11 +21,11 @@ import type { ForecastPoint } from "@/modules/dashboard/types";
 const chartConfig = {
   actual: {
     label: "Net sales",
-    color: "var(--primary)",
+    color: "var(--chart-1)",
   },
   forecast: {
     label: "Forecast",
-    color: "var(--color-amber-500)",
+    color: "var(--color-secondary)",
   },
 } satisfies ChartConfig;
 
@@ -52,12 +52,15 @@ export function ForecastChart({ points }: { points: ForecastPoint[] }) {
   return (
     <ChartContainer
       config={chartConfig}
-      className="h-[240px] min-h-[220px] w-full"
+      className={
+        "h-[220px] min-h-[200px] w-full min-w-0 max-w-full " +
+        "sm:h-[240px]"
+      }
     >
       <LineChart
         accessibilityLayer
         data={points}
-        margin={{ top: 8, right: 12, left: 0, bottom: 0 }}
+        margin={{ top: 8, right: 4, left: -8, bottom: 0 }}
       >
         <CartesianGrid vertical={false} strokeDasharray="3 5" />
         <XAxis

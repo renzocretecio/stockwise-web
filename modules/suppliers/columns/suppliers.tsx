@@ -1,19 +1,9 @@
 "use client";
 
 import type { DataTableColumn } from "@/components/DataTable";
-import {
-    MoreHorizontal,
-    Pencil,
-    Trash2,
-} from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Supplier } from "@/modules/suppliers/types";
 
 type SupplierColumnsOptions = {
@@ -29,36 +19,28 @@ export function getSupplierColumns({
         {
             key: "name",
             header: "Name",
-            cell: (row) => (
-                <span className="font-medium">
-                    {row.name}
-                </span>
-            ),
+            cell: (row) => <span className="font-medium">{row.name}</span>,
         },
         {
             key: "contact_person",
             header: "Contact",
-            cell: (row) =>
-                row.contact_person || "—",
+            cell: (row) => row.contact_person || "—",
         },
         {
             key: "email",
             header: "Email",
-            cell: (row) =>
-                row.email || "—",
+            cell: (row) => row.email || "—",
         },
         {
             key: "phone",
             header: "Phone",
-            cell: (row) =>
-                row.phone || "—",
+            cell: (row) => row.phone || "—",
         },
         {
             key: "lead_time_days",
             header: "Lead Time",
             cell: (row) => {
-                const days =
-                    row.lead_time_days;
+                const days = row.lead_time_days;
 
                 return (
                     <span>
@@ -80,22 +62,25 @@ export function getSupplierColumns({
                         <Button
                             variant="ghost"
                             size="sm"
-                            className="h-8 w-8 p-0 cursor-pointer"
+                            className="size-8 p-0"
                             onClick={(e) => {
-                            e.stopPropagation();
-                            onEdit(supplier);
+                                e.stopPropagation();
+                                onEdit(supplier);
                             }}
-                            aria-label={`Edit ${supplier}`}
+                            aria-label={`Edit ${supplier.name}`}
                         >
                             <Pencil className="h-4 w-4" />
                         </Button>
                         <Button
                             variant="ghost"
                             size="sm"
-                            className="h-8 w-8 p-0 cursor-pointer text-destructive hover:text-destructive hover:bg-destructive/10"
+                            className={
+                                "size-8 p-0 text-destructive hover:bg-destructive/10 " +
+                                "hover:text-destructive"
+                            }
                             onClick={(e) => {
-                            e.stopPropagation();
-                            onDelete(supplier);
+                                e.stopPropagation();
+                                onDelete(supplier);
                             }}
                             aria-label={`Delete ${supplier.name}`}
                             title="Delete Supplier"

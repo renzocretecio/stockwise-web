@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, RefreshCw, AlertTriangle, ClipboardList } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { AlertTriangle, ClipboardList, Plus, RefreshCw } from "lucide-react";
+
+import { DataTable } from "@/components/DataTable";
 import { Button } from "@/components/ui/button";
 import {
     Dialog,
@@ -13,30 +14,17 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { DataTable } from "@/components/DataTable";
-import {
-    useInventoryCounts
-} from "@/modules/inventory/services/counts";
 import { getCountColumns } from "@/modules/inventory/columns/counts";
 import { StartCountForm } from "@/modules/inventory/components/start-count-form";
-import { InventoryCountListItem } from "@/modules/inventory/types/counts";
+import { useInventoryCounts } from "@/modules/inventory/services/counts";
+import type { InventoryCountListItem } from "@/modules/inventory/types/counts";
 
 export default function PhysicalCountsPage() {
     const router = useRouter();
     const [isStartFormOpen, setIsStartFormOpen] = useState(false);
-
-    const {
-        data,
-        isLoading,
-        isError,
-        error,
-        refetch,
-        isFetching,
-    } = useInventoryCounts();
-
+    const { data, isLoading, isError, error, refetch, isFetching } =
+        useInventoryCounts();
     const counts = data?.counts ?? [];
-    const errorMessage =
-        error instanceof Error ? error.message : "Failed to load count sessions";
 
     const columns = getCountColumns({
         onView: (count: InventoryCountListItem) => {
@@ -45,121 +33,138 @@ export default function PhysicalCountsPage() {
     });
 
     return (
-        <div className="space-y-6 pb-12">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="pb-12">
+            <header
+                className={
+                    "flex flex-col gap-4 border-b p-4 sm:flex-row " +
+                    "sm:items-end sm:justify-between"
+                }
+            >
                 <div>
-                    <div className="flex items-center gap-3">
-                        <h1 className="text-3xl font-bold tracking-tight text-foreground">
-                            Physical Counts
+                    <div className="flex flex-wrap items-center gap-2">
+                        <h1 className="text-2xl font-bold tracking-tight">
+                            Physical counts
                         </h1>
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-primary/10 text-primary">
-                            {counts.length}{" "}
-                            {counts.length === 1 ? "session" : "sessions"}
+                        <span className="text-xs text-muted-foreground">
+                            {counts.length} sessions
                         </span>
                     </div>
-                    <p className="text-sm text-muted-foreground mt-1">
-                        Reconcile actual stock counts against expected quantities.
+                    <p className="mt-1 text-xs text-muted-foreground">
+                        Compare your actual stock with the quantities in
+                        Stockwise.
                     </p>
                 </div>
-
-                <div className="flex items-center gap-2.5 flex-wrap">
+                <div className="flex flex-wrap items-center gap-2">
                     <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => refetch()}
+                        aria-label="Refresh count sessions"
                         disabled={isFetching}
-                        className="cursor-pointer gap-1.5"
+                        onClick={() => void refetch()}
+                        size="icon"
+                        type="button"
+                        variant="outline"
                     >
-                        <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} />
-                        <span>Refresh</span>
+                        <RefreshCw
+                            className={cn(
+                                "size-4",
+                                isFetching && "animate-spin",
+                            )}
+                        />
                     </Button>
                     <Button
-                        size="sm"
-                        className="cursor-pointer gap-1.5 bg-primary text-primary-foreground shadow-sm"
                         onClick={() => setIsStartFormOpen(true)}
+                        size="sm"
+                        type="button"
                     >
-                        <Plus className="h-4 w-4" />
-                        <span>Start Count</span>
+                        <Plus className="mr-1.5 size-4" />
+                        Start count
                     </Button>
                 </div>
-            </div>
+            </header>
 
-            {isError && (
-                <Card className="p-6 border-destructive/50 bg-destructive/5 text-destructive">
-                    <div className="flex items-center gap-3">
-                        <AlertTriangle className="h-5 w-5 shrink-0" />
-                        <div className="flex-1">
-                            <h3 className="font-semibold text-sm">
-                                Failed to load count sessions
-                            </h3>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                                {errorMessage}
+            {isError ? (
+                <section className="border-b bg-destructive/5 p-5">
+                    <div className="flex items-start gap-3 text-sm text-destructive">
+                        <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+                        <div className="min-w-0 flex-1">
+                            <p className="font-medium">
+                                Unable to load count sessions
+                            </p>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                                {error instanceof Error
+                                    ? error.message
+                                    : "Please try again."}
                             </p>
                         </div>
                         <Button
-                            variant="outline"
+                            onClick={() => void refetch()}
                             size="sm"
-                            onClick={() => refetch()}
-                            className="cursor-pointer"
+                            type="button"
+                            variant="outline"
                         >
-                            Try Again
+                            Try again
                         </Button>
                     </div>
-                </Card>
-            )}
+                </section>
+            ) : null}
 
-            {!isError && counts.length === 0 && !isLoading && (
-                <Card className="p-12 text-center border-dashed border-2">
-                    <div className="h-12 w-12 rounded-full bg-primary/10 text-primary mx-auto flex items-center justify-center mb-4">
-                        <ClipboardList className="h-6 w-6" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-foreground">
-                        No count sessions yet
-                    </h3>
-                    <p className="text-sm text-muted-foreground max-w-sm mx-auto mt-1 mb-6">
-                        Start a physical count to reconcile your actual stock against
-                        the system.
-                    </p>
-                    <Button
-                        size="sm"
-                        onClick={() => setIsStartFormOpen(true)}
-                        className="cursor-pointer gap-1.5 bg-primary text-primary-foreground shadow-sm"
-                    >
-                        <Plus className="h-4 w-4" />
-                        <span>Start Count</span>
-                    </Button>
-                </Card>
-            )}
+            <section>
+                <div className="p-2 sm:p-4">
+                    <DataTable
+                        className="rounded-none border-0 shadow-none ring-0"
+                        columns={columns}
+                        data={counts}
+                        emptyLabel="count session"
+                        emptyState={
+                            <EmptyCounts
+                                onStart={() => setIsStartFormOpen(true)}
+                            />
+                        }
+                        getRowId={(count) => count.id}
+                        isLoading={isLoading}
+                        onRowClick={(count) =>
+                            router.push(`/inventory/counts/${count.id}`)
+                        }
+                    />
+                </div>
+            </section>
 
-            {!isError && (counts.length > 0 || isLoading) && (
-                <DataTable
-                    columns={columns}
-                    data={counts}
-                    getRowId={(c) => c.id}
-                    isLoading={isLoading}
-                    emptyLabel="count session"
-                    onRowClick={(c) => router.push(`/inventory/counts/${c.id}`)}
-                />
-            )}
-
-            <Dialog open={isStartFormOpen} onOpenChange={setIsStartFormOpen}>
+            <Dialog onOpenChange={setIsStartFormOpen} open={isStartFormOpen}>
                 <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
                     <DialogHeader>
-                        <DialogTitle>Start Physical Count</DialogTitle>
+                        <DialogTitle>Start physical count</DialogTitle>
                         <DialogDescription>
-                            Choose which products to include in this count session.
+                            Choose the products to include in this count
+                            session.
                         </DialogDescription>
                     </DialogHeader>
-
                     <StartCountForm
+                        onCancel={() => setIsStartFormOpen(false)}
                         onSuccess={(countId) => {
                             setIsStartFormOpen(false);
                             router.push(`/inventory/counts/${countId}`);
                         }}
-                        onCancel={() => setIsStartFormOpen(false)}
                     />
                 </DialogContent>
             </Dialog>
+        </div>
+    );
+}
+
+function EmptyCounts({ onStart }: { onStart: () => void }) {
+    return (
+        <div className="flex flex-col items-center justify-center px-6 py-14 text-center">
+            <div className="mb-3 flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <ClipboardList className="size-5" />
+            </div>
+            <p className="font-medium">No count sessions yet</p>
+            <p className="mt-1 max-w-sm text-xs text-muted-foreground">
+                Start a physical count to reconcile actual stock with the
+                system.
+            </p>
+            <Button className="mt-5" onClick={onStart} size="sm" type="button">
+                <Plus className="mr-1.5 size-4" />
+                Start count
+            </Button>
         </div>
     );
 }

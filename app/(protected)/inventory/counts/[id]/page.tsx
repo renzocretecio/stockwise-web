@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import {
     Dialog,
     DialogContent,
@@ -38,17 +37,11 @@ export default function CountDetailPage() {
     const [isFinalizeOpen, setIsFinalizeOpen] = useState(false);
     const [isCancelOpen, setIsCancelOpen] = useState(false);
 
-    const {
-        data,
-        isLoading,
-        isError,
-        error,
-    } = useInventoryCountDetail(countId);
+    const { data, isLoading, isError, error } =
+        useInventoryCountDetail(countId);
 
-    const {
-        mutateAsync: recordItems,
-        isPending: isSaving,
-    } = useRecordCountItems(countId);
+    const { mutateAsync: recordItems, isPending: isSaving } =
+        useRecordCountItems(countId);
 
     const {
         mutateAsync: finalizeCount,
@@ -56,28 +49,23 @@ export default function CountDetailPage() {
         error: finalizeError,
     } = useFinalizeCount(countId);
 
-    const {
-        mutateAsync: cancelCount,
-        isPending: isCancelling,
-    } = useCancelCount(countId);
+    const { mutateAsync: cancelCount, isPending: isCancelling } =
+        useCancelCount(countId);
 
     const count = data?.count;
-    
+
     const isReadOnly = count?.status !== "in_progress";
     const hasUnsavedChanges = Object.keys(drafts).length > 0;
 
     const itemsWithVariance = useMemo(() => {
-        return count?.items.filter(
-            (item) =>
-                item.variance !== null &&
-                item.variance !== 0,
-        ) ?? [];
+        return (
+            count?.items.filter(
+                (item) => item.variance !== null && item.variance !== 0,
+            ) ?? []
+        );
     }, [count]);
 
-    const handleDraftChange = (
-        productId: string,
-        value: string,
-    ) => {
+    const handleDraftChange = (productId: string, value: string) => {
         setDrafts((previous) => ({
             ...previous,
             [productId]: value,
@@ -97,9 +85,7 @@ export default function CountDetailPage() {
             })
             .map((item) => ({
                 product_id: item.product_id,
-                counted_quantity: Number(
-                    drafts[item.product_id],
-                ),
+                counted_quantity: Number(drafts[item.product_id]),
                 notes: null,
             }));
 
@@ -136,11 +122,11 @@ export default function CountDetailPage() {
 
     if (isLoading) {
         return (
-            <div className="space-y-3">
+            <div className="space-y-px bg-border">
                 {[1, 2, 3, 4, 5].map((item) => (
                     <div
                         key={item}
-                        className="h-14 animate-pulse rounded-xl border border-border/40 bg-muted/60"
+                        className="h-14 animate-pulse bg-muted/60"
                     />
                 ))}
             </div>
@@ -149,7 +135,7 @@ export default function CountDetailPage() {
 
     if (isError || !count) {
         return (
-            <Card className="border-destructive/50 bg-destructive/5 p-6 text-destructive">
+            <div className="border-b bg-destructive/5 p-5 text-destructive">
                 <div className="flex items-center gap-3">
                     <AlertTriangle className="h-5 w-5 shrink-0" />
 
@@ -159,13 +145,13 @@ export default function CountDetailPage() {
                             : "Failed to load this count session."}
                     </p>
                 </div>
-            </Card>
+            </div>
         );
     }
 
     return (
-        <div className="space-y-6 pb-12">
-            <div>
+        <div className="pb-12">
+            <header className="border-b p-4">
                 <button
                     type="button"
                     onClick={() => router.push("/inventory/counts")}
@@ -175,7 +161,7 @@ export default function CountDetailPage() {
                     Back to counts
                 </button>
 
-                <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+                <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
                     <div>
                         <div className="flex items-center gap-3">
                             <h1 className="text-3xl font-bold tracking-tight text-foreground">
@@ -186,7 +172,8 @@ export default function CountDetailPage() {
                         </div>
 
                         <p className="mt-1 text-sm text-muted-foreground">
-                            {count.counted_items} of {count.total_items} products counted
+                            {count.counted_items} of {count.total_items}{" "}
+                            products counted
                             {count.items_with_variance > 0 &&
                                 ` — ${count.items_with_variance} with variance`}
                         </p>
@@ -221,16 +208,14 @@ export default function CountDetailPage() {
                         </div>
                     )}
                 </div>
-            </div>
+            </header>
 
-            <Card className="overflow-hidden border-border/80">
+            <section className="border-b">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
                         <thead className="border-b border-border/80 bg-muted/50 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                             <tr>
-                                <th className="px-4 py-3">
-                                    Product
-                                </th>
+                                <th className="px-4 py-3">Product</th>
 
                                 <th className="px-4 py-3 text-right">
                                     Expected
@@ -278,23 +263,15 @@ export default function CountDetailPage() {
                         <Button
                             type="button"
                             onClick={handleSaveCounts}
-                            disabled={
-                                !hasUnsavedChanges ||
-                                isSaving
-                            }
+                            disabled={!hasUnsavedChanges || isSaving}
                         >
-                            {isSaving
-                                ? "Saving..."
-                                : "Save Counts"}
+                            {isSaving ? "Saving..." : "Save Counts"}
                         </Button>
                     </div>
                 )}
-            </Card>
+            </section>
 
-            <Dialog
-                open={isFinalizeOpen}
-                onOpenChange={setIsFinalizeOpen}
-            >
+            <Dialog open={isFinalizeOpen} onOpenChange={setIsFinalizeOpen}>
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <div className="flex items-center gap-3">
@@ -302,23 +279,22 @@ export default function CountDetailPage() {
                                 <CheckCircle2 className="h-5 w-5" />
                             </div>
 
-                            <DialogTitle>
-                                Finalize count
-                            </DialogTitle>
+                            <DialogTitle>Finalize count</DialogTitle>
                         </div>
                     </DialogHeader>
 
                     <div className="space-y-2 text-sm text-muted-foreground">
                         <p>
-                            {count.counted_items} of {count.total_items} products
-                            have been counted.
-
+                            {count.counted_items} of {count.total_items}{" "}
+                            products have been counted.
                             {count.total_items - count.counted_items > 0 && (
                                 <>
                                     {" "}
                                     <span className="text-amber-600">
-                                        {count.total_items - count.counted_items} uncounted
-                                        product(s) will be skipped and left unchanged.
+                                        {count.total_items -
+                                            count.counted_items}{" "}
+                                        uncounted product(s) will be skipped and
+                                        left unchanged.
                                     </span>
                                 </>
                             )}
@@ -326,10 +302,10 @@ export default function CountDetailPage() {
 
                         {itemsWithVariance.length > 0 ? (
                             <p className="rounded-md bg-amber-500/10 px-3 py-2 text-amber-700">
-                                {itemsWithVariance.length} product(s) have a variance
-                                and will have their stock adjusted to match the counted
-                                quantity. This creates stock movements and cannot be
-                                undone.
+                                {itemsWithVariance.length} product(s) have a
+                                variance and will have their stock adjusted to
+                                match the counted quantity. This creates stock
+                                movements and cannot be undone.
                             </p>
                         ) : (
                             <p>
@@ -362,18 +338,13 @@ export default function CountDetailPage() {
                             onClick={handleFinalize}
                             disabled={isFinalizing}
                         >
-                            {isFinalizing
-                                ? "Finalizing..."
-                                : "Finalize count"}
+                            {isFinalizing ? "Finalizing..." : "Finalize count"}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
 
-            <Dialog
-                open={isCancelOpen}
-                onOpenChange={setIsCancelOpen}
-            >
+            <Dialog open={isCancelOpen} onOpenChange={setIsCancelOpen}>
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <div className="flex items-center gap-3">
@@ -381,9 +352,7 @@ export default function CountDetailPage() {
                                 <XCircle className="h-5 w-5" />
                             </div>
 
-                            <DialogTitle>
-                                Cancel this count?
-                            </DialogTitle>
+                            <DialogTitle>Cancel this count?</DialogTitle>
                         </div>
                     </DialogHeader>
 
@@ -408,9 +377,7 @@ export default function CountDetailPage() {
                             onClick={handleCancelCount}
                             disabled={isCancelling}
                         >
-                            {isCancelling
-                                ? "Cancelling..."
-                                : "Cancel count"}
+                            {isCancelling ? "Cancelling..." : "Cancel count"}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -419,11 +386,7 @@ export default function CountDetailPage() {
     );
 }
 
-function StatusBadge({
-    status,
-}: {
-    status: string;
-}) {
+function StatusBadge({ status }: { status: string }) {
     const statusMap: Record<
         string,
         {
@@ -445,9 +408,7 @@ function StatusBadge({
         },
     };
 
-    const currentStatus =
-        statusMap[status] ??
-        statusMap.in_progress;
+    const currentStatus = statusMap[status] ?? statusMap.in_progress;
 
     return (
         <span
@@ -476,21 +437,15 @@ function CountRow({
         draftValue !== undefined
             ? draftValue
             : item.counted_quantity !== null
-                ? String(item.counted_quantity)
-                : "";
+              ? String(item.counted_quantity)
+              : "";
 
     const variance = item.variance;
 
-    const hasVariance =
-        variance !== null &&
-        variance !== 0;
+    const hasVariance = variance !== null && variance !== 0;
 
     return (
-        <tr
-            className={cn(
-                hasVariance && "bg-amber-500/5",
-            )}
-        >
+        <tr className={cn(hasVariance && "bg-amber-500/5")}>
             <td className="px-4 py-3">
                 <div className="flex flex-col">
                     <span className="font-medium text-foreground">
@@ -511,18 +466,14 @@ function CountRow({
 
             <td className="px-4 py-3 text-right">
                 {isReadOnly ? (
-                    <span>
-                        {item.counted_quantity ?? "—"}
-                    </span>
+                    <span>{item.counted_quantity ?? "—"}</span>
                 ) : (
                     <input
                         type="number"
                         min="0"
                         step="1"
                         value={displayValue}
-                        onChange={(event) =>
-                            onDraftChange(event.target.value)
-                        }
+                        onChange={(event) => onDraftChange(event.target.value)}
                         placeholder="—"
                         className="w-24 rounded-md border border-input bg-background px-2 py-1 text-right text-sm outline-none focus:ring-2 focus:ring-primary"
                     />
@@ -531,19 +482,14 @@ function CountRow({
 
             <td className="px-4 py-3 text-right">
                 {variance === null ? (
-                    <span className="text-muted-foreground">
-                        —
-                    </span>
+                    <span className="text-muted-foreground">—</span>
                 ) : (
                     <span
                         className={cn(
                             "font-medium",
-                            variance > 0 &&
-                                "text-emerald-600",
-                            variance < 0 &&
-                                "text-destructive",
-                            variance === 0 &&
-                                "text-muted-foreground",
+                            variance > 0 && "text-emerald-600",
+                            variance < 0 && "text-destructive",
+                            variance === 0 && "text-muted-foreground",
                         )}
                     >
                         {variance > 0 && "+"}

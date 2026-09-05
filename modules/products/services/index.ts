@@ -74,6 +74,9 @@ export const useCreateProduct = () => {
             queryClient.invalidateQueries({
                 queryKey: productKeys.lists(),
             });
+            queryClient.invalidateQueries({
+                queryKey: ["overall-status-products"],
+            });
         },
     });
 };
@@ -131,6 +134,9 @@ export const useUpdateProduct = (productId: string) => {
             queryClient.invalidateQueries({
                 queryKey: productKeys.list(),
             });
+            queryClient.invalidateQueries({
+                queryKey: ["overall-status-products"],
+            });
         },
     });
 };
@@ -147,6 +153,9 @@ export const useDeleteProduct = () => {
         onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: productKeys.list(),
+            });
+            queryClient.invalidateQueries({
+                queryKey: ["overall-status-products"],
             });
         },
     });

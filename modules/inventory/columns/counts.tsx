@@ -41,7 +41,9 @@ export function getCountColumns({
             key: "name",
             header: "Count session",
             sortable: true,
-            cell: (c) => <span className="font-medium text-foreground">{c.name}</span>,
+            cell: (c) => (
+                <span className="font-medium text-foreground">{c.name}</span>
+            ),
         },
         {
             key: "status",
@@ -52,11 +54,11 @@ export function getCountColumns({
                     className: "text-muted-foreground bg-muted",
                 };
                 return (
-                <span
-                    className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${status.className}`}
-                >
-                    {status.label}
-                </span>
+                    <span
+                        className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${status.className}`}
+                    >
+                        {status.label}
+                    </span>
                 );
             },
         },
@@ -65,21 +67,21 @@ export function getCountColumns({
             header: "Progress",
             cell: (c) => {
                 const pct =
-                c.total_items > 0
-                    ? Math.round((c.counted_items / c.total_items) * 100)
-                    : 0;
+                    c.total_items > 0
+                        ? Math.round((c.counted_items / c.total_items) * 100)
+                        : 0;
                 return (
-                <div className="flex items-center gap-2 min-w-[140px]">
-                    <div className="h-1.5 flex-1 rounded-full bg-muted overflow-hidden">
-                    <div
-                        className="h-full rounded-full bg-primary transition-all"
-                        style={{ width: `${pct}%` }}
-                    />
+                    <div className="flex items-center gap-2 min-w-[140px]">
+                        <div className="h-1.5 flex-1 rounded-full bg-muted overflow-hidden">
+                            <div
+                                className="h-full rounded-full bg-primary transition-all"
+                                style={{ width: `${pct}%` }}
+                            />
+                        </div>
+                        <span className="text-xs text-muted-foreground shrink-0">
+                            {c.counted_items}/{c.total_items}
+                        </span>
                     </div>
-                    <span className="text-xs text-muted-foreground shrink-0">
-                    {c.counted_items}/{c.total_items}
-                    </span>
-                </div>
                 );
             },
         },
@@ -89,7 +91,7 @@ export function getCountColumns({
             sortable: true,
             cell: (c) => (
                 <span className="text-muted-foreground">
-                {new Date(c.created_at).toLocaleDateString()}
+                    {new Date(c.created_at).toLocaleDateString()}
                 </span>
             ),
         },
@@ -98,9 +100,9 @@ export function getCountColumns({
             header: "Finalized",
             cell: (c) => (
                 <span className="text-muted-foreground">
-                {c.finalized_at
-                    ? new Date(c.finalized_at).toLocaleDateString()
-                    : "—"}
+                    {c.finalized_at
+                        ? new Date(c.finalized_at).toLocaleDateString()
+                        : "—"}
                 </span>
             ),
         },
@@ -119,7 +121,7 @@ export function getCountColumns({
                         onView(c);
                     }}
                     aria-label={`View ${c.name}`}
-                    >
+                >
                     <Eye className="h-4 w-4" />
                 </Button>
             ),

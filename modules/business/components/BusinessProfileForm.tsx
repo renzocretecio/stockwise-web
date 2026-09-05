@@ -86,7 +86,7 @@ export function BusinessProfileForm({
       }
       await queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
       if (mode === "onboarding") {
-        router.replace("/dashboard");
+        router.replace("/dashboard/overview");
         router.refresh();
       } else {
         setSaved(true);
@@ -105,12 +105,12 @@ export function BusinessProfileForm({
   return (
     <form onSubmit={submit} className="space-y-5">
       {error && (
-        <p className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+        <p className="bg-destructive/10 p-3 text-sm text-destructive">
           {error}
         </p>
       )}
       {saved && (
-        <p className="rounded-lg bg-emerald-500/10 p-3 text-sm text-emerald-700">
+        <p className="bg-emerald-500/10 p-3 text-sm text-emerald-700">
           Business settings saved.
         </p>
       )}
@@ -182,13 +182,15 @@ export function BusinessProfileForm({
           />
         </label>
       </div>
-      <Button type="submit" className="w-full" disabled={saving}>
-        {saving
-          ? "Saving…"
-          : mode === "onboarding"
-            ? "Finish setup"
-            : "Save business settings"}
-      </Button>
+      <div className="flex justify-end">
+        <Button type="submit" disabled={saving}>
+          {saving
+            ? "Saving…"
+            : mode === "onboarding"
+              ? "Finish setup"
+              : "Save business settings"}
+        </Button>
+      </div>
     </form>
   );
 }

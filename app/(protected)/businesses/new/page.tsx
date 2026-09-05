@@ -3,7 +3,7 @@ import { Building2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreateBusinessForm } from "@/modules/business/components/CreateBusinessForm";
 
-export default function BusinessesSettingsPage() {
+export default function NewBusinessPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6 pb-12">
       <div>

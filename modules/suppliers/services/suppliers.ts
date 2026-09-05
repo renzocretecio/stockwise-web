@@ -1,8 +1,4 @@
-import {
-    useMutation,
-    useQuery,
-    useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { apiClient } from "@/lib/api-client";
 import {
@@ -15,16 +11,10 @@ import {
 export const supplierKeys = {
     all: ["suppliers"] as const,
 
-    lists: () => [
-        ...supplierKeys.all,
-        "list",
-    ] as const,
+    lists: () => [...supplierKeys.all, "list"] as const,
 
-    detail: (supplierId: string) => [
-        ...supplierKeys.all,
-        "detail",
-        supplierId,
-    ] as const,
+    detail: (supplierId: string) =>
+        [...supplierKeys.all, "detail", supplierId] as const,
 };
 
 export const useSuppliers = (
@@ -33,35 +23,24 @@ export const useSuppliers = (
     search?: string,
 ) => {
     return useQuery({
-        queryKey: [
-            ...supplierKeys.lists(),
-            page,
-            pageSize,
-            search,
-        ],
+        queryKey: [...supplierKeys.lists(), page, pageSize, search],
 
         queryFn: () =>
             apiClient<SuppliersResponse>(
                 `/api/suppliers?page=${page}&page_size=${pageSize}` +
-                    (search
-                        ? `&search=${encodeURIComponent(search)}`
-                        : ""),
+                    (search ? `&search=${encodeURIComponent(search)}` : ""),
             ),
 
         staleTime: 1000 * 60 * 2,
     });
 };
 
-export const useSupplier = (
-    supplierId: string,
-) => {
+export const useSupplier = (supplierId: string) => {
     return useQuery({
         queryKey: supplierKeys.detail(supplierId),
 
         queryFn: () =>
-            apiClient<SupplierResponse>(
-                `/api/suppliers/${supplierId}`,
-            ),
+            apiClient<SupplierResponse>(`/api/suppliers/${supplierId}`),
 
         enabled: !!supplierId,
     });
@@ -71,16 +50,11 @@ export const useCreateSupplier = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (
-            payload: SupplierFormData,
-        ) =>
-            apiClient<SupplierCreateResponse>(
-                "/api/suppliers",
-                {
-                    method: "POST",
-                    body: JSON.stringify(payload),
-                },
-            ),
+        mutationFn: (payload: SupplierFormData) =>
+            apiClient<SupplierCreateResponse>("/api/suppliers", {
+                method: "POST",
+                body: JSON.stringify(payload),
+            }),
 
         onSuccess: () => {
             queryClient.invalidateQueries({
@@ -90,22 +64,15 @@ export const useCreateSupplier = () => {
     });
 };
 
-export const useUpdateSupplier = (
-    supplierId: string,
-) => {
+export const useUpdateSupplier = (supplierId: string) => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (
-            payload: Partial<SupplierFormData>,
-        ) =>
-            apiClient<SupplierResponse>(
-                `/api/suppliers/${supplierId}`,
-                {
-                    method: "PUT",
-                    body: JSON.stringify(payload),
-                },
-            ),
+        mutationFn: (payload: Partial<SupplierFormData>) =>
+            apiClient<SupplierResponse>(`/api/suppliers/${supplierId}`, {
+                method: "PUT",
+                body: JSON.stringify(payload),
+            }),
 
         onSuccess: () => {
             queryClient.invalidateQueries({
@@ -113,8 +80,7 @@ export const useUpdateSupplier = (
             });
 
             queryClient.invalidateQueries({
-                queryKey:
-                    supplierKeys.detail(supplierId),
+                queryKey: supplierKeys.detail(supplierId),
             });
         },
     });
@@ -124,15 +90,10 @@ export const useDeleteSupplier = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (
-            supplierId: string,
-        ) =>
-            apiClient(
-                `/api/suppliers/${supplierId}`,
-                {
-                    method: "DELETE",
-                },
-            ),
+        mutationFn: (supplierId: string) =>
+            apiClient(`/api/suppliers/${supplierId}`, {
+                method: "DELETE",
+            }),
 
         onSuccess: () => {
             queryClient.invalidateQueries({

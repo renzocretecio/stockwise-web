@@ -9,7 +9,7 @@ export type IntelligenceMessage = {
 export type IntelligenceResponse = {
   success: boolean;
   intent: string;
-  provider: "gemini" | "template";
+  provider: "groq" | "template";
   model: string | null;
   message: IntelligenceMessage;
   context: Record<string, unknown>;

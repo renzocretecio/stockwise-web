@@ -4,7 +4,10 @@ import type { DataTableColumn } from "@/components/DataTable";
 import { Purchase, PurchaseStatus } from "@/modules/purchases/types";
 import { formatCurrency } from "@/lib/currency";
 
-const statusLabel: Record<PurchaseStatus, { label: string; className: string }> = {
+const statusLabel: Record<
+    PurchaseStatus,
+    { label: string; className: string }
+> = {
     draft: {
         label: "Draft",
         className: "text-muted-foreground bg-muted",
@@ -56,16 +59,21 @@ export function getPurchaseColumns({
             key: "supplier_name",
             header: "Supplier",
             sortable: true,
-            cell: (p) => <span className="text-foreground">{p.supplier_name}</span>,
+            cell: (p) => (
+                <span className="text-foreground">{p.supplier_name}</span>
+            ),
         },
         {
             key: "status",
             header: "Status",
             cell: (p) => {
-                const status = statusLabel[p.status];
+                const status = statusLabel[p.status] ?? {
+                    label: p.status.replaceAll("_", " "),
+                    className: "text-muted-foreground bg-muted",
+                };
                 return (
                     <span
-                        className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${status.className}`}
+                        className={`inline-flex px-2 py-0.5 text-xs font-medium ${status.className}`}
                     >
                         {status.label}
                     </span>
@@ -78,16 +86,33 @@ export function getPurchaseColumns({
             align: "right",
             sortable: true,
             cell: (p) => (
-                <span className="font-medium">{formatCurrency(p.total_amount)}</span>
+                <span className="font-medium">
+                    {formatCurrency(p.total_amount)}
+                </span>
             ),
         },
         {
-            key: "created_at",
-            header: "Ordered",
+            key: "expected_delivery_date",
+            header: "Expected",
+            cell: (p) => (
+                <span className="text-muted-foreground">
+                    {p.expected_delivery_date
+                        ? new Date(
+                              `${p.expected_delivery_date}T12:00:00`,
+                          ).toLocaleDateString()
+                        : "—"}
+                </span>
+            ),
+        },
+        {
+            key: "ordered_at",
+            header: "Placed",
             sortable: true,
             cell: (p) => (
                 <span className="text-muted-foreground">
-                    {new Date(p.created_at).toLocaleDateString()}
+                    {p.ordered_at
+                        ? new Date(p.ordered_at).toLocaleDateString()
+                        : "—"}
                 </span>
             ),
         },
@@ -108,11 +133,11 @@ export function getPurchaseColumns({
             align: "right",
             width: "w-52",
             cell: (p) => (
-                <div className="flex items-center justify-end gap-1.5">
+                <div className="flex items-center justify-end gap-1">
                     <Button
                         variant="ghost"
                         size="sm"
-                        className="h-8 w-8 p-0 cursor-pointer"
+                        className="size-8 p-0"
                         onClick={(e) => {
                             e.stopPropagation();
                             onView(p);
@@ -127,7 +152,7 @@ export function getPurchaseColumns({
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                className="h-8 w-8 p-0 cursor-pointer"
+                                className="size-8 p-0"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     onEdit(p);
@@ -139,7 +164,7 @@ export function getPurchaseColumns({
                             <Button
                                 size="sm"
                                 variant="outline"
-                                className="cursor-pointer gap-1.5"
+                                className="gap-1.5"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     onOrder(p);
@@ -154,7 +179,7 @@ export function getPurchaseColumns({
                     {p.status === "ordered" && (
                         <Button
                             size="sm"
-                            className="cursor-pointer gap-1.5"
+                            className="gap-1.5"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 onReceive(p);

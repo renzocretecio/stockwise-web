@@ -72,7 +72,7 @@ export function LoginForm() {
         const destination =
           callbackUrl?.startsWith("/") && !callbackUrl.startsWith("//")
             ? callbackUrl
-            : "/dashboard";
+            : "/dashboard/overview";
         router.replace(destination);
         router.refresh();
       } catch {

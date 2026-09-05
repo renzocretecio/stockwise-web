@@ -1,495 +1,488 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import Link from "next/link";
+import { useMemo, useState } from "react";
+import type { ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
-    Package,
-    Search,
-    Plus,
-    Upload,
-    RefreshCw,
-    AlertTriangle,
-    CheckCircle2,
-    XCircle,
-    LayoutGrid,
-    List,
-    Boxes,
+  AlertTriangle,
+  Boxes,
+  CheckCircle2,
+  Package,
+  Plus,
+  RefreshCw,
+  Search,
+  Upload,
+  XCircle,
 } from "lucide-react";
-import { apiClient } from "@/lib/api-client";
-import { Product, ProductsResponse } from "@/modules/products/types";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
-import Cookies from "js-cookie";
-import { ProductForm } from "@/modules/products/components/product-form";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
-import {
-    productKeys,
-    useProductOverallStats,
-    useDeleteProduct,
-} from "@/modules/products/services";
-import { getProductColumns } from "@/modules/products/columns/Product";
+
 import { DataTable } from "@/components/DataTable";
-import { Pagination } from "@/components/Pagination";
-import { usePagination } from "@/hooks/use-pagination";
 import { DeleteConfirmDialog } from "@/components/DeleteDialog";
-import { ProductImportDialog } from "@/modules/products/components/product-import-dialog";
+import { Pagination } from "@/components/Pagination";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { apiClient } from "@/lib/api-client";
+import { useDebounce } from "@/hooks/use-debounce";
+import { cn } from "@/lib/utils";
+import { usePagination } from "@/hooks/use-pagination";
+import { getProductColumns } from "@/modules/products/columns/Product";
+import { ProductForm } from "@/modules/products/components/product-form";
+import { ProductImportDialog } from
+  "@/modules/products/components/product-import-dialog";
+import {
+  productKeys,
+  useDeleteProduct,
+  useProductOverallStats,
+} from "@/modules/products/services";
+import type { Product, ProductsResponse } from "@/modules/products/types";
+
+const selectClass =
+  "h-9 rounded-md border border-input bg-background px-3 text-sm " +
+  "text-foreground outline-none focus:ring-2 focus:ring-primary";
 
 export default function ProductsPage() {
-    const [isProductFormOpen, setIsProductFormOpen] = useState(false);
-    const [searchQuery, setSearchQuery] = useState("");
-    const [selectedCategory, setSelectedCategory] = useState<string>("all");
-    const [selectedStatus, setSelectedStatus] = useState<string>("all");
-    const [sortBy, setSortBy] = useState<string>("name-asc");
-    const [viewMode, setViewMode] = useState<"table" | "grid">("table");
-    const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
-    const [productToDelete, setProductToDelete] =
-        useState<Product | null>(null);
+  const [isProductFormOpen, setIsProductFormOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedStatus, setSelectedStatus] = useState("all");
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [productToDelete, setProductToDelete] =
+    useState<Product | null>(null);
+  const [selectedProduct, setSelectedProduct] =
+    useState<Product | null>(null);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
+  const { page, pageSize, setPage, setPageSize } = usePagination();
+  const { mutateAsync: deleteProduct } = useDeleteProduct();
 
-    const [selectedProduct, setSelectedProduct] =
-        useState<Product | null>(null);
+  const {
+    data: productsData,
+    isLoading: isProductsLoading,
+    isError,
+    error,
+    refetch,
+    isFetching,
+  } = useQuery<ProductsResponse>({
+    queryKey: [
+      ...productKeys.list(),
+      page,
+      pageSize,
+      debouncedSearchQuery,
+      selectedCategory,
+      selectedStatus,
+    ],
+    queryFn: () => {
+      const query = new URLSearchParams({
+        page: String(page),
+        page_size: String(pageSize),
+      });
+      if (debouncedSearchQuery) {
+        query.set("search", debouncedSearchQuery);
+      }
+      if (selectedCategory !== "all") {
+        query.set("category", selectedCategory);
+      }
+      if (selectedStatus !== "all") {
+        query.set("stock_status", selectedStatus);
+      }
+      return apiClient<ProductsResponse>(`/api/products?${query}`);
+    },
+    staleTime: 1000 * 60 * 2,
+  });
 
-    const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const {
+    data: overviewData,
+    isLoading: isOverviewDataLoading,
+    refetch: refetchOverall,
+  } = useProductOverallStats();
 
-    const {
-        page,
-        pageSize,
-        setPage,
-        setPageSize,
-    } = usePagination();
+  const products = useMemo(
+    () => productsData?.products ?? [],
+    [productsData?.products],
+  );
+  const pagination = productsData?.pagination;
+  const isPageLoading = isProductsLoading || isOverviewDataLoading;
 
-    const { mutateAsync: deleteProduct } = useDeleteProduct();
-
-    const columns = getProductColumns({
-        onEdit: (product) => {
-            setSelectedProduct(product);
-            setIsProductFormOpen(true);
-        },
-        onDelete: (product) => {
-            setProductToDelete(product);
-            setIsDeleteConfirmOpen(true);
-        },
+  const categories = useMemo(() => {
+    const values = new Set<string>();
+    products.forEach((product) => {
+      const category = product.category_name ?? product.category;
+      if (category) values.add(category);
     });
+    return Array.from(values).sort((a, b) => a.localeCompare(b));
+  }, [products]);
 
-    const {
-        data: productsData,
-        isLoading: isProductsLoading,
-        isError,
-        error,
-        refetch,
-        isFetching,
-    } = useQuery<ProductsResponse>({
-        queryKey: [...productKeys.list(), page, pageSize],
-        queryFn: () =>
-            apiClient<ProductsResponse>(
-                `/api/products?page=${page}&page_size=${pageSize}` +
-                    (searchQuery
-                        ? `&search=${encodeURIComponent(searchQuery)}`
-                        : "") +
-                    (selectedCategory !== "all"
-                        ? `&category=${encodeURIComponent(selectedCategory)}`
-                        : ""),
-            ),
-        staleTime: 1000 * 60 * 2,
-    });
+  const visibleProducts = products;
 
-    const products: Product[] = productsData?.products ?? [];
-    const pagination = productsData?.pagination;
+  const columns = getProductColumns({
+    onEdit: (product) => {
+      setSelectedProduct(product);
+      setIsProductFormOpen(true);
+    },
+    onDelete: (product) => {
+      setProductToDelete(product);
+      setIsDeleteConfirmOpen(true);
+    },
+  });
 
-    const {
-        data: overviewData,
-        isLoading: isOverviewDataLoading,
-        refetch: refetchOverall
-    } = useProductOverallStats();
+  const refreshProducts = () => {
+    void Promise.all([refetch(), refetchOverall()]);
+  };
 
-    const categories = useMemo(() => {
-        const set = new Set<string>();
+  const closeProductForm = () => {
+    setIsProductFormOpen(false);
+    setSelectedProduct(null);
+  };
 
-        products.forEach((product) => {
-            const category =
-                product.category || product.category_name;
+  const handleProductSuccess = () => {
+    closeProductForm();
+    void refetchOverall();
+  };
 
-            if (category) {
-                set.add(category);
-            }
-        });
+  const hasFilters =
+    Boolean(searchQuery) ||
+    selectedCategory !== "all" ||
+    selectedStatus !== "all";
 
-        return Array.from(set);
-    }, [products]);
-
-    const isPageLoading = isProductsLoading || isOverviewDataLoading;
-
-    return(
-        <div className="space-y-6 pb-12">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <div className="flex items-center gap-3">
-                        <h1 className="text-3xl font-bold tracking-tight text-foreground">
-                        Products
-                        </h1>
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-primary/10 text-primary">
-                        {products.length} {products.length === 1 ? "Item" : "Items"}
-                        </span>
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-1">
-                        Manage your inventory catalog, stock levels, and product pricing.
-                    </p>
-                </div>
-
-                <div className="flex items-center gap-2.5 flex-wrap">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {refetch(), refetchOverall()}}
-                        disabled={isFetching}
-                        className="cursor-pointer gap-1.5"
-                    >
-                        <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} />
-                        <span>Refresh</span>
-                    </Button>
-                    <Button variant="outline" size="sm" className="cursor-pointer gap-1.5" onClick={() => setIsImportDialogOpen(true)}>
-                        <Upload className="h-4 w-4" />
-                        <span>Import</span>
-                    </Button>
-                    <Button size="sm" className="cursor-pointer gap-1.5 bg-primary text-primary-foreground shadow-sm" onClick={() => setIsProductFormOpen(true)}>
-                        <Plus className="h-4 w-4" />
-                        <span>Add Product</span>
-                    </Button>
-                </div>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Card className="p-4 border-border/80 bg-card hover:border-primary/30 transition-colors">
-                    <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                        Total Products
-                        </span>
-                        <div className="h-8 w-8 rounded-lg bg-blue-500/10 text-blue-600 flex items-center justify-center">
-                        <Boxes className="h-4 w-4" />
-                        </div>
-                    </div>
-                    <div className="mt-2 text-2xl font-bold text-foreground">
-                        {isPageLoading ? "…" : overviewData?.total_products}
-                    </div>
-                    <span className="text-xs text-muted-foreground mt-1 block">
-                        Catalog inventory
-                    </span>
-                </Card>
-                    {/* In Stock */}
-                <Card className="p-4 border-border/80 bg-card hover:border-emerald-500/30 transition-colors">
-                    <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                        In Stock
-                        </span>
-                        <div className="h-8 w-8 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
-                        <CheckCircle2 className="h-4 w-4" />
-                        </div>
-                    </div>
-                    <div className="mt-2 text-2xl font-bold text-emerald-600">
-                        {isPageLoading ? "…" : overviewData?.in_stock}
-                    </div>
-                    <span className="text-xs text-muted-foreground mt-1 block">
-                        Healthy stock levels
-                    </span>
-                </Card>
-                {/* Low Stock */}
-                <Card className="p-4 border-border/80 bg-card hover:border-amber-500/30 transition-colors">
-                    <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                            Low Stock
-                        </span>
-                        <div className="h-8 w-8 rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center">
-                            <AlertTriangle className="h-4 w-4" />
-                        </div>
-                    </div>
-                    <div className="mt-2 text-2xl font-bold text-amber-600">
-                        {isPageLoading ? "…" : overviewData?.low_stock}
-                    </div>
-                    <span className="text-xs text-muted-foreground mt-1 block">
-                        Needs replenishment
-                    </span>
-                </Card>
-
-                {/* Out of Stock */}
-                <Card className="p-4 border-border/80 bg-card hover:border-rose-500/30 transition-colors">
-                    <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                            Out of Stock
-                        </span>
-                        <div className="h-8 w-8 rounded-lg bg-rose-500/10 text-rose-600 flex items-center justify-center">
-                            <XCircle className="h-4 w-4" />
-                        </div>
-                    </div>
-                    <div className="mt-2 text-2xl font-bold text-rose-600">
-                        {isPageLoading ? "…" : overviewData?.out_of_stock}
-                    </div>
-                    <span className="text-xs text-muted-foreground mt-1 block">
-                        Unavailable items
-                    </span>
-                </Card>
-            </div>
-
-            <Card className="p-4 border-border/80">
-                <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-                    <div className="relative flex-1 min-w-[240px]">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            type="text"
-                            placeholder="Search by name, SKU, category, or barcode…"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-9 bg-background"
-                        />
-                    </div>
-                </div>
-
-                <div className="flex items-center gap-2 flex-wrap">
-                    {/* Category Filter */}
-                    {categories.length > 0 && (
-                        <select
-                            value={selectedCategory}
-                            onChange={(e) => setSelectedCategory(e.target.value)}
-                            className="h-9 px-3 rounded-lg border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
-                            aria-label="Filter by category"
-                        >
-                            <option value="all">All Categories</option>
-                                {categories.map((cat) => (
-                            <option key={cat} value={cat}>
-                                {cat}
-                            </option>
-                            ))}
-                        </select>
-                    )}
-
-                    {/* Stock Status Filter */}
-                    <select
-                        value={selectedStatus}
-                        onChange={(e) => setSelectedStatus(e.target.value)}
-                        className="h-9 px-3 rounded-lg border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
-                        aria-label="Filter by stock status"
-                    >
-                        <option value="all">All Status</option>
-                        <option value="in_stock">In Stock</option>
-                        <option value="low_stock">Low Stock</option>
-                        <option value="out_of_stock">Out of Stock</option>
-                    </select>
-
-                    <select
-                        value={sortBy}
-                        onChange={(e) => setSortBy(e.target.value)}
-                        className="h-9 px-3 rounded-lg border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
-                        aria-label="Sort products"
-                    >
-                        <option value="name-asc">Name (A-Z)</option>
-                        <option value="name-desc">Name (Z-A)</option>
-                        <option value="price-asc">Price (Low to High)</option>
-                        <option value="price-desc">Price (High to Low)</option>
-                        <option value="stock-desc">Stock (Highest first)</option>
-                        <option value="stock-asc">Stock (Lowest first)</option>
-                    </select>
-
-                    <div className="flex items-center border border-input rounded-lg p-0.5 bg-muted/40">
-                        <button
-                            type="button"
-                            onClick={() => setViewMode("table")}
-                            className={cn(
-                            "p-1.5 rounded-md transition-colors cursor-pointer",
-                            viewMode === "table"
-                                ? "bg-background text-foreground shadow-xs font-semibold"
-                                : "text-muted-foreground hover:text-foreground"
-                            )}
-                            aria-label="Table view"
-                        >
-                            <List className="h-4 w-4" />
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setViewMode("grid")}
-                            className={cn(
-                            "p-1.5 rounded-md transition-colors cursor-pointer",
-                            viewMode === "grid"
-                                ? "bg-background text-foreground shadow-xs font-semibold"
-                                : "text-muted-foreground hover:text-foreground"
-                            )}
-                            aria-label="Grid view"
-                        >
-                            <LayoutGrid className="h-4 w-4" />
-                        </button>
-                    </div>
-                </div>
-            </Card>
-
-            {isError && (
-                <Card className="p-6 border-destructive/50 bg-destructive/5 text-destructive">
-                    <div className="flex items-center gap-3">
-                        <AlertTriangle className="h-5 w-5 shrink-0" />
-                        <div className="flex-1">
-                            <h3 className="font-semibold text-sm">Failed to load products</h3>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                                {(error as Error)?.message || "An unexpected error occurred while fetching product data."}
-                            </p>
-                        </div>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => refetch()}
-                            className="cursor-pointer"
-                        >
-                            Try Again
-                        </Button>
-                    </div>
-                </Card>
-            )}
-
-            {isPageLoading && (
-                <div className="space-y-3">
-                {[1, 2, 3, 4, 5].map((i) => (
-                    <div
-                    key={i}
-                    className="h-16 rounded-xl bg-muted/60 animate-pulse border border-border/40"
-                    />
-                ))}
-                </div>
-            )}
-
-            {!isPageLoading && !isError && (
-                // <ProductsConsole products={products} />
-                <>
-                    <DataTable columns={columns} data={products} getRowId={(p) => p.id} isLoading={isProductsLoading} />
-                    {pagination && (
-                        <Pagination
-                            pagination={pagination}
-                            onPageChange={setPage}
-                            onPageSizeChange={setPageSize}
-                            className="mt-4"
-                        />
-                    )}
-                </>
-                
-                
-            )}
-            
-
-            {/* 8. EMPTY STATE */}
-            {!isPageLoading && !isError && products.length === 0 && (
-                <Card className="p-12 text-center border-dashed border-2">
-                <div className="h-12 w-12 rounded-full bg-primary/10 text-primary mx-auto flex items-center justify-center mb-4">
-                    <Package className="h-6 w-6" />
-                </div>
-                <h3 className="text-lg font-semibold text-foreground">
-                    No products found
-                </h3>
-                <p className="text-sm text-muted-foreground max-w-sm mx-auto mt-1 mb-6">
-                    {searchQuery || selectedCategory !== "all" || selectedStatus !== "all"
-                    ? "No products match your active search or filter criteria. Try clearing your filters."
-                    : "You haven't added any products to this business catalog yet."}
-                </p>
-                <div className="flex items-center justify-center gap-3">
-                    {(searchQuery || selectedCategory !== "all" || selectedStatus !== "all") && (
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                        setSearchQuery("");
-                        setSelectedCategory("all");
-                        setSelectedStatus("all");
-                        }}
-                        className="cursor-pointer"
-                    >
-                        Clear Filters
-                    </Button>
-                    )}
-                    <Link href="/products/new">
-                        <Button
-                            size="sm"
-                            onClick={() => setIsProductFormOpen(true)}
-                            className="cursor-pointer gap-1.5 bg-primary text-primary-foreground shadow-sm"
-                        >
-                            <Plus className="h-4 w-4" />
-                            <span>Add Product</span>
-                        </Button>
-                    </Link>
-                </div>
-                </Card>
-            )}
-
-            <Dialog
-                open={isProductFormOpen}
-                onOpenChange={(open) => {
-                    setIsProductFormOpen(open);
-
-                    if (!open) {
-                        setSelectedProduct(null);
-                    }
-                }}
-            >
-                <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
-                    <DialogHeader>
-                        <DialogTitle>
-                            {selectedProduct
-                                ? "Update Product"
-                                : "Add Product"}
-                        </DialogTitle>
-
-                        <DialogDescription>
-                            {selectedProduct
-                                ? "Update existing product."
-                                : "Add a new product to your inventory catalog."}
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    {selectedProduct ? (
-                        <ProductForm
-                            productId={selectedProduct.id}
-                            initialData={selectedProduct}
-                            onSuccess={() => {
-                                setIsProductFormOpen(false);
-                                setSelectedProduct(null);
-                            }}
-                            onCancel={() => {
-                                setIsProductFormOpen(false);
-                                setSelectedProduct(null);
-                            }}
-                        />
-                    ) : (
-                        <ProductForm
-                            onSuccess={() => {
-                                setIsProductFormOpen(false);
-                            }}
-                            onCancel={() => {
-                                setIsProductFormOpen(false);
-                            }}
-                        />
-                    )}
-                </DialogContent>
-            </Dialog>
-
-            <DeleteConfirmDialog<Product>
-                open={isDeleteConfirmOpen}
-                onOpenChange={setIsDeleteConfirmOpen}
-                item={productToDelete}
-                itemLabel="product"
-                getItemName={(product) => product.name}
-                onConfirm={async (product) => {
-                    await deleteProduct(product.id);
-                }}
-            />
-            <ProductImportDialog
-                open={isImportDialogOpen}
-                onOpenChange={setIsImportDialogOpen}
-                onSuccess={() => {
-                    refetch();
-                    refetchOverall();
-                }}
-            />
+  return (
+    <div className="pb-12">
+      <header
+        className={
+          "flex flex-col gap-4 border-b p-4 sm:flex-row sm:items-end " +
+          "sm:justify-between"
+        }
+      >
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-2xl font-bold tracking-tight">Products</h1>
+            <span className="text-xs text-muted-foreground">
+              {pagination?.total ?? products.length} in catalog
+            </span>
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Manage your catalog, stock levels, and product pricing.
+          </p>
         </div>
-    );
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            aria-label="Refresh products"
+            disabled={isFetching}
+            onClick={refreshProducts}
+            size="icon"
+            type="button"
+            variant="outline"
+          >
+            <RefreshCw
+              className={cn("size-4", isFetching && "animate-spin")}
+            />
+          </Button>
+          <Button
+            onClick={() => setIsImportDialogOpen(true)}
+            size="sm"
+            type="button"
+            variant="outline"
+          >
+            <Upload className="mr-1.5 size-4" />
+            Import
+          </Button>
+          <Button
+            onClick={() => setIsProductFormOpen(true)}
+            size="sm"
+            type="button"
+          >
+            <Plus className="mr-1.5 size-4" />
+            Add product
+          </Button>
+        </div>
+      </header>
+
+      <section className="border-b">
+        <div className="grid gap-px bg-border sm:grid-cols-2 xl:grid-cols-4">
+          <ProductStat
+            icon={<Boxes className="size-4" />}
+            label="Total products"
+            value={overviewData?.total_products}
+            loading={isPageLoading}
+          />
+          <ProductStat
+            className="text-emerald-600"
+            icon={<CheckCircle2 className="size-4" />}
+            label="In stock"
+            value={overviewData?.in_stock}
+            loading={isPageLoading}
+          />
+          <ProductStat
+            className="text-amber-600"
+            icon={<AlertTriangle className="size-4" />}
+            label="Low stock"
+            value={overviewData?.low_stock}
+            loading={isPageLoading}
+          />
+          <ProductStat
+            className="text-destructive"
+            icon={<XCircle className="size-4" />}
+            label="Out of stock"
+            value={overviewData?.out_of_stock}
+            loading={isPageLoading}
+          />
+        </div>
+      </section>
+
+      <section className="border-b">
+        <div className="flex flex-col gap-3 p-4 lg:flex-row lg:items-center">
+          <div className="relative min-w-0 flex-1">
+            <Search
+              aria-hidden="true"
+              className={
+                "absolute left-3 top-1/2 size-4 -translate-y-1/2 " +
+                "text-muted-foreground"
+              }
+            />
+            <Input
+              aria-label="Search products"
+              className="h-10 pl-9"
+              onChange={(event) => {
+                setPage(1);
+                setSearchQuery(event.target.value);
+              }}
+              placeholder="Search by name, SKU, category, or barcode"
+              value={searchQuery}
+            />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <select
+              aria-label="Filter by category"
+              className={selectClass}
+              onChange={(event) => {
+                setPage(1);
+                setSelectedCategory(event.target.value);
+              }}
+              value={selectedCategory}
+            >
+              <option value="all">All categories</option>
+              {categories.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
+            <select
+              aria-label="Filter by stock status"
+              className={selectClass}
+              onChange={(event) => {
+                setPage(1);
+                setSelectedStatus(event.target.value);
+              }}
+              value={selectedStatus}
+            >
+              <option value="all">All stock</option>
+              <option value="in_stock">In stock</option>
+              <option value="low_stock">Low stock</option>
+              <option value="out_of_stock">Out of stock</option>
+            </select>
+            {hasFilters ? (
+              <Button
+                onClick={() => {
+                  setPage(1);
+                  setSearchQuery("");
+                  setSelectedCategory("all");
+                  setSelectedStatus("all");
+                }}
+                size="sm"
+                type="button"
+                variant="ghost"
+              >
+                Clear filters
+              </Button>
+            ) : null}
+          </div>
+        </div>
+      </section>
+
+      {isError ? (
+        <section className="border-b bg-destructive/5 p-5">
+          <div className="flex items-start gap-3 text-sm text-destructive">
+            <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="font-medium">Unable to load products</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {error instanceof Error
+                  ? error.message
+                  : "Please try again."}
+              </p>
+            </div>
+            <Button
+              onClick={() => void refetch()}
+              size="sm"
+              variant="outline"
+            >
+              Try again
+            </Button>
+          </div>
+        </section>
+      ) : null}
+
+      <section>
+        {isProductsLoading ? (
+          <div className="space-y-px bg-border">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <div
+                className="h-14 animate-pulse bg-background"
+                key={index}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="p-2 sm:p-4">
+            <DataTable
+              className="rounded-none border-0 shadow-none ring-0"
+              columns={columns}
+              data={visibleProducts}
+              emptyLabel="product"
+              emptyState={
+                <ProductEmptyState
+                  filtered={hasFilters}
+                  onClear={() => {
+                    setSearchQuery("");
+                    setSelectedCategory("all");
+                    setSelectedStatus("all");
+                  }}
+                  onCreate={() => setIsProductFormOpen(true)}
+                />
+              }
+              getRowId={(product) => product.id}
+              isLoading={isProductsLoading}
+            />
+            {pagination ? (
+              <Pagination
+                className="mt-4"
+                onPageChange={setPage}
+                onPageSizeChange={setPageSize}
+                pagination={pagination}
+              />
+            ) : null}
+          </div>
+        )}
+      </section>
+
+      <Dialog
+        onOpenChange={(open) => {
+          setIsProductFormOpen(open);
+          if (!open) setSelectedProduct(null);
+        }}
+        open={isProductFormOpen}
+      >
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedProduct ? "Update product" : "Add product"}
+            </DialogTitle>
+            <DialogDescription>
+              {selectedProduct
+                ? "Update the details for this product."
+                : "Add a product to your inventory catalog."}
+            </DialogDescription>
+          </DialogHeader>
+          <ProductForm
+            initialData={selectedProduct ?? undefined}
+            onCancel={closeProductForm}
+            onSuccess={handleProductSuccess}
+            productId={selectedProduct?.id}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <DeleteConfirmDialog<Product>
+        getItemName={(product) => product.name}
+        item={productToDelete}
+        itemLabel="product"
+        onConfirm={async (product) => {
+          await deleteProduct(product.id);
+          await refetchOverall();
+        }}
+        onOpenChange={setIsDeleteConfirmOpen}
+        open={isDeleteConfirmOpen}
+      />
+
+      <ProductImportDialog
+        onOpenChange={setIsImportDialogOpen}
+        onSuccess={refreshProducts}
+        open={isImportDialogOpen}
+      />
+    </div>
+  );
+}
+
+function ProductStat({
+  className,
+  icon,
+  label,
+  loading,
+  value,
+}: {
+  className?: string;
+  icon: ReactNode;
+  label: string;
+  loading: boolean;
+  value?: number;
+}) {
+  return (
+    <div className="flex items-center justify-between bg-background p-4 sm:p-5">
+      <div>
+        <p className="text-xs text-muted-foreground">{label}</p>
+        <p
+          className={cn(
+            "mt-1 text-xl font-semibold tabular-nums",
+            className,
+          )}
+        >
+          {loading ? "…" : value ?? 0}
+        </p>
+      </div>
+      <span className={cn("text-muted-foreground", className)}>{icon}</span>
+    </div>
+  );
+}
+
+function ProductEmptyState({
+  filtered,
+  onClear,
+  onCreate,
+}: {
+  filtered: boolean;
+  onClear: () => void;
+  onCreate: () => void;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center px-6 py-14 text-center">
+      <div className="mb-3 flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+        <Package className="size-5" />
+      </div>
+      <p className="font-medium">
+        {filtered ? "No matching products" : "No products yet"}
+      </p>
+      <p className="mt-1 max-w-sm text-xs text-muted-foreground">
+        {filtered
+          ? "Try a different search or clear the active filters."
+          : "Add your first product to start tracking inventory."}
+      </p>
+      <div className="mt-5 flex flex-wrap justify-center gap-2">
+        {filtered ? (
+          <Button onClick={onClear} size="sm" variant="outline">
+            Clear filters
+          </Button>
+        ) : null}
+        <Button onClick={onCreate} size="sm">
+          <Plus className="mr-1.5 size-4" />
+          Add product
+        </Button>
+      </div>
+    </div>
+  );
 }

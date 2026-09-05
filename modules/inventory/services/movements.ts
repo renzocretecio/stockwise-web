@@ -27,7 +27,8 @@ export const useStockMovements = (
     page: number = 1,
     pageSize: number = 50,
     productId?: string,
-    movementType?: string
+    movementType?: string,
+    enabled: boolean = true,
 ) => {
     return useQuery({
         queryKey: inventoryKeys.movementsList(page, pageSize, productId, movementType),
@@ -37,6 +38,7 @@ export const useStockMovements = (
                     (productId ? `&product_id=${encodeURIComponent(productId)}` : "") +
                     (movementType ? `&movement_type=${encodeURIComponent(movementType)}` : "")
             ),
+        enabled,
         staleTime: 60 * 1000,
     });
 };
