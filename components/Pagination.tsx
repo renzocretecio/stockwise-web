@@ -79,7 +79,7 @@ export function Pagination({
               value={page_size}
               onChange={(e) => onPageSizeChange(Number(e.target.value))}
               disabled={isLoading}
-              className="h-8 rounded-md border border-input bg-background px-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary cursor-pointer disabled:opacity-50"
+              className="h-8 rounded-2xl border border-input bg-background px-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary cursor-pointer disabled:opacity-50"
             >
               {pageSizeOptions.map((size) => (
                 <option key={size} value={size}>

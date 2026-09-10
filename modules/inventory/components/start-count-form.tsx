@@ -1,6 +1,7 @@
 "use client";
 
 import {
+    useMemo,
     useState,
     type ChangeEvent,
     type FormEvent,
@@ -8,8 +9,10 @@ import {
 import { Button } from "@/components/ui/button";
 import {
     useStartCount } from "@/modules/inventory/services/counts";
-import { useAllCategories } from "@/modules/products/services/category";
-import { useProducts } from "@/modules/products/services";
+import { ReferenceDataStatus } from
+    "@/modules/offline/components/reference-data-status";
+import { useReferenceCatalog } from
+    "@/modules/offline/services/reference-data";
 import { CountScope } from "../types/counts";
 
 type StartCountFormProps = {
@@ -20,16 +23,32 @@ type StartCountFormProps = {
 export function StartCountForm({ onSuccess, onCancel }: StartCountFormProps) {
     const { mutateAsync: startCount, isPending, error } = useStartCount();
 
-    const { data: categoriesData } = useAllCategories();
-    const categories = categoriesData?.categories ?? [];
+    const {
+        data: referenceData,
+        isLoading: referenceDataLoading,
+    } = useReferenceCatalog();
+    const categories = referenceData?.categories ?? [];
+    const allProducts = useMemo(
+        () => referenceData?.products ?? [],
+        [referenceData?.products],
+    );
+    const referenceDataAvailable = referenceData?.available ?? false;
 
     const [productQuery, setProductQuery] = useState("");
-    const { data: productsData, isLoading: productsLoading } = useProducts(
-        1,
-        50,
-        productQuery
-    );
-    const products = productsData?.products ?? [];
+    const products = useMemo(() => {
+        const search = productQuery.trim().toLowerCase();
+        if (!search) return allProducts.slice(0, 100);
+
+        return allProducts
+            .filter((product) =>
+                [product.name, product.sku, product.barcode]
+                    .filter(Boolean)
+                    .some((value) =>
+                        String(value).toLowerCase().includes(search),
+                    ),
+            )
+            .slice(0, 100);
+    }, [allProducts, productQuery]);
 
     const [name, setName] = useState(
         `Count — ${new Date().toLocaleDateString()}`
@@ -77,6 +96,12 @@ export function StartCountForm({ onSuccess, onCancel }: StartCountFormProps) {
                         : "An error occurred while starting the count."}
                 </div>
             )}
+
+            <ReferenceDataStatus
+                available={referenceDataAvailable}
+                generatedAt={referenceData?.generated_at}
+                loading={referenceDataLoading}
+            />
 
             <div>
                 <label htmlFor="name" className="mb-1 block text-sm font-medium">
@@ -158,7 +183,7 @@ export function StartCountForm({ onSuccess, onCancel }: StartCountFormProps) {
                         className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary mb-2"
                     />
                     <div className="max-h-56 overflow-y-auto rounded-lg border border-input divide-y">
-                        {productsLoading ? (
+                        {referenceDataLoading ? (
                             <p className="p-3 text-sm text-muted-foreground">
                                 Loading products…
                             </p>
@@ -201,7 +226,14 @@ export function StartCountForm({ onSuccess, onCancel }: StartCountFormProps) {
                     Cancel
                 </Button>
 
-                <Button type="submit" disabled={isPending || !isValid}>
+                <Button
+                    type="submit"
+                    disabled={
+                        isPending ||
+                        !isValid ||
+                        !referenceDataAvailable
+                    }
+                >
                     {isPending ? "Starting..." : "Start count"}
                 </Button>
             </div>

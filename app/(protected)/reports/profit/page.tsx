@@ -4,7 +4,8 @@ import { useState } from "react";
 import { DollarSign } from "lucide-react";
 
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
-import { ProductProfitChart } from "@/modules/reports/components/product-profit-chart";
+import { ProductProfitChart } from
+    "@/modules/reports/components/product-profit-chart";
 import {
     ReportOverviewCard,
     type ReportSummaryItem,
@@ -16,8 +17,12 @@ import {
     ReportHeader,
     ReportLoading,
 } from "@/modules/reports/components/report-ui";
-import { useProfitReport } from "@/modules/reports/services/reports";
-import type { ProfitReport, ReportPeriod } from "@/modules/reports/types";
+import { ReportAiSummary } from
+    "@/modules/reports/components/report-ai-summary";
+import { createReportDateRange } from "@/modules/reports/date-range";
+import { useProfitReportByDateRange } from
+    "@/modules/reports/services/reports";
+import type { ProfitReport } from "@/modules/reports/types";
 
 type Product = ProfitReport["by_product"][number];
 
@@ -70,18 +75,22 @@ const columns: DataTableColumn<Product>[] = [
 ];
 
 export default function ProfitReportPage() {
-    const [period, setPeriod] = useState<ReportPeriod>(30);
+    const [dateRange, setDateRange] = useState(createReportDateRange);
     const { data, isLoading, error, refetch, isFetching } =
-        useProfitReport(period);
+        useProfitReportByDateRange(dateRange);
 
     return (
         <div className="pb-12">
             <ReportHeader
                 title="Profit Report"
-                description="Gross profit and margin based on captured sale costs."
+                description={
+                    "Gross profit and margin based on captured " +
+                    "sale costs."
+                }
                 icon={DollarSign}
-                period={period}
-                onPeriodChange={setPeriod}
+                dateRange={dateRange}
+                exportReport="profit"
+                onDateRangeChange={setDateRange}
                 isRefreshing={isFetching}
                 onRefresh={() => void refetch()}
             />
@@ -91,7 +100,13 @@ export default function ProfitReportPage() {
             ) : error || !data ? (
                 <ReportError error={error} />
             ) : (
-                <ProfitReportContent data={data} />
+                <>
+                    <ReportAiSummary
+                        dateRange={dateRange}
+                        report="profit"
+                    />
+                    <ProfitReportContent data={data} />
+                </>
             )}
         </div>
     );

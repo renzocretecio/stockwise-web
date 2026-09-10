@@ -11,10 +11,19 @@ import {
     ReportHeader,
     ReportLoading,
 } from "@/modules/reports/components/report-ui";
-import { PurchaseSpendChart } from "@/modules/reports/components/purchase-spend-chart";
-import { SupplierSpendChart } from "@/modules/reports/components/supplier-spend-chart";
-import { usePurchaseReport } from "@/modules/reports/services/reports";
-import type { PurchaseReport, ReportPeriod } from "@/modules/reports/types";
+import { ReportAiSummary } from
+    "@/modules/reports/components/report-ai-summary";
+import { PurchaseSpendChart } from
+    "@/modules/reports/components/purchase-spend-chart";
+import { SupplierSpendChart } from
+    "@/modules/reports/components/supplier-spend-chart";
+import { createReportDateRange } from "@/modules/reports/date-range";
+import { usePurchaseReportByDateRange } from
+    "@/modules/reports/services/reports";
+import type {
+    PurchaseReport,
+    ReportDateRange,
+} from "@/modules/reports/types";
 
 type Supplier = PurchaseReport["by_supplier"][number];
 
@@ -43,9 +52,9 @@ const columns: DataTableColumn<Supplier>[] = [
 ];
 
 export default function PurchaseReportPage() {
-    const [period, setPeriod] = useState<ReportPeriod>(30);
+    const [dateRange, setDateRange] = useState(createReportDateRange);
     const { data, isLoading, error, refetch, isFetching } =
-        usePurchaseReport(period);
+        usePurchaseReportByDateRange(dateRange);
 
     return (
         <div className="pb-12">
@@ -55,8 +64,9 @@ export default function PurchaseReportPage() {
                     "Received purchasing spend " + "and supplier performance."
                 }
                 icon={TrendingDown}
-                period={period}
-                onPeriodChange={setPeriod}
+                dateRange={dateRange}
+                exportReport="purchases"
+                onDateRangeChange={setDateRange}
                 isRefreshing={isFetching}
                 onRefresh={() => void refetch()}
             />
@@ -67,7 +77,14 @@ export default function PurchaseReportPage() {
                 <ReportError error={error} />
             ) : (
                 <>
-                    <PurchasePerformance data={data} period={period} />
+                    <ReportAiSummary
+                        dateRange={dateRange}
+                        report="purchases"
+                    />
+                    <PurchasePerformance
+                        data={data}
+                        dateRange={dateRange}
+                    />
 
                     <section
                         className={
@@ -81,7 +98,10 @@ export default function PurchaseReportPage() {
                                 Supplier details
                             </h2>
                             <DataTable
-                                className="rounded-none border-0 shadow-none ring-0"
+                                className={
+                                    "rounded-none border-0 shadow-none " +
+                                    "ring-0"
+                                }
                                 columns={columns}
                                 data={data.by_supplier}
                                 getRowId={(row) => row.supplier_id}
@@ -97,10 +117,10 @@ export default function PurchaseReportPage() {
 
 function PurchasePerformance({
     data,
-    period,
+    dateRange,
 }: {
     data: PurchaseReport;
-    period: ReportPeriod;
+    dateRange: ReportDateRange;
 }) {
     const summary = data.summary;
 
@@ -112,7 +132,10 @@ function PurchasePerformance({
                 }
             >
                 <div className="min-w-0 p-4 sm:p-5">
-                    <PurchaseSpendChart points={data.by_day} days={period} />
+                    <PurchaseSpendChart
+                        dateRange={dateRange}
+                        points={data.by_day}
+                    />
                 </div>
                 <dl
                     className={

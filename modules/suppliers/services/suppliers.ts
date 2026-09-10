@@ -7,6 +7,8 @@ import {
     SupplierResponse,
     SuppliersResponse,
 } from "@/modules/suppliers/types";
+import { referenceDataKeys } from
+    "@/modules/offline/services/reference-data";
 
 export const supplierKeys = {
     all: ["suppliers"] as const,
@@ -60,6 +62,9 @@ export const useCreateSupplier = () => {
             queryClient.invalidateQueries({
                 queryKey: supplierKeys.lists(),
             });
+            queryClient.invalidateQueries({
+                queryKey: referenceDataKeys.all,
+            });
         },
     });
 };
@@ -82,6 +87,9 @@ export const useUpdateSupplier = (supplierId: string) => {
             queryClient.invalidateQueries({
                 queryKey: supplierKeys.detail(supplierId),
             });
+            queryClient.invalidateQueries({
+                queryKey: referenceDataKeys.all,
+            });
         },
     });
 };
@@ -98,6 +106,9 @@ export const useDeleteSupplier = () => {
         onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: supplierKeys.lists(),
+            });
+            queryClient.invalidateQueries({
+                queryKey: referenceDataKeys.all,
             });
         },
     });

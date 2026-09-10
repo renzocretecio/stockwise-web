@@ -1,29 +1,22 @@
 "use client";
 
+import { Bar } from "@/components/charts/bar";
+import { BarChart } from "@/components/charts/bar-chart";
+import { BarValueAxis } from "@/components/charts/bar-value-axis";
+import { BarYAxis } from "@/components/charts/bar-y-axis";
+import { Grid } from "@/components/charts/grid";
+import { ChartTooltip } from
+    "@/components/charts/tooltip/chart-tooltip";
 import {
-    Bar,
-    BarChart,
-    CartesianGrid,
-    Cell,
-    ReferenceLine,
-    XAxis,
-    YAxis,
-} from "recharts";
-
-import {
-    type ChartConfig,
-    ChartContainer,
-    ChartTooltip,
-    ChartTooltipContent,
-} from "@/components/ui/chart";
+    EmptyReportChart,
+    formatSignedChartNumber,
+    horizontalReportChartMargin,
+    reportPrimary,
+    reportSecondary,
+    reportTertiary,
+    toChartNumber,
+} from "@/modules/reports/components/report-chart-utils";
 import type { StockMovementReport } from "@/modules/reports/types";
-
-const chartConfig = {
-    total_quantity_change: {
-        label: "Net quantity",
-        color: "var(--chart-1)",
-    },
-} satisfies ChartConfig;
 
 type Movement = StockMovementReport["by_type"][number];
 
@@ -35,96 +28,62 @@ const movementLabel = (value: string) =>
 export function MovementTypeChart({ movements }: { movements: Movement[] }) {
     const data = movements.map((movement) => ({
         ...movement,
-        label: movementLabel(movement.movement_type),
+        movement_label: movementLabel(movement.movement_type),
     }));
 
     if (!data.length) {
-        return <EmptyState />;
+        return (
+            <EmptyReportChart>
+                No stock movements in this period.
+            </EmptyReportChart>
+        );
     }
 
     return (
-        <ChartContainer
-            config={chartConfig}
-            className="h-[280px] w-full min-w-0 max-w-full"
+        <BarChart
+            aspectRatio="auto"
+            barGap={0.32}
+            className="h-[280px]"
+            data={data}
+            margin={horizontalReportChartMargin}
+            orientation="horizontal"
+            xDataKey="movement_label"
         >
-            <BarChart
-                accessibilityLayer
-                data={data}
-                layout="vertical"
-                margin={{ top: 4, right: 12, left: 4, bottom: 0 }}
-            >
-                <CartesianGrid horizontal={false} strokeDasharray="3 5" />
-                <ReferenceLine x={0} stroke="var(--border)" />
-                <XAxis
-                    type="number"
-                    axisLine={false}
-                    tickLine={false}
-                    allowDecimals={false}
-                />
-                <YAxis
-                    type="category"
-                    dataKey="label"
-                    axisLine={false}
-                    tickLine={false}
-                    width={100}
-                    tick={{ fontSize: 11 }}
-                />
-                <ChartTooltip
-                    cursor={{ fill: "var(--muted)" }}
-                    content={
-                        <ChartTooltipContent
-                            labelKey="label"
-                            formatter={(value) => {
-                                const quantity = Number(value);
-                                return (
-                                    <div
-                                        className={
-                                            "flex w-full min-w-36 justify-between gap-4"
-                                        }
-                                    >
-                                        <span className="text-muted-foreground">
-                                            Net quantity
-                                        </span>
-                                        <span className="font-mono font-medium">
-                                            {quantity > 0 ? "+" : ""}
-                                            {quantity.toLocaleString("en-PH")}
-                                        </span>
-                                    </div>
-                                );
-                            }}
-                        />
-                    }
-                />
-                <Bar
-                    dataKey="total_quantity_change"
-                    name="total_quantity_change"
-                    radius={[0, 6, 6, 0]}
-                >
-                    {data.map((movement) => (
-                        <Cell
-                            key={movement.movement_type}
-                            fill={
-                                movement.total_quantity_change < 0
-                                    ? "var(--chart-3)"
-                                    : "var(--chart-1)"
-                            }
-                        />
-                    ))}
-                </Bar>
-            </BarChart>
-        </ChartContainer>
-    );
-}
-
-function EmptyState() {
-    return (
-        <div
-            className={
-                "flex h-[280px] items-center justify-center text-sm " +
-                "text-muted-foreground"
-            }
-        >
-            No stock movements in this period.
-        </div>
+            <Grid horizontal={false} strokeDasharray="3,5" vertical />
+            <BarValueAxis formatValue={formatSignedChartNumber} />
+            <Bar
+                dataKey="total_quantity_change"
+                fill={(point) =>
+                    toChartNumber(point.total_quantity_change) < 0
+                        ? reportSecondary
+                        : reportPrimary
+                }
+                lineCap={6}
+                stroke={reportPrimary}
+            />
+            <BarYAxis labelWidth={108} />
+            <ChartTooltip
+                showDatePill={false}
+                rows={(point) => [
+                    {
+                        color:
+                            toChartNumber(point.total_quantity_change) < 0
+                                ? reportSecondary
+                                : reportPrimary,
+                        label: "Net quantity",
+                        value: formatSignedChartNumber(
+                            toChartNumber(point.total_quantity_change),
+                        ),
+                    },
+                    {
+                        color: reportTertiary,
+                        label: "Movements",
+                        value: toChartNumber(
+                            point.total_movements,
+                        ).toLocaleString("en-PH"),
+                    },
+                ]}
+            />
+        </BarChart>
     );
 }

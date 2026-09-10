@@ -1,6 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from "@/lib/api-client";
+import { executeOrQueue } from "@/lib/offline-sync";
 import { InventoryCountCreatePayload, InventoryCountListItem, InventoryCountDetail, RecordCountItemsPayload, RecordCountItemsResponse } from '../types/counts';
+import {
+    referenceDataKeys,
+    type FormReferenceCatalog,
+} from "@/modules/offline/services/reference-data";
 export const countKeys = {
     all: ['inventory-counts'] as const,
     lists: () => [...countKeys.all, 'list'] as const,
@@ -55,10 +60,78 @@ export const useStartCount = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
+        networkMode: "always",
         mutationFn: (payload: InventoryCountCreatePayload) =>
-            apiClient<InventoryCountCreateResponse>('/api/inventory-counts', {
-                method: 'POST',
-                body: JSON.stringify(payload),
+            executeOrQueue<InventoryCountCreateResponse>(
+                "physical_count",
+                { ...payload, action: "start" },
+                "/api/inventory-counts",
+                [countKeys.lists()],
+            ).then((result) => {
+                if ("queued" in result) {
+                    const catalog = queryClient
+                        .getQueriesData<FormReferenceCatalog>({
+                            queryKey: referenceDataKeys.all,
+                        })
+                        .map(([, data]) => data)
+                        .find((data) => data?.available);
+                    const cachedProducts = catalog?.products ?? [];
+                    const categoryById = new Map(
+                        (catalog?.categories ?? []).map((category) => [
+                            category.id,
+                            category.name,
+                        ]),
+                    );
+                    const selectedProducts = cachedProducts.filter((product) =>
+                        payload.scope === "all"
+                            ? true
+                            : payload.scope === "category"
+                              ? categoryById.get(product.category_id ?? "") ===
+                                payload.category
+                              : payload.product_ids?.includes(product.id),
+                    );
+
+                    queryClient.setQueryData(
+                        countKeys.detail(result.clientEventId),
+                        {
+                            success: true,
+                            count: {
+                                id: result.clientEventId,
+                                name: payload.name,
+                                status: "in_progress",
+                                scope: payload.scope,
+                                total_items: selectedProducts.length,
+                                counted_items: 0,
+                                items_with_variance: 0,
+                                created_at: new Date().toISOString(),
+                                finalized_at: null,
+                                items: selectedProducts.map((product) => ({
+                                    product_id: product.id,
+                                    product_name: product.name,
+                                    sku: product.sku ?? null,
+                                    expected_quantity:
+                                        product.quantity ??
+                                        product.stock_quantity ??
+                                        0,
+                                    counted_quantity: null,
+                                    variance: null,
+                                })),
+                            },
+                        },
+                    );
+
+                    return {
+                        success: true,
+                        inventory_count_id: result.clientEventId,
+                        name: payload.name,
+                        status: "in_progress",
+                        total_items: 0,
+                        message: "Physical count queued for sync.",
+                    };
+                }
+                return "result" in result && result.result
+                    ? (result.result as InventoryCountCreateResponse)
+                    : result;
             }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: countKeys.lists() });
@@ -66,26 +139,30 @@ export const useStartCount = () => {
     });
 };
 
-interface RecordCountItemResponse {
-    success: boolean;
-    product_id: string;
-    expected_quantity: number;
-    counted_quantity: number;
-    variance: number;
-}
-
 export const useRecordCountItems = (countId: string) => {
     const queryClient = useQueryClient();
 
     return useMutation({
+        networkMode: "always",
         mutationFn: (payload: RecordCountItemsPayload) =>
-            apiClient<RecordCountItemsResponse>(
+            executeOrQueue<RecordCountItemsResponse>(
+                "physical_count",
+                { action: "record", count_id: countId, ...payload },
                 `/api/inventory-counts/${countId}/record`,
-                {
-                    method: "POST",
-                    body: JSON.stringify(payload),
-                },
-            ),
+                [countKeys.detail(countId), countKeys.lists()],
+            ).then((result) => {
+                if ("queued" in result) {
+                    return {
+                        success: true,
+                        count_id: countId,
+                        updated_items: payload.items.length,
+                        items: [],
+                    };
+                }
+                return "result" in result && result.result
+                    ? (result.result as RecordCountItemsResponse)
+                    : result;
+            }),
         onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: countKeys.detail(countId),
@@ -110,11 +187,33 @@ export const useFinalizeCount = (countId: string) => {
     const queryClient = useQueryClient();
 
     return useMutation({
+        networkMode: "always",
         mutationFn: () =>
-            apiClient<FinalizeCountResponse>(
+            executeOrQueue<FinalizeCountResponse>(
+                "physical_count",
+                { action: "finalize", count_id: countId },
                 `/api/inventory-counts/${countId}/finalize`,
-                { method: 'POST' }
-            ),
+                [
+                    countKeys.detail(countId),
+                    countKeys.lists(),
+                    ["inventory"],
+                    ["products"],
+                    referenceDataKeys.all,
+                ],
+            ).then((result) => {
+                if ("queued" in result) {
+                    return {
+                        success: true,
+                        count_id: countId,
+                        status: "finalized",
+                        adjustments_made: 0,
+                        message: "Count finalization queued for sync.",
+                    };
+                }
+                return "result" in result && result.result
+                    ? (result.result as FinalizeCountResponse)
+                    : result;
+            }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: countKeys.detail(countId) });
             queryClient.invalidateQueries({ queryKey: countKeys.lists() });
@@ -122,6 +221,7 @@ export const useFinalizeCount = (countId: string) => {
             // refresh those feature areas too.
             queryClient.invalidateQueries({ queryKey: ['inventory'] });
             queryClient.invalidateQueries({ queryKey: ['products'] });
+            queryClient.invalidateQueries({ queryKey: referenceDataKeys.all });
         },
     });
 };

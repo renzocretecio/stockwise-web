@@ -5,6 +5,9 @@ import {
 } from "@tanstack/react-query";
 
 import { apiClient } from "@/lib/api-client";
+import { executeOrQueue } from "@/lib/offline-sync";
+import { referenceDataKeys } from
+    "@/modules/offline/services/reference-data";
 import {
     SaleCreateResponse,
     SaleDetailResponse,
@@ -61,7 +64,8 @@ export const useSaleReturns = (
         `/api/sales/returns?page=${page}&page_size=${pageSize}` +
         (search ? `&search=${encodeURIComponent(search)}` : ""),
     ),
-    staleTime: 60 * 1000,
+    staleTime: 2 * 60 * 1000,
+    refetchOnWindowFocus: false,
 });
 
 export const useSales = (
@@ -84,7 +88,7 @@ export const useSales = (
                         : ""),
             ),
 
-        staleTime: 1000 * 60 * 2,
+        staleTime: 2 * 60 * 1000,
     });
 };
 
@@ -100,6 +104,8 @@ export const useSale = (
             ),
 
         enabled: !!saleId,
+        staleTime: 2 * 60 * 1000,
+        refetchOnWindowFocus: false,
     });
 };
 
@@ -107,15 +113,20 @@ export const useCreateSale = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
+        networkMode: "always",
         mutationFn: (
             payload: SaleFormData,
         ) =>
-            apiClient<SaleCreateResponse>(
+            executeOrQueue<SaleCreateResponse>(
+                "sale",
+                payload,
                 "/api/sales",
-                {
-                    method: "POST",
-                    body: JSON.stringify(payload),
-                },
+                [
+                    saleKeys.lists(),
+                    ["products"],
+                    ["inventory"],
+                    referenceDataKeys.all,
+                ],
             ),
 
         onSuccess: () => {
@@ -129,6 +140,9 @@ export const useCreateSale = () => {
 
             queryClient.invalidateQueries({
                 queryKey: ["inventory"],
+            });
+            queryClient.invalidateQueries({
+                queryKey: referenceDataKeys.all,
             });
         },
     });
@@ -168,6 +182,9 @@ export const useVoidSale = () => {
                     variables.saleId,
                 ),
             });
+            queryClient.invalidateQueries({
+                queryKey: referenceDataKeys.all,
+            });
         },
     });
 };
@@ -206,6 +223,9 @@ export const useCreateSaleReturn = () => {
             });
             queryClient.invalidateQueries({
                 queryKey: ["inventory"],
+            });
+            queryClient.invalidateQueries({
+                queryKey: referenceDataKeys.all,
             });
         },
     });

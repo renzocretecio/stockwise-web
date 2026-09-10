@@ -1,12 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { apiClient } from "@/lib/api-client";
+import { executeOrQueue, type QueuedMutation } from "@/lib/offline-sync";
 import {
     Purchase,
     PurchaseFormData,
     PurchaseMutationResponse,
     PurchasesResponse,
 } from "@/modules/purchases/types";
+import { referenceDataKeys } from
+    "@/modules/offline/services/reference-data";
 
 export const purchaseKeys = {
     all: ["purchases"] as const,
@@ -59,7 +62,8 @@ export const usePurchases = (
                         : "") +
                     (search ? `&search=${encodeURIComponent(search)}` : ""),
             ),
-        staleTime: 60 * 1000,
+        staleTime: 2 * 60 * 1000,
+        refetchOnWindowFocus: false,
     });
 };
 
@@ -68,6 +72,8 @@ export const usePurchase = (purchaseId: string) => {
         queryKey: purchaseKeys.detail(purchaseId),
         queryFn: () => apiClient<Purchase>(`/api/purchases/${purchaseId}`),
         enabled: !!purchaseId,
+        staleTime: 2 * 60 * 1000,
+        refetchOnWindowFocus: false,
     });
 };
 
@@ -75,10 +81,23 @@ export const useCreatePurchase = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
+        networkMode: "always",
         mutationFn: (payload: PurchaseFormData) =>
-            apiClient<PurchaseMutationResponse>("/api/purchases", {
-                method: "POST",
-                body: JSON.stringify(payload),
+            executeOrQueue<PurchaseMutationResponse>(
+                "purchase",
+                payload,
+                "/api/purchases",
+                [purchaseKeys.lists()],
+            ).then((result) => {
+                if ("queued" in result) {
+                    return {
+                        success: true,
+                        message: "Purchase draft queued for sync.",
+                    } as PurchaseMutationResponse & QueuedMutation;
+                }
+                return "result" in result && result.result
+                    ? (result.result as PurchaseMutationResponse)
+                    : result;
             }),
 
         onSuccess: () => {
@@ -110,6 +129,9 @@ export const useUpdatePurchase = (purchaseId: string) => {
             queryClient.invalidateQueries({
                 queryKey: purchaseKeys.detail(purchaseId),
             });
+            queryClient.invalidateQueries({
+                queryKey: referenceDataKeys.all,
+            });
         },
     });
 };
@@ -133,6 +155,9 @@ export const useReceivePurchase = (purchaseId: string) => {
 
             queryClient.invalidateQueries({
                 queryKey: purchaseKeys.detail(purchaseId),
+            });
+            queryClient.invalidateQueries({
+                queryKey: referenceDataKeys.all,
             });
         },
     });

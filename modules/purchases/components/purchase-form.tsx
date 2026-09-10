@@ -1,17 +1,22 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/currency";
+import { useOnlineStatus } from "@/hooks/use-online-status";
 import {
     useCreatePurchase,
     useUpdatePurchase,
 } from "@/modules/purchases/services/purchases";
 import { Purchase, PurchaseFormData } from "@/modules/purchases/types";
-import { useSuppliers } from "@/modules/suppliers/services/suppliers";
-import { useProducts } from "@/modules/products/services";
+import { ReferenceDataStatus } from
+    "@/modules/offline/components/reference-data-status";
+import { ReferenceCombobox } from
+    "@/modules/offline/components/reference-combobox";
+import { useReferenceCatalog } from
+    "@/modules/offline/services/reference-data";
 
 type PurchaseFormProps = {
     purchase?: Purchase | null;
@@ -27,16 +32,12 @@ export function PurchaseForm({
     onCancel,
 }: PurchaseFormProps) {
     const isEditMode = !!purchase;
+    const isOnline = useOnlineStatus();
 
-    const { data: suppliersData, isLoading: suppliersLoading } = useSuppliers(
-        1,
-        100,
-    );
-
-    const { data: productsData, isLoading: productsLoading } = useProducts(
-        1,
-        100,
-    );
+    const {
+        data: referenceData,
+        isLoading: referenceDataLoading,
+    } = useReferenceCatalog();
 
     const {
         mutateAsync: createPurchase,
@@ -52,8 +53,10 @@ export function PurchaseForm({
 
     const [formData, setFormData] = useState<PurchaseFormData>({
         supplier_id: purchase?.supplier_id ?? initialData?.supplier_id ?? "",
-        reference_number:
-            purchase?.reference_number ?? initialData?.reference_number ?? "",
+        supplier_reference_number:
+            purchase?.supplier_reference_number ??
+            initialData?.supplier_reference_number ??
+            "",
         expected_delivery_date:
             purchase?.expected_delivery_date ??
             initialData?.expected_delivery_date ??
@@ -74,10 +77,200 @@ export function PurchaseForm({
             purchase?.discount_amount ?? initialData?.discount_amount ?? 0,
         notes: purchase?.notes ?? initialData?.notes ?? "",
     });
+    const [showOtherProducts, setShowOtherProducts] = useState(false);
+    const [minimumDeliveryDate, setMinimumDeliveryDate] = useState("");
 
-    const suppliers = suppliersData?.suppliers ?? [];
+    useEffect(() => {
+        const timer = window.setTimeout(() => {
+            const date = new Date();
+            date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+            setMinimumDeliveryDate(date.toISOString().slice(0, 10));
+        }, 0);
 
-    const products = productsData?.products ?? [];
+        return () => window.clearTimeout(timer);
+    }, []);
+
+    const suppliers = useMemo(
+        () => referenceData?.suppliers ?? [],
+        [referenceData?.suppliers],
+    );
+
+    const products = useMemo(
+        () => referenceData?.products ?? [],
+        [referenceData?.products],
+    );
+
+    const supplierProducts = useMemo(
+        () => referenceData?.supplier_products ?? [],
+        [referenceData?.supplier_products],
+    );
+
+    const referenceDataAvailable = referenceData?.available ?? false;
+
+    const supplierOptions = useMemo(
+        () =>
+            suppliers.map((supplier) => ({
+                id: supplier.id,
+                label: supplier.name,
+                description: `${supplier.lead_time_days}-day lead time`,
+            })),
+        [suppliers],
+    );
+
+    const selectedSupplier = useMemo(
+        () =>
+            suppliers.find(
+                (supplier) => supplier.id === formData.supplier_id,
+            ),
+        [formData.supplier_id, suppliers],
+    );
+
+    const selectedSupplierProducts = useMemo(
+        () =>
+            supplierProducts.filter(
+                (item) => item.supplier_id === formData.supplier_id,
+            ),
+        [formData.supplier_id, supplierProducts],
+    );
+
+    const supplierProductByProduct = useMemo(
+        () =>
+            new Map(
+                selectedSupplierProducts.map((item) => [
+                    item.product_id,
+                    item,
+                ]),
+            ),
+        [selectedSupplierProducts],
+    );
+
+    const productIdsWithSuppliers = useMemo(
+        () => new Set(supplierProducts.map((item) => item.product_id)),
+        [supplierProducts],
+    );
+
+    const productById = useMemo(
+        () => new Map(products.map((product) => [product.id, product])),
+        [products],
+    );
+
+    const productOptions = useMemo(
+        () => {
+            const currentSupplierGroup = `Products from ${
+                selectedSupplier?.name ?? "this supplier"
+            }`;
+
+            return products
+                .map((product) => {
+                    const supplierProduct = supplierProductByProduct.get(
+                        product.id,
+                    );
+                    const hasSupplier = productIdsWithSuppliers.has(product.id);
+                    const group = supplierProduct
+                        ? currentSupplierGroup
+                        : hasSupplier
+                          ? "Products from other suppliers"
+                          : "Products without a supplier";
+                    const details = [
+                        supplierProduct
+                            ? `Saved cost: ${formatCurrency(
+                                  supplierProduct.unit_cost,
+                              )}`
+                            : `Default cost: ${formatCurrency(
+                                  product.cost_price,
+                              )}`,
+                        supplierProduct?.supplier_sku ?? product.sku,
+                        product.unit,
+                        supplierProduct &&
+                        supplierProduct.minimum_order_quantity > 1
+                            ? `Min ${supplierProduct.minimum_order_quantity}`
+                            : undefined,
+                        supplierProduct && supplierProduct.pack_size > 1
+                            ? `Pack ${supplierProduct.pack_size}`
+                            : undefined,
+                    ].filter(Boolean);
+
+                    return {
+                        id: product.id,
+                        label: product.name,
+                        description: details.join(" · "),
+                        searchText: product.barcode ?? undefined,
+                        group,
+                    };
+                })
+                .sort((left, right) => {
+                    const groupOrder = [
+                        currentSupplierGroup,
+                        "Products without a supplier",
+                        "Products from other suppliers",
+                    ];
+                    const leftGroup = groupOrder.indexOf(left.group ?? "");
+                    const rightGroup = groupOrder.indexOf(right.group ?? "");
+
+                    if (leftGroup !== rightGroup) {
+                        return leftGroup - rightGroup;
+                    }
+
+                    return left.label.localeCompare(right.label);
+                });
+        },
+        [
+            products,
+            productIdsWithSuppliers,
+            selectedSupplier?.name,
+            supplierProductByProduct,
+        ],
+    );
+
+    const visibleProductOptions = useMemo(
+        () =>
+            productOptions.filter(
+                (option) =>
+                    showOtherProducts ||
+                    option.group !== "Products from other suppliers",
+            ),
+        [productOptions, showOtherProducts],
+    );
+
+    const hasProductsFromOtherSuppliers = useMemo(
+        () =>
+            productOptions.some(
+                (option) => option.group === "Products from other suppliers",
+            ),
+        [productOptions],
+    );
+
+    const getSupplierRelationshipNotice = (productId: string) => {
+        if (!productId || supplierProductByProduct.has(productId)) {
+            return null;
+        }
+
+        const product = productById.get(productId);
+        const supplierName = selectedSupplier?.name ?? "this supplier";
+
+        if (!product) {
+            return null;
+        }
+
+        if (!productIdsWithSuppliers.has(productId)) {
+            return `${product.name} is not yet linked to ${supplierName}. ` +
+                "Saving this purchase will add it as a supplier.";
+        }
+
+        return `${product.name} is currently sourced from another supplier. ` +
+            `Saving this purchase will add ${supplierName} as an ` +
+            "additional supplier.";
+    };
+
+    const selectedProductIds = useMemo(
+        () =>
+            new Set(
+                formData.items
+                    .map((item) => item.product_id)
+                    .filter(Boolean),
+            ),
+        [formData.items],
+    );
 
     const isPending = isCreating || isUpdating;
 
@@ -109,6 +302,66 @@ export function PurchaseForm({
         }));
     };
 
+    const handleSupplierChange = (supplierId: string) => {
+        setFormData((previous) => {
+            if (previous.supplier_id === supplierId) {
+                return previous;
+            }
+
+            const linksByProduct = new Map(
+                supplierProducts
+                    .filter((item) => item.supplier_id === supplierId)
+                    .map((item) => [item.product_id, item]),
+            );
+
+            return {
+                ...previous,
+                supplier_id: supplierId,
+                items: previous.items.map((item) => {
+                    const link = linksByProduct.get(item.product_id);
+                    const product = productById.get(item.product_id);
+
+                    return {
+                        ...item,
+                        quantity: Math.max(
+                            item.quantity,
+                            link?.minimum_order_quantity ?? 1,
+                        ),
+                        unit_cost:
+                            link?.unit_cost ?? product?.cost_price ?? 0,
+                    };
+                }),
+            };
+        });
+        setShowOtherProducts(false);
+    };
+
+    const handleProductChange = (
+        index: number,
+        productId: string,
+    ) => {
+        const link = supplierProductByProduct.get(productId);
+        const product = productById.get(productId);
+
+        setFormData((previous) => ({
+            ...previous,
+            items: previous.items.map((item, itemIndex) =>
+                itemIndex === index
+                    ? {
+                          ...item,
+                          product_id: productId,
+                          quantity: Math.max(
+                              item.quantity,
+                              link?.minimum_order_quantity ?? 1,
+                          ),
+                          unit_cost:
+                              link?.unit_cost ?? product?.cost_price ?? 0,
+                      }
+                    : item,
+            ),
+        }));
+    };
+
     const handleRemoveItem = (index: number) => {
         setFormData((previous) => ({
             ...previous,
@@ -137,7 +390,16 @@ export function PurchaseForm({
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        if (!formData.supplier_id || formData.items.length === 0) {
+        if (
+            !formData.supplier_id ||
+            formData.items.length === 0 ||
+            formData.items.some(
+                (item) =>
+                    !item.product_id ||
+                    item.quantity <= 0 ||
+                    item.unit_cost < 0,
+            )
+        ) {
             return;
         }
 
@@ -164,8 +426,27 @@ export function PurchaseForm({
                 </div>
             )}
 
+            <ReferenceDataStatus
+                available={referenceDataAvailable}
+                generatedAt={referenceData?.generated_at}
+                loading={referenceDataLoading}
+            />
+
+            {isEditMode && !isOnline && (
+                <div
+                    className={
+                        "rounded-2xl border border-amber-500/30 " +
+                        "bg-amber-500/10 p-4 text-sm text-amber-950 " +
+                        "dark:text-amber-100"
+                    }
+                >
+                    Editing an existing purchase requires a connection. New
+                    purchase drafts can still be created offline.
+                </div>
+            )}
+
             <section className="space-y-4">
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
                         <label
                             htmlFor="supplier_id"
@@ -174,47 +455,51 @@ export function PurchaseForm({
                             Supplier *
                         </label>
 
-                        <select
+                        <ReferenceCombobox
                             id="supplier_id"
                             value={formData.supplier_id}
-                            onChange={(event) =>
-                                setFormData((previous) => ({
-                                    ...previous,
-                                    supplier_id: event.target.value,
-                                }))
+                            options={supplierOptions}
+                            onValueChange={handleSupplierChange}
+                            disabled={
+                                referenceDataLoading ||
+                                !referenceDataAvailable
                             }
-                            required
-                            disabled={suppliersLoading}
-                            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
-                        >
-                            <option value="">Select supplier</option>
+                            placeholder="Select supplier"
+                            searchPlaceholder="Search suppliers..."
+                            emptyMessage="No suppliers found."
+                        />
 
-                            {suppliers.map((supplier) => (
-                                <option key={supplier.id} value={supplier.id}>
-                                    {supplier.name}
-                                </option>
-                            ))}
-                        </select>
+                        {formData.supplier_id && (
+                            <p className="mt-1 text-xs text-muted-foreground">
+                                {selectedSupplierProducts.length} saved
+                                supplier price
+                                {selectedSupplierProducts.length === 1
+                                    ? ""
+                                    : "s"}
+                                {" · Other products can also be added"}
+                            </p>
+                        )}
                     </div>
 
                     <div>
                         <label
-                            htmlFor="reference_number"
+                            htmlFor="supplier_reference_number"
                             className="mb-1 block text-sm font-medium"
                         >
-                            Reference #
+                            Supplier invoice / reference
                         </label>
 
                         <input
-                            id="reference_number"
-                            value={formData.reference_number}
+                            id="supplier_reference_number"
+                            value={formData.supplier_reference_number}
                             onChange={(event) =>
                                 setFormData((previous) => ({
                                     ...previous,
-                                    reference_number: event.target.value,
+                                    supplier_reference_number:
+                                        event.target.value,
                                 }))
                             }
-                            placeholder="PO-2026-001"
+                            placeholder="Optional supplier invoice number"
                             className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
                         />
                     </div>
@@ -233,6 +518,7 @@ export function PurchaseForm({
                                 "px-3 py-2 text-sm"
                             }
                             id="expected_delivery_date"
+                            min={minimumDeliveryDate || undefined}
                             onChange={(event) =>
                                 setFormData((previous) => ({
                                     ...previous,
@@ -249,64 +535,92 @@ export function PurchaseForm({
 
             <section className="space-y-3 border-t pt-6">
                 <div className="flex items-center justify-between">
-                    <h2 className="font-semibold">Items</h2>
+                    <div>
+                        <h2 className="font-semibold">Items</h2>
+                        <p className="text-xs text-muted-foreground">
+                            Saved prices are applied automatically. New
+                            supplier-product pairings are remembered.
+                        </p>
+                    </div>
 
-                    <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={handleAddItem}
-                    >
-                        <Plus className="mr-1 h-4 w-4" />
-                        Add item
-                    </Button>
+                    <div className="flex items-center gap-2">
+                        {formData.supplier_id &&
+                        hasProductsFromOtherSuppliers && (
+                            <Button
+                                type="button"
+                                variant="secondary"
+                                size="sm"
+                                onClick={() =>
+                                    setShowOtherProducts((visible) => !visible)
+                                }
+                                disabled={!formData.supplier_id}
+                            >
+                                {showOtherProducts
+                                    ? "Hide other products"
+                                    : "Show other products"}
+                            </Button>
+                        )}
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={handleAddItem}
+                            disabled={!formData.supplier_id}
+                        >
+                            <Plus className="mr-1 h-4 w-4" />
+                            Add item
+                        </Button>
+                    </div>
                 </div>
 
                 {formData.items.map((item, index) => (
                     <div
                         key={index}
-                        className="grid grid-cols-1 gap-3 border p-3 sm:grid-cols-[1fr_100px_130px_40px]"
+                        className="grid grid-cols-1 gap-3 border rounded-2xl p-3 sm:grid-cols-[1fr_100px_130px_40px]"
                     >
                         <div>
                             <label className="mb-1 block text-xs text-muted-foreground">
                                 Product
                             </label>
 
-                            <select
+                            <ReferenceCombobox
                                 value={item.product_id}
-                                onChange={(event) => {
-                                    const productId = event.target.value;
+                                options={visibleProductOptions.filter(
+                                    (option) =>
+                                        option.id === item.product_id ||
+                                        !selectedProductIds.has(option.id),
+                                )}
+                                onValueChange={(productId) =>
+                                    handleProductChange(index, productId)
+                                }
+                                disabled={
+                                    referenceDataLoading ||
+                                    !referenceDataAvailable ||
+                                    !formData.supplier_id
+                                }
+                                placeholder={
+                                    formData.supplier_id
+                                        ? "Select product"
+                                        : "Select a supplier first"
+                                }
+                                searchPlaceholder={
+                                    "Search by product, SKU, or barcode..."
+                                }
+                                emptyMessage="No products found."
+                            />
 
-                                    const product = products.find(
-                                        (product) => product.id === productId,
-                                    );
-
-                                    handleItemChange(
-                                        index,
-                                        "product_id",
-                                        productId,
-                                    );
-
-                                    if (product && item.unit_cost === 0) {
-                                        handleItemChange(
-                                            index,
-                                            "unit_cost",
-                                            product.cost_price ?? 0,
-                                        );
+                            {getSupplierRelationshipNotice(item.product_id) && (
+                                <p
+                                    className={
+                                        "mt-2 rounded-2xl border border-amber-" +
+                                        "500/30 bg-amber-500/10 px-2.5 py-2 " +
+                                        "text-xs text-amber-950 dark:text-amber-" +
+                                        "100"
                                     }
-                                }}
-                                required
-                                disabled={productsLoading}
-                                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
-                            >
-                                <option value="">Select product</option>
-
-                                {products.map((product) => (
-                                    <option key={product.id} value={product.id}>
-                                        {product.name}
-                                    </option>
-                                ))}
-                            </select>
+                                >
+                                    {getSupplierRelationshipNotice(item.product_id)}
+                                </p>
+                            )}
                         </div>
 
                         <div>
@@ -481,7 +795,13 @@ export function PurchaseForm({
 
                 <Button
                     type="submit"
-                    disabled={isPending || formData.items.length === 0}
+                    disabled={
+                        isPending ||
+                        formData.items.length === 0 ||
+                        !referenceDataAvailable ||
+                        !formData.supplier_id ||
+                        (isEditMode && !isOnline)
+                    }
                 >
                     {isPending
                         ? "Saving..."

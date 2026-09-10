@@ -1,118 +1,79 @@
 "use client";
 
-import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts";
-
-import {
-    type ChartConfig,
-    ChartContainer,
-    ChartTooltip,
-    ChartTooltipContent,
-} from "@/components/ui/chart";
+import { Bar } from "@/components/charts/bar";
+import { BarChart } from "@/components/charts/bar-chart";
+import { BarValueAxis } from "@/components/charts/bar-value-axis";
+import { BarYAxis } from "@/components/charts/bar-y-axis";
+import { Grid } from "@/components/charts/grid";
+import { ChartTooltip } from
+    "@/components/charts/tooltip/chart-tooltip";
 import { currency } from "@/lib/currency";
+import {
+    EmptyReportChart,
+    formatCompactChartCurrency,
+    horizontalReportChartMargin,
+    reportPrimary,
+    reportSecondary,
+    reportTertiary,
+    toChartNumber,
+} from "@/modules/reports/components/report-chart-utils";
 import type { PurchaseReport } from "@/modules/reports/types";
-
-const chartConfig = {
-    total_spent: {
-        label: "Total spent",
-        color: "var(--chart-1)",
-    },
-} satisfies ChartConfig;
-
-const chartShades = [
-    "var(--chart-1)",
-    "var(--chart-2)",
-    "var(--chart-3)",
-    "var(--chart-4)",
-    "var(--chart-5)",
-];
 
 type Supplier = PurchaseReport["by_supplier"][number];
 
-const shortNumber = (value: number) =>
-    new Intl.NumberFormat("en-PH", {
-        notation: "compact",
-        maximumFractionDigits: 1,
-    }).format(value);
+const colors = [reportPrimary, reportSecondary, reportTertiary];
 
 export function SupplierSpendChart({ suppliers }: { suppliers: Supplier[] }) {
-    const data = suppliers.slice(0, 5).map((supplier) => ({
-        ...supplier,
-        label:
-            supplier.supplier_name.length > 18
-                ? `${supplier.supplier_name.slice(0, 17)}…`
-                : supplier.supplier_name,
-    }));
+    const data = [...suppliers]
+        .sort((left, right) => right.total_spent - left.total_spent)
+        .slice(0, 5);
 
     if (!data.length) {
         return (
-            <div
-                className={
-                    "flex h-[280px] items-center justify-center text-sm " +
-                    "text-muted-foreground"
-                }
-            >
+            <EmptyReportChart>
                 No received supplier purchases in this period.
-            </div>
+            </EmptyReportChart>
         );
     }
 
     return (
-        <ChartContainer
-            config={chartConfig}
-            className="h-[280px] w-full min-w-0 max-w-full"
+        <BarChart
+            aspectRatio="auto"
+            barGap={0.34}
+            className="h-[280px]"
+            data={data}
+            margin={horizontalReportChartMargin}
+            orientation="horizontal"
+            xDataKey="supplier_name"
         >
-            <BarChart
-                accessibilityLayer
-                data={data}
-                layout="vertical"
-                margin={{ top: 4, right: 12, left: 4, bottom: 0 }}
-            >
-                <CartesianGrid horizontal={false} strokeDasharray="3 5" />
-                <XAxis
-                    type="number"
-                    axisLine={false}
-                    tickLine={false}
-                    tickFormatter={shortNumber}
-                />
-                <YAxis
-                    type="category"
-                    dataKey="label"
-                    axisLine={false}
-                    tickLine={false}
-                    width={94}
-                    tick={{ fontSize: 11 }}
-                />
-                <ChartTooltip
-                    cursor={{ fill: "var(--muted)" }}
-                    content={
-                        <ChartTooltipContent
-                            labelKey="supplier_name"
-                            formatter={(value) => (
-                                <div className="flex w-full min-w-36 justify-between gap-4">
-                                    <span className="text-muted-foreground">
-                                        Total spent
-                                    </span>
-                                    <span className="font-mono font-medium">
-                                        {currency.format(Number(value))}
-                                    </span>
-                                </div>
-                            )}
-                        />
-                    }
-                />
-                <Bar
-                    dataKey="total_spent"
-                    name="total_spent"
-                    radius={[0, 6, 6, 0]}
-                >
-                    {data.map((supplier, index) => (
-                        <Cell
-                            key={supplier.supplier_id}
-                            fill={chartShades[index]}
-                        />
-                    ))}
-                </Bar>
-            </BarChart>
-        </ChartContainer>
+            <Grid horizontal={false} strokeDasharray="3,5" vertical />
+            <BarValueAxis formatValue={formatCompactChartCurrency} />
+            <Bar
+                dataKey="total_spent"
+                fill={(_point, index) => colors[index % colors.length]}
+                lineCap={6}
+                stroke={reportPrimary}
+            />
+            <BarYAxis labelWidth={108} />
+            <ChartTooltip
+                showDatePill={false}
+                rows={(point) => [
+                    {
+                        color: reportPrimary,
+                        label: "Total spent",
+                        value: currency.format(
+                            toChartNumber(point.total_spent),
+                        ),
+                    },
+                    {
+                        color: reportTertiary,
+                        label: "Received orders",
+                        value: toChartNumber(
+                            point.purchases_count,
+                        ).toLocaleString("en-PH"),
+                    },
+                ]}
+            />
+        </BarChart>
     );
 }

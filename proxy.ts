@@ -75,18 +75,14 @@ export function proxy(request: NextRequest) {
 
   if (isOnboardingRoute && onboardingCompleted === "true") {
     return NextResponse.redirect(
-      new URL("/dashboard/overview", request.url),
+      new URL("/dashboard", request.url),
     );
-  }
-
-  if (request.nextUrl.pathname === "/") {
-    return NextResponse.redirect(new URL("/login", request.url));
   }
 
   // kapag authenticated at inaccess ang login/signup page, redirect to dashboard
   if (isAuthRoute && sessionToken && !isExpired) {
     return NextResponse.redirect(
-      new URL("/dashboard/overview", request.url),
+      new URL("/dashboard", request.url),
     );
   }
 
@@ -95,6 +91,6 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.jpg$).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|manifest.webmanifest|offline|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };

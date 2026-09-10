@@ -38,6 +38,8 @@ export type SalesReport = {
         total_items_sold: number;
         average_sale_value: number;
         voided_count: number;
+        return_count: number;
+        return_amount: number;
     };
     by_day: {
         date: string;

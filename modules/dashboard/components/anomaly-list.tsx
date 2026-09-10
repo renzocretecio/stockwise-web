@@ -12,9 +12,12 @@ import { ExplanationDrawer } from
 import { useAnomalyExplanation } from
     "@/modules/intelligence/services/intelligence";
 import type { InventoryAnomaly } from "@/modules/dashboard/types";
+import { useAiAllowance } from
+    "@/modules/billing/components/ai-usage";
 
 export function AnomalyList({ anomalies }: { anomalies: InventoryAnomaly[] }) {
     const explanation = useAnomalyExplanation();
+    const aiAllowance = useAiAllowance();
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [drawerOpen, setDrawerOpen] = useState(false);
     const selectedAnomaly = anomalies.find((anomaly) => anomaly.id === selectedId);
@@ -60,6 +63,7 @@ export function AnomalyList({ anomalies }: { anomalies: InventoryAnomaly[] }) {
                             isExplaining={
                                 explanation.isPending && selectedId === anomaly.id
                             }
+                            limitReached={aiAllowance.exhausted}
                             key={anomaly.id}
                             onExplain={() => {
                                 setSelectedId(anomaly.id);
@@ -94,15 +98,17 @@ function AnomalyCard({
     anomaly,
     explanationError,
     isExplaining,
+    limitReached,
     onExplain,
 }: {
     anomaly: InventoryAnomaly;
     explanationError: Error | null | undefined;
     isExplaining: boolean;
+    limitReached: boolean;
     onExplain: () => void;
 }) {
     return (
-        <Card className="h-full gap-4 bg-muted/30 py-4 rounded-md" size="sm">
+        <Card className="h-full gap-4 bg-muted/30 py-4 rounded-2xl" size="sm">
             <div className="px-4">
                 <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
@@ -132,14 +138,18 @@ function AnomalyCard({
 
             <div className="mt-auto flex flex-wrap gap-2 border-t px-4 pt-4">
                 <Button
-                    disabled={isExplaining}
+                    disabled={isExplaining || limitReached}
                     onClick={onExplain}
                     size="sm"
                     type="button"
                     variant="outline"
                 >
                     <Sparkles className="mr-1.5 size-4" />
-                    {isExplaining ? "Explaining…" : "Explain"}
+                    {isExplaining
+                        ? "Explaining…"
+                        : limitReached
+                            ? "Weekly AI limit reached"
+                            : "Explain · 1 AI action"}
                 </Button>
                 <Link
                     className={

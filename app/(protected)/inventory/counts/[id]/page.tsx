@@ -301,7 +301,7 @@ export default function CountDetailPage() {
                         </p>
 
                         {itemsWithVariance.length > 0 ? (
-                            <p className="rounded-md bg-amber-500/10 px-3 py-2 text-amber-700">
+                            <p className="rounded-2xl bg-amber-500/10 px-3 py-2 text-amber-700">
                                 {itemsWithVariance.length} product(s) have a
                                 variance and will have their stock adjusted to
                                 match the counted quantity. This creates stock
@@ -475,7 +475,7 @@ function CountRow({
                         value={displayValue}
                         onChange={(event) => onDraftChange(event.target.value)}
                         placeholder="—"
-                        className="w-24 rounded-md border border-input bg-background px-2 py-1 text-right text-sm outline-none focus:ring-2 focus:ring-primary"
+                        className="w-24 rounded-2xl border border-input bg-background px-2 py-1 text-right text-sm outline-none focus:ring-2 focus:ring-primary"
                     />
                 )}
             </td>

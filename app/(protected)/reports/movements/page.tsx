@@ -4,7 +4,8 @@ import { useState } from "react";
 import { ArrowLeftRight } from "lucide-react";
 
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
-import { MovementTypeChart } from "@/modules/reports/components/movement-type-chart";
+import { MovementTypeChart } from
+    "@/modules/reports/components/movement-type-chart";
 import {
     ReportOverviewCard,
     type ReportSummaryItem,
@@ -15,11 +16,12 @@ import {
     ReportHeader,
     ReportLoading,
 } from "@/modules/reports/components/report-ui";
-import { useStockMovementReport } from "@/modules/reports/services/reports";
-import type {
-    ReportPeriod,
-    StockMovementReport,
-} from "@/modules/reports/types";
+import { ReportAiSummary } from
+    "@/modules/reports/components/report-ai-summary";
+import { createReportDateRange } from "@/modules/reports/date-range";
+import { useStockMovementReportByDateRange } from
+    "@/modules/reports/services/reports";
+import type { StockMovementReport } from "@/modules/reports/types";
 
 type Movement = StockMovementReport["by_type"][number];
 
@@ -63,18 +65,22 @@ const columns: DataTableColumn<Movement>[] = [
 ];
 
 export default function MovementReportPage() {
-    const [period, setPeriod] = useState<ReportPeriod>(30);
+    const [dateRange, setDateRange] = useState(createReportDateRange);
     const { data, isLoading, error, refetch, isFetching } =
-        useStockMovementReport(period);
+        useStockMovementReportByDateRange(dateRange);
 
     return (
         <div className="pb-12">
             <ReportHeader
                 title="Stock Movement Report"
-                description="Inventory inflows, outflows, and adjustments by type."
+                description={
+                    "Inventory inflows, outflows, and adjustments " +
+                    "by type."
+                }
                 icon={ArrowLeftRight}
-                period={period}
-                onPeriodChange={setPeriod}
+                dateRange={dateRange}
+                exportReport="stock-movements"
+                onDateRangeChange={setDateRange}
                 isRefreshing={isFetching}
                 onRefresh={() => void refetch()}
             />
@@ -84,7 +90,13 @@ export default function MovementReportPage() {
             ) : error || !data ? (
                 <ReportError error={error} />
             ) : (
-                <MovementContent data={data} />
+                <>
+                    <ReportAiSummary
+                        dateRange={dateRange}
+                        report="movements"
+                    />
+                    <MovementContent data={data} />
+                </>
             )}
         </div>
     );

@@ -123,7 +123,7 @@ export function DeleteConfirmDialog<T>({
                             </p>
                         ))}
                     {item && warning?.(item) && (
-                        <p className="rounded-md bg-amber-500/10 px-3 py-2 text-amber-700">
+                        <p className="rounded-2xl bg-amber-500/10 px-3 py-2 text-amber-700">
                             {warning(item)}
                         </p>
                     )}

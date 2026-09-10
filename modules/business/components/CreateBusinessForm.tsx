@@ -2,25 +2,22 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { subscriptionLabel } from "@/lib/subscription-label";
+import {
+  authKeys,
+  hydrateSessionCache,
+  resetSessionCache,
+  useSession,
+} from "@/modules/auth/services/session";
 
 export function CreateBusinessForm() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { data } = useQuery<{
-    businesses: Array<{ id: string; name: string; role: string }>;
-    active_business?: { id: string };
-  }>({
-    queryKey: ["auth", "me"],
-    queryFn: async () => {
-      const response = await fetch("/api/auth/me", { cache: "no-store" });
-      if (!response.ok) throw new Error("Unable to load businesses");
-      return response.json();
-    },
-  });
+  const { data: session } = useSession();
   const [name, setName] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,11 +32,12 @@ export function CreateBusinessForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name }),
       });
-      const data = await response.json().catch(() => ({}));
+      const result = await response.json().catch(() => ({}));
       if (!response.ok) {
-        throw new Error(data.error || "Unable to create business");
+        throw new Error(result.error || "Unable to create business");
       }
-      await queryClient.invalidateQueries();
+      await resetSessionCache(queryClient);
+      await hydrateSessionCache(queryClient).catch(() => undefined);
       router.replace("/onboarding/business");
       router.refresh();
     } catch (reason) {
@@ -57,9 +55,18 @@ export function CreateBusinessForm() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ business_id: businessId }),
     });
-    if (response.ok) {
-      await queryClient.invalidateQueries();
-      router.replace("/dashboard/overview");
+    const result = await response.json().catch(() => ({}));
+    if (response.ok && result.active_business) {
+      const business = result.active_business;
+      await resetSessionCache(queryClient);
+      queryClient.setQueryData(authKeys.me, {
+        ...session,
+        active_business: business,
+        business_id: business.id,
+        business_name: business.name,
+        permissions: business.permissions ?? [],
+      });
+      router.replace("/dashboard");
       router.refresh();
     }
   };
@@ -68,8 +75,8 @@ export function CreateBusinessForm() {
     <div className="space-y-6">
       <div className="space-y-2">
         <h2 className="text-sm font-semibold">Your businesses</h2>
-        {data?.businesses?.map((business) => {
-          const active = business.id === data.active_business?.id;
+        {session?.businesses?.map((business) => {
+          const active = business.id === session.active_business?.id;
           return (
             <div
               key={business.id}
@@ -78,7 +85,10 @@ export function CreateBusinessForm() {
               <div>
                 <p className="font-medium">{business.name}</p>
                 <p className="text-xs capitalize text-muted-foreground">
-                  {business.role}
+                  {business.role} · {subscriptionLabel(
+                    business.plan,
+                    business.subscription_status,
+                  )}
                 </p>
               </div>
               <Button

@@ -14,6 +14,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { useHasPermission } from "@/modules/auth/hooks/use-has-permission";
 import { getCountColumns } from "@/modules/inventory/columns/counts";
 import { StartCountForm } from "@/modules/inventory/components/start-count-form";
 import { useInventoryCounts } from "@/modules/inventory/services/counts";
@@ -25,6 +26,7 @@ export default function PhysicalCountsPage() {
     const { data, isLoading, isError, error, refetch, isFetching } =
         useInventoryCounts();
     const counts = data?.counts ?? [];
+    const canCount = useHasPermission("inventory.count");
 
     const columns = getCountColumns({
         onView: (count: InventoryCountListItem) => {
@@ -55,21 +57,23 @@ export default function PhysicalCountsPage() {
                     </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                    <Button
-                        aria-label="Refresh count sessions"
-                        disabled={isFetching}
-                        onClick={() => void refetch()}
-                        size="icon"
-                        type="button"
-                        variant="outline"
-                    >
-                        <RefreshCw
-                            className={cn(
-                                "size-4",
-                                isFetching && "animate-spin",
-                            )}
-                        />
-                    </Button>
+                    {canCount ? (
+                        <Button
+                            aria-label="Refresh count sessions"
+                            disabled={isFetching}
+                            onClick={() => void refetch()}
+                            size="icon"
+                            type="button"
+                            variant="outline"
+                        >
+                            <RefreshCw
+                                className={cn(
+                                    "size-4",
+                                    isFetching && "animate-spin",
+                                )}
+                            />
+                        </Button>
+                    ) : null}
                     <Button
                         onClick={() => setIsStartFormOpen(true)}
                         size="sm"
@@ -117,6 +121,7 @@ export default function PhysicalCountsPage() {
                         emptyState={
                             <EmptyCounts
                                 onStart={() => setIsStartFormOpen(true)}
+                                showStart={canCount}
                             />
                         }
                         getRowId={(count) => count.id}
@@ -150,7 +155,13 @@ export default function PhysicalCountsPage() {
     );
 }
 
-function EmptyCounts({ onStart }: { onStart: () => void }) {
+function EmptyCounts({
+    onStart,
+    showStart,
+}: {
+    onStart: () => void;
+    showStart: boolean;
+}) {
     return (
         <div className="flex flex-col items-center justify-center px-6 py-14 text-center">
             <div className="mb-3 flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -161,10 +172,17 @@ function EmptyCounts({ onStart }: { onStart: () => void }) {
                 Start a physical count to reconcile actual stock with the
                 system.
             </p>
-            <Button className="mt-5" onClick={onStart} size="sm" type="button">
-                <Plus className="mr-1.5 size-4" />
-                Start count
-            </Button>
+            {showStart ? (
+                <Button
+                    className="mt-5"
+                    onClick={onStart}
+                    size="sm"
+                    type="button"
+                >
+                    <Plus className="mr-1.5 size-4" />
+                    Start count
+                </Button>
+            ) : null}
         </div>
     );
 }

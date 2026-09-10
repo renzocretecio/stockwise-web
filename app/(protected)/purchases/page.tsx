@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PackagePlus, Plus, RefreshCw, Search } from "lucide-react";
 
@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/use-debounce";
 import { usePagination } from "@/hooks/use-pagination";
 import { cn } from "@/lib/utils";
+import { useHasPermission } from "@/modules/auth/hooks/use-has-permission";
 import { getPurchaseColumns } from "@/modules/purchases/columns/purchases";
 import { OrderConfirmDialog } from "@/modules/purchases/components/order-confirm-dialog";
 import { PurchaseForm } from "@/modules/purchases/components/purchase-form";
@@ -35,6 +36,16 @@ const tabs: { key: TabKey; label: string; status?: PurchaseStatus }[] = [
 ];
 
 export default function PurchasesPage() {
+    return (
+        <Suspense
+            fallback={<div className="min-h-96 animate-pulse bg-muted/40" />}
+        >
+            <PurchasesContent />
+        </Suspense>
+    );
+}
+
+function PurchasesContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const reorderDraft = useMemo(
@@ -59,6 +70,8 @@ export default function PurchasesPage() {
     const debouncedSearch = useDebounce(searchQuery, 400);
     const { page, pageSize, setPage, setPageSize } = usePagination();
     const currentTab = tabs.find((tab) => tab.key === activeTab);
+    const canCreate = useHasPermission("purchases.create");
+    const canReceive = useHasPermission("purchases.receive");
     const { data, isLoading, isError, error, refetch, isFetching } =
         usePurchases(
             page,
@@ -73,15 +86,19 @@ export default function PurchasesPage() {
 
     const columns = getPurchaseColumns({
         onView: (purchase) => router.push(`/purchases/${purchase.id}`),
-        onEdit: (purchase) => {
-            setSelectedPurchase(purchase);
-            setIsPurchaseFormOpen(true);
-        },
-        onOrder: setPurchaseToOrder,
-        onReceive: (purchase) => {
-            setPurchaseToReceive(purchase);
-            setIsReceiveOpen(true);
-        },
+        onEdit: canCreate
+            ? (purchase) => {
+                  setSelectedPurchase(purchase);
+                  setIsPurchaseFormOpen(true);
+              }
+            : undefined,
+        onOrder: canCreate ? setPurchaseToOrder : undefined,
+        onReceive: canReceive
+            ? (purchase) => {
+                  setPurchaseToReceive(purchase);
+                  setIsReceiveOpen(true);
+              }
+            : undefined,
     });
 
     const closeForm = () => {
@@ -117,21 +134,23 @@ export default function PurchasesPage() {
                     </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                    <Button
-                        aria-label="Refresh purchases"
-                        disabled={isFetching}
-                        onClick={() => void refetch()}
-                        size="icon"
-                        type="button"
-                        variant="outline"
-                    >
-                        <RefreshCw
-                            className={cn(
-                                "size-4",
-                                isFetching && "animate-spin",
-                            )}
-                        />
-                    </Button>
+                    {canCreate ? (
+                        <Button
+                            aria-label="Refresh purchases"
+                            disabled={isFetching}
+                            onClick={() => void refetch()}
+                            size="icon"
+                            type="button"
+                            variant="outline"
+                        >
+                            <RefreshCw
+                                className={cn(
+                                    "size-4",
+                                    isFetching && "animate-spin",
+                                )}
+                            />
+                        </Button>
+                    ) : null}
                     <Button
                         onClick={() => setIsPurchaseFormOpen(true)}
                         size="sm"
@@ -242,6 +261,7 @@ export default function PurchasesPage() {
                                 Boolean(searchQuery) || activeTab !== "all"
                             }
                             onCreate={() => setIsPurchaseFormOpen(true)}
+                            showCreate={canCreate}
                         />
                     }
                     getRowId={(purchase) => purchase.id}
@@ -280,9 +300,15 @@ export default function PurchasesPage() {
                     </DialogHeader>
                     <PurchaseForm
                         initialData={
-                            selectedPurchase ? undefined : reorderDraft ?? undefined
+                            selectedPurchase
+                                ? undefined
+                                : (reorderDraft ?? undefined)
                         }
-                        key={selectedPurchase?.id ?? reorderDraft?.product_id ?? "new"}
+                        key={
+                            selectedPurchase?.id ??
+                            reorderDraft?.product_id ??
+                            "new"
+                        }
                         onCancel={closeForm}
                         onSuccess={closeForm}
                         purchase={selectedPurchase}
@@ -345,9 +371,11 @@ function getReorderDraft(searchParams: URLSearchParams) {
 function EmptyPurchases({
     filtered,
     onCreate,
+    showCreate,
 }: {
     filtered: boolean;
     onCreate: () => void;
+    showCreate: boolean;
 }) {
     return (
         <div className="flex flex-col items-center justify-center px-6 py-14 text-center">
@@ -362,7 +390,7 @@ function EmptyPurchases({
                     ? "Try another search or select a different status."
                     : "Create a purchase order to keep incoming stock organized."}
             </p>
-            {!filtered ? (
+            {!filtered && showCreate ? (
                 <Button
                     className="mt-5"
                     onClick={onCreate}

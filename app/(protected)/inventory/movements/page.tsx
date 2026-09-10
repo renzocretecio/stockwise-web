@@ -28,7 +28,7 @@ const movementTypes = [
 
 const selectClass =
     "h-9 border border-input bg-background px-3 text-sm text-foreground " +
-    "outline-none focus:ring-2 focus:ring-primary rounded-md";
+    "outline-none focus:ring-2 focus:ring-primary rounded-2xl";
 
 export default function StockMovementsPage() {
     return (

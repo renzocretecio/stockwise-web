@@ -1,74 +1,73 @@
 "use client";
 
-import { useState } from "react";
-import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ComposedChart,
-  Line,
-  LineChart,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { useMemo, useState } from "react";
 
+import { Area } from "@/components/charts/area";
+import { AreaChart } from "@/components/charts/area-chart";
+import { Bar } from "@/components/charts/bar";
+import { BarChart } from "@/components/charts/bar-chart";
+import { BarXAxis } from "@/components/charts/bar-x-axis";
+import { ComposedChart } from "@/components/charts/composed-chart";
+import { Grid } from "@/components/charts/grid";
+import { Line } from "@/components/charts/line";
+import { SeriesBar } from "@/components/charts/series-bar";
+import { ChartTooltip } from
+  "@/components/charts/tooltip/chart-tooltip";
+import { XAxis } from "@/components/charts/x-axis";
+import { YAxis } from "@/components/charts/y-axis";
 import { Button } from "@/components/ui/button";
-import {
-  type ChartConfig,
-  ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
-import { formatCurrency } from "@/lib/currency";
+import { currency, getActiveCurrencyCode } from "@/lib/currency";
 import { useDashboardTrends } from
   "@/modules/dashboard/services/dashboard";
 import type { DashboardTrendPoint } from
   "@/modules/dashboard/types";
 import type { ReportDateRange } from "@/modules/reports/types";
 
-const primary = "var(--chart-1)";
-const medium = "color-mix(in oklab, var(--chart-1) 68%, transparent)";
-const light = "color-mix(in oklab, var(--chart-1) 42%, transparent)";
+const primary = "var(--primary)";
+const secondary = "var(--chart-1)";
+const tertiary = "var(--chart-3)";
+const chartMargin = {
+  top: 12,
+  right: 18,
+  bottom: 36,
+  left: 48,
+};
+const dualAxisMargin = {
+  ...chartMargin,
+  right: 52,
+};
 
-const salesConfig = {
-  items_sold: { label: "Items sold", color: primary },
-  order_count: { label: "Orders", color: medium },
-} satisfies ChartConfig;
+type TrendView = "stockouts" | "turnover" | "operations";
 
-const capitalConfig = {
-  inventory_value: { label: "Inventory value", color: primary },
-  dead_stock_value: { label: "Dead-stock value", color: light },
-} satisfies ChartConfig;
+type ChartPoint = Omit<DashboardTrendPoint, "date"> & {
+  date: Date;
+};
 
-const stockoutConfig = {
-  stockout_count: { label: "Stockouts", color: primary },
-} satisfies ChartConfig;
-
-const turnoverConfig = {
-  inventory_turnover: { label: "Turnover", color: primary },
-} satisfies ChartConfig;
-
-const operationsConfig = {
-  purchase_receipts: { label: "Purchase receipts", color: primary },
-  adjustments: { label: "Other adjustments", color: medium },
-  discrepancies: { label: "Count discrepancies", color: light },
-} satisfies ChartConfig;
-
-type TrendView =
-  | "sales"
-  | "capital"
-  | "stockouts"
-  | "turnover"
-  | "operations";
+type LegendItem = {
+  color: string;
+  label: string;
+};
 
 const extraTrendViews: { label: string; value: TrendView }[] = [
   { label: "Stockouts", value: "stockouts" },
   { label: "Turnover", value: "turnover" },
   { label: "Stock operations", value: "operations" },
+];
+
+const salesLegend: LegendItem[] = [
+  { color: primary, label: "Items sold" },
+  { color: secondary, label: "Orders" },
+];
+
+const capitalLegend: LegendItem[] = [
+  { color: primary, label: "Inventory value" },
+  { color: secondary, label: "Dead-stock value" },
+];
+
+const operationsLegend: LegendItem[] = [
+  { color: primary, label: "Purchase receipts" },
+  { color: secondary, label: "Other adjustments" },
+  { color: tertiary, label: "Count discrepancies" },
 ];
 
 const number = new Intl.NumberFormat("en-PH", {
@@ -80,12 +79,6 @@ const compactNumber = new Intl.NumberFormat("en-PH", {
   maximumFractionDigits: 1,
 });
 
-const dateLabel = (value: string) =>
-  new Date(`${value}T12:00:00`).toLocaleDateString("en-PH", {
-    month: "short",
-    day: "numeric",
-  });
-
 export function DashboardTrends({
   dateRange,
 }: {
@@ -94,6 +87,10 @@ export function DashboardTrends({
   const [selectedView, setSelectedView] = useState<TrendView>("stockouts");
   const [showMore, setShowMore] = useState(false);
   const trends = useDashboardTrends(dateRange);
+  const chartData = useMemo(
+    () => toChartData(trends.data?.points ?? []),
+    [trends.data?.points],
+  );
 
   if (trends.error) {
     return (
@@ -139,13 +136,13 @@ export function DashboardTrends({
           description="Net units sold compared with completed orders"
           title="Sales activity"
         >
-          <SalesActivityChart points={data.points} />
+          <SalesActivityChart points={chartData} />
         </ChartPanel>
         <ChartPanel
           description={data.inventory_valuation_method}
           title="Inventory capital"
         >
-          <InventoryCapitalChart points={data.points} />
+          <InventoryCapitalChart points={chartData} />
         </ChartPanel>
       </div>
 
@@ -175,7 +172,7 @@ export function DashboardTrends({
               }
               title="Stockout trend"
             >
-              <StockoutChart points={data.points} />
+              <StockoutChart points={chartData} />
             </ChartPanel>
           ) : null}
           {selectedView === "turnover" ? (
@@ -185,7 +182,7 @@ export function DashboardTrends({
               }
               title="Inventory turnover"
             >
-              <TurnoverChart points={data.points} />
+              <TurnoverChart points={chartData} />
             </ChartPanel>
           ) : null}
           {selectedView === "operations" ? (
@@ -195,7 +192,7 @@ export function DashboardTrends({
               }
               title="Receipts, adjustments, and discrepancies"
             >
-              <OperationsChart points={data.points} />
+              <OperationsChart points={chartData} />
             </ChartPanel>
           ) : null}
         </div>
@@ -238,247 +235,301 @@ function ChartHeading({
   );
 }
 
-function SalesActivityChart({
-  points,
-}: {
-  points: DashboardTrendPoint[];
-}) {
+function SalesActivityChart({ points }: { points: ChartPoint[] }) {
   return (
-    <ChartContainer config={salesConfig} className="h-64 w-full">
+    <TrendChart legend={salesLegend}>
       <ComposedChart
-        accessibilityLayer
+        aspectRatio="auto"
+        className="h-64"
         data={points}
-        margin={{ left: -10, right: -10 }}
+        margin={dualAxisMargin}
+        maxBarSize={24}
       >
-        <CartesianGrid vertical={false} strokeDasharray="3 5" />
-        <ChartXAxis />
+        <Grid horizontal strokeDasharray="3,5" />
+        <YAxis formatValue={formatCompactNumber} />
         <YAxis
-          axisLine={false}
-          tickFormatter={(value) => compactNumber.format(value)}
-          tickLine={false}
-          width={42}
-          yAxisId="items"
-        />
-        <YAxis
-          axisLine={false}
+          formatLargeNumbers={false}
+          formatValue={formatWholeNumber}
           orientation="right"
-          tickLine={false}
-          width={32}
           yAxisId="orders"
         />
-        <MetricTooltip config={salesConfig} />
-        <ChartLegend content={<ChartLegendContent />} />
-        <Bar
-          dataKey="items_sold"
-          fill="var(--color-items_sold)"
-          radius={[3, 3, 0, 0]}
-          yAxisId="items"
-        />
+        <SeriesBar dataKey="items_sold" fill={primary} radius={4} />
         <Line
           dataKey="order_count"
-          dot={false}
-          stroke="var(--color-order_count)"
-          strokeWidth={2}
-          type="monotone"
+          fadeEdges={false}
+          stroke={secondary}
+          strokeWidth={2.5}
           yAxisId="orders"
         />
+        <XAxis numTicks={5} />
+        <ChartTooltip
+          indicatorDasharray="3,5"
+          rows={(point) => [
+            {
+              color: primary,
+              label: "Items sold",
+              value: number.format(toNumber(point.items_sold)),
+            },
+            {
+              color: secondary,
+              label: "Orders",
+              value: number.format(toNumber(point.order_count)),
+            },
+          ]}
+        />
       </ComposedChart>
-    </ChartContainer>
+    </TrendChart>
   );
 }
 
-function InventoryCapitalChart({
-  points,
-}: {
-  points: DashboardTrendPoint[];
-}) {
+function InventoryCapitalChart({ points }: { points: ChartPoint[] }) {
   return (
-    <ChartContainer config={capitalConfig} className="h-64 w-full">
+    <TrendChart legend={capitalLegend}>
       <AreaChart
-        accessibilityLayer
+        aspectRatio="auto"
+        className="h-64"
         data={points}
-        margin={{ left: -4, right: 4 }}
+        margin={chartMargin}
       >
-        <defs>
-          <linearGradient id="inventory-value-fill" x1="0" x2="0" y1="0" y2="1">
-            <stop
-              offset="5%"
-              stopColor="var(--color-inventory_value)"
-              stopOpacity={0.24}
-            />
-            <stop
-              offset="95%"
-              stopColor="var(--color-inventory_value)"
-              stopOpacity={0.02}
-            />
-          </linearGradient>
-        </defs>
-        <CartesianGrid vertical={false} strokeDasharray="3 5" />
-        <ChartXAxis />
-        <YAxis
-          axisLine={false}
-          tickFormatter={(value) => compactNumber.format(value)}
-          tickLine={false}
-          width={46}
-        />
-        <MetricTooltip config={capitalConfig} currency />
-        <ChartLegend content={<ChartLegendContent />} />
+        <Grid horizontal strokeDasharray="3,5" />
+        <YAxis formatValue={formatCompactCurrency} />
         <Area
           dataKey="inventory_value"
-          fill="url(#inventory-value-fill)"
-          stroke="var(--color-inventory_value)"
+          fadeEdges
+          fill={primary}
+          fillOpacity={0.24}
           strokeWidth={2}
-          type="monotone"
         />
         <Area
           dataKey="dead_stock_value"
-          fill="transparent"
-          stroke="var(--color-dead_stock_value)"
+          fill={secondary}
+          fillOpacity={0}
           strokeWidth={2}
-          type="monotone"
+        />
+        <XAxis numTicks={5} />
+        <ChartTooltip
+          indicatorDasharray="3,5"
+          rows={(point) => [
+            {
+              color: primary,
+              label: "Inventory value",
+              value: currency.format(toNumber(point.inventory_value)),
+            },
+            {
+              color: secondary,
+              label: "Dead-stock value",
+              value: currency.format(toNumber(point.dead_stock_value)),
+            },
+          ]}
         />
       </AreaChart>
-    </ChartContainer>
+    </TrendChart>
   );
 }
 
-function StockoutChart({ points }: { points: DashboardTrendPoint[] }) {
+function StockoutChart({ points }: { points: ChartPoint[] }) {
   return (
-    <ChartContainer config={stockoutConfig} className="h-64 w-full">
+    <TrendChart legend={[{ color: primary, label: "Stockouts" }]}>
       <BarChart
-        accessibilityLayer
+        aspectRatio="auto"
+        barGap={0.3}
+        className="h-64"
         data={points}
-        margin={{ left: -12, right: 4 }}
+        margin={chartMargin}
+        xDataKey="date"
       >
-        <CartesianGrid vertical={false} strokeDasharray="3 5" />
-        <ChartXAxis />
-        <YAxis allowDecimals={false} axisLine={false} tickLine={false} />
-        <MetricTooltip config={stockoutConfig} />
+        <Grid horizontal strokeDasharray="3,5" />
+        <YAxis formatLargeNumbers={false} formatValue={formatWholeNumber} />
         <Bar
           dataKey="stockout_count"
-          fill="var(--color-stockout_count)"
-          radius={[3, 3, 0, 0]}
+          fill={primary}
+          lineCap={4}
+        />
+        <BarXAxis maxLabels={6} />
+        <ChartTooltip
+          indicatorDasharray="3,5"
+          rows={(point) => [
+            {
+              color: primary,
+              label: "Stockouts",
+              value: formatWholeNumber(toNumber(point.stockout_count)),
+            },
+          ]}
         />
       </BarChart>
-    </ChartContainer>
+    </TrendChart>
   );
 }
 
-function TurnoverChart({ points }: { points: DashboardTrendPoint[] }) {
+function TurnoverChart({ points }: { points: ChartPoint[] }) {
   return (
-    <ChartContainer config={turnoverConfig} className="h-64 w-full">
-      <LineChart
-        accessibilityLayer
+    <TrendChart legend={[{ color: primary, label: "Turnover" }]}>
+      <AreaChart
+        aspectRatio="auto"
+        className="h-64"
         data={points}
-        margin={{ left: -12, right: 8 }}
+        margin={chartMargin}
       >
-        <CartesianGrid vertical={false} strokeDasharray="3 5" />
-        <ChartXAxis />
-        <YAxis
-          axisLine={false}
-          tickFormatter={(value) => `${number.format(value)}×`}
-          tickLine={false}
-        />
-        <MetricTooltip config={turnoverConfig} suffix="×" />
-        <Line
+        <Grid horizontal strokeDasharray="3,5" />
+        <YAxis formatValue={formatTurnover} />
+        <Area
           dataKey="inventory_turnover"
-          dot={false}
-          stroke="var(--color-inventory_turnover)"
+          fadeEdges
+          fill={primary}
+          fillOpacity={0.2}
+          showMarkers={points.length <= 16}
           strokeWidth={2}
-          type="monotone"
         />
-      </LineChart>
-    </ChartContainer>
+        <XAxis numTicks={5} />
+        <ChartTooltip
+          indicatorDasharray="3,5"
+          rows={(point) => [
+            {
+              color: primary,
+              label: "Turnover",
+              value: formatTurnover(toNumber(point.inventory_turnover)),
+            },
+          ]}
+        />
+      </AreaChart>
+    </TrendChart>
   );
 }
 
-function OperationsChart({
-  points,
-}: {
-  points: DashboardTrendPoint[];
-}) {
+function OperationsChart({ points }: { points: ChartPoint[] }) {
   return (
-    <ChartContainer config={operationsConfig} className="h-72 w-full">
-      <BarChart
-        accessibilityLayer
+    <TrendChart legend={operationsLegend}>
+      <AreaChart
+        aspectRatio="auto"
+        className="h-72"
         data={points}
-        margin={{ left: -4, right: 4 }}
+        margin={dualAxisMargin}
       >
-        <CartesianGrid vertical={false} strokeDasharray="3 5" />
-        <ChartXAxis />
+        <Grid horizontal strokeDasharray="3,5" />
+        <YAxis formatValue={formatCompactNumber} />
         <YAxis
-          axisLine={false}
-          tickFormatter={(value) => compactNumber.format(value)}
-          tickLine={false}
-          width={44}
+          formatLargeNumbers={false}
+          formatValue={formatSignedNumber}
+          orientation="right"
+          yAxisId="corrections"
         />
-        <MetricTooltip config={operationsConfig} />
-        <ChartLegend content={<ChartLegendContent />} />
-        <Bar
+        <Area
           dataKey="purchase_receipts"
-          fill="var(--color-purchase_receipts)"
-          radius={[3, 3, 0, 0]}
+          fadeEdges
+          fill={primary}
+          fillOpacity={0.2}
+          strokeWidth={2}
         />
-        <Bar
+        <Area
           dataKey="adjustments"
-          fill="var(--color-adjustments)"
-          radius={[3, 3, 0, 0]}
+          fill={secondary}
+          fillOpacity={0}
+          strokeWidth={2}
+          yAxisId="corrections"
         />
-        <Bar
+        <Area
           dataKey="discrepancies"
-          fill="var(--color-discrepancies)"
-          radius={[3, 3, 0, 0]}
+          fill={tertiary}
+          fillOpacity={0}
+          strokeWidth={2}
+          yAxisId="corrections"
         />
-      </BarChart>
-    </ChartContainer>
+        <XAxis numTicks={5} />
+        <ChartTooltip
+          indicatorDasharray="3,5"
+          rows={(point) => [
+            {
+              color: primary,
+              label: "Purchase receipts",
+              value: number.format(toNumber(point.purchase_receipts)),
+            },
+            {
+              color: secondary,
+              label: "Other adjustments",
+              value: formatSignedNumber(toNumber(point.adjustments)),
+            },
+            {
+              color: tertiary,
+              label: "Count discrepancies",
+              value: formatSignedNumber(toNumber(point.discrepancies)),
+            },
+          ]}
+        />
+      </AreaChart>
+    </TrendChart>
   );
 }
 
-function ChartXAxis() {
-  return (
-    <XAxis
-      axisLine={false}
-      dataKey="date"
-      minTickGap={28}
-      tickFormatter={dateLabel}
-      tickLine={false}
-      tickMargin={10}
-    />
-  );
-}
-
-function MetricTooltip({
-  config,
-  currency = false,
-  suffix = "",
+function TrendChart({
+  children,
+  legend,
 }: {
-  config: ChartConfig;
-  currency?: boolean;
-  suffix?: string;
+  children: React.ReactNode;
+  legend: LegendItem[];
 }) {
   return (
-    <ChartTooltip
-      content={
-        <ChartTooltipContent
-          indicator="line"
-          labelFormatter={(value) => dateLabel(String(value))}
-          formatter={(value, name) => (
-            <div className="flex min-w-44 justify-between gap-4">
-              <span className="text-muted-foreground">
-                {config[String(name)]?.label}
-              </span>
-              <span className="font-mono font-medium">
-                {currency
-                  ? formatCurrency(Number(value))
-                  : `${number.format(Number(value))}${suffix}`}
-              </span>
-            </div>
-          )}
-        />
-      }
-      cursor={{ stroke: "var(--border)", strokeDasharray: "3 5" }}
-    />
+    <div className="min-w-0">
+      <div
+        aria-label="Chart legend"
+        className={
+          "mb-2 flex min-h-5 flex-wrap items-center justify-end " +
+          "gap-x-4 gap-y-1 text-xs text-muted-foreground"
+        }
+      >
+        {legend.map((item) => (
+          <span className="inline-flex items-center gap-1.5" key={item.label}>
+            <span
+              aria-hidden="true"
+              className="size-2 rounded-full"
+              style={{ backgroundColor: item.color }}
+            />
+            {item.label}
+          </span>
+        ))}
+      </div>
+      {children}
+    </div>
   );
+}
+
+function toChartData(points: DashboardTrendPoint[]): ChartPoint[] {
+  return points.map((point) => ({
+    ...point,
+    date: new Date(`${point.date}T12:00:00`),
+  }));
+}
+
+function toNumber(value: unknown) {
+  const parsed = typeof value === "number" ? value : Number(value ?? 0);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function formatCompactNumber(value: number) {
+  return compactNumber.format(value);
+}
+
+function formatWholeNumber(value: number) {
+  return number.format(Math.round(value));
+}
+
+function formatSignedNumber(value: number) {
+  if (value === 0) {
+    return "0";
+  }
+  return `${value > 0 ? "+" : ""}${number.format(value)}`;
+}
+
+function formatTurnover(value: number) {
+  return `${number.format(value)}×`;
+}
+
+function formatCompactCurrency(value: number) {
+  return new Intl.NumberFormat("en-PH", {
+    style: "currency",
+    currency: getActiveCurrencyCode(),
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(value);
 }
 
 function DashboardTrendsLoading() {

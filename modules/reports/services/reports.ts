@@ -27,11 +27,32 @@ export const reportKeys = {
         ] as const,
     purchases: (days: number) =>
         [...reportKeys.all, "purchases", days] as const,
+    purchasesRange: (range: ReportDateRange) =>
+        [
+            ...reportKeys.all,
+            "purchases",
+            range.startDate,
+            range.endDate,
+        ] as const,
     inventory: () => [...reportKeys.all, "inventory"] as const,
     profit: (days: number) => [...reportKeys.all, "profit", days] as const,
+    profitRange: (range: ReportDateRange) =>
+        [
+            ...reportKeys.all,
+            "profit",
+            range.startDate,
+            range.endDate,
+        ] as const,
     lowStock: () => [...reportKeys.all, "low-stock"] as const,
     movements: (days: number) =>
         [...reportKeys.all, "movements", days] as const,
+    movementsRange: (range: ReportDateRange) =>
+        [
+            ...reportKeys.all,
+            "movements",
+            range.startDate,
+            range.endDate,
+        ] as const,
 };
 
 const usePeriodQuery = <T>(
@@ -42,24 +63,37 @@ const usePeriodQuery = <T>(
     useQuery({
         queryKey: key,
         queryFn: () => apiClient<T>(`/api/reports/${path}?days=${days}`),
-        staleTime: 60_000,
+        staleTime: 10 * 60 * 1000,
+        refetchOnMount: false
     });
 
-export const useSalesReport = (days: ReportPeriod) =>
-    usePeriodQuery<SalesReport>("sales", reportKeys.sales(days), days);
-
-export const useSalesReportByDateRange = (range: ReportDateRange) => {
+const useDateRangeQuery = <T>(
+    path: string,
+    key: readonly unknown[],
+    range: ReportDateRange,
+) => {
     const query = new URLSearchParams({
         start_date: range.startDate,
         end_date: range.endDate,
     });
 
     return useQuery({
-        queryKey: reportKeys.salesRange(range),
+        queryKey: key,
         queryFn: () =>
-            apiClient<SalesReport>(`/api/reports/sales?${query.toString()}`),
+            apiClient<T>(`/api/reports/${path}?${query.toString()}`),
         staleTime: 60_000,
     });
+};
+
+export const useSalesReport = (days: ReportPeriod) =>
+    usePeriodQuery<SalesReport>("sales", reportKeys.sales(days), days);
+
+export const useSalesReportByDateRange = (range: ReportDateRange) => {
+    return useDateRangeQuery<SalesReport>(
+        "sales",
+        reportKeys.salesRange(range),
+        range,
+    );
 };
 
 export const useOperationalMetrics = (range: ReportDateRange) => {
@@ -85,8 +119,22 @@ export const usePurchaseReport = (days: ReportPeriod) =>
         days,
     );
 
+export const usePurchaseReportByDateRange = (range: ReportDateRange) =>
+    useDateRangeQuery<PurchaseReport>(
+        "purchases",
+        reportKeys.purchasesRange(range),
+        range,
+    );
+
 export const useProfitReport = (days: ReportPeriod) =>
     usePeriodQuery<ProfitReport>("profit", reportKeys.profit(days), days);
+
+export const useProfitReportByDateRange = (range: ReportDateRange) =>
+    useDateRangeQuery<ProfitReport>(
+        "profit",
+        reportKeys.profitRange(range),
+        range,
+    );
 
 export const useStockMovementReport = (days: ReportPeriod) =>
     usePeriodQuery<StockMovementReport>(
@@ -95,11 +143,21 @@ export const useStockMovementReport = (days: ReportPeriod) =>
         days,
     );
 
+export const useStockMovementReportByDateRange = (
+    range: ReportDateRange,
+) =>
+    useDateRangeQuery<StockMovementReport>(
+        "stock-movements",
+        reportKeys.movementsRange(range),
+        range,
+    );
+
 export const useInventoryReport = () =>
     useQuery({
         queryKey: reportKeys.inventory(),
         queryFn: () => apiClient<InventoryReport>("/api/reports/inventory"),
         staleTime: 60_000,
+        refetchOnMount: false
     });
 
 export const useLowStockReport = () =>
@@ -107,4 +165,5 @@ export const useLowStockReport = () =>
         queryKey: reportKeys.lowStock(),
         queryFn: () => apiClient<LowStockReport>("/api/reports/low-stock"),
         staleTime: 60_000,
+        refetchOnMount: false
     });

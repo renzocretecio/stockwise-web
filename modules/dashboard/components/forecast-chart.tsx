@@ -1,39 +1,18 @@
 "use client";
 
-import {
-  CartesianGrid,
-  Line,
-  LineChart,
-  XAxis,
-  YAxis,
-} from "recharts";
-
-import {
-  type ChartConfig,
-  ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
+import { Grid } from "@/components/charts/grid";
+import { Line } from "@/components/charts/line";
+import { LineChart } from "@/components/charts/line-chart";
+import { ChartTooltip } from
+  "@/components/charts/tooltip/chart-tooltip";
+import { XAxis } from "@/components/charts/x-axis";
+import { YAxis } from "@/components/charts/y-axis";
 import type { ForecastPoint } from "@/modules/dashboard/types";
 
-const chartConfig = {
-  actual: {
-    label: "Net sales",
-    color: "var(--chart-1)",
-  },
-  forecast: {
-    label: "Forecast",
-    color: "var(--color-secondary)",
-  },
-} satisfies ChartConfig;
-
-const formatDate = (value: string) =>
-  new Date(`${value}T00:00:00`).toLocaleDateString("en-PH", {
-    month: "short",
-    day: "numeric",
-  });
+const seriesColor = "var(--primary)";
+const number = new Intl.NumberFormat("en-PH", {
+  maximumFractionDigits: 1,
+});
 
 export function ForecastChart({ points }: { points: ForecastPoint[] }) {
   if (!points.length) {
@@ -49,67 +28,88 @@ export function ForecastChart({ points }: { points: ForecastPoint[] }) {
     );
   }
 
+  const firstForecastIndex = points.findIndex(
+    (point) => point.forecast !== null,
+  );
+  const data = points.map((point) => ({
+    date: new Date(`${point.date}T12:00:00`),
+    units: point.actual ?? point.forecast ?? 0,
+    phase: point.actual !== null ? "actual" : "forecast",
+  }));
+
   return (
-    <ChartContainer
-      config={chartConfig}
-      className={
-        "h-[220px] min-h-[200px] w-full min-w-0 max-w-full " +
-        "sm:h-[240px]"
-      }
-    >
-      <LineChart
-        accessibilityLayer
-        data={points}
-        margin={{ top: 8, right: 4, left: -8, bottom: 0 }}
+    <div className="min-w-0">
+      <div
+        aria-label="Chart legend"
+        className={
+          "mb-2 flex items-center justify-end gap-4 text-xs " +
+          "text-muted-foreground"
+        }
       >
-        <CartesianGrid vertical={false} strokeDasharray="3 5" />
-        <XAxis
-          dataKey="date"
-          axisLine={false}
-          tickLine={false}
-          tickMargin={10}
-          minTickGap={28}
-          tickFormatter={formatDate}
-        />
-        <YAxis
-          axisLine={false}
-          tickLine={false}
-          tickMargin={8}
-          width={36}
-          allowDecimals={false}
-        />
-        <ChartTooltip
-          cursor={{ stroke: "var(--border)", strokeDasharray: "3 5" }}
-          content={
-            <ChartTooltipContent
-              indicator="line"
-              labelFormatter={(value) => formatDate(String(value))}
-            />
+        <LegendItem label="Net sales" />
+        <LegendItem dashed label="Forecast" />
+      </div>
+      <LineChart
+        aspectRatio="auto"
+        className="h-[220px] min-h-[200px] sm:h-[240px]"
+        data={data}
+        margin={{ top: 12, right: 18, bottom: 36, left: 44 }}
+      >
+        <Grid horizontal strokeDasharray="3,5" />
+        <YAxis formatLargeNumbers={false} formatValue={formatUnits} />
+        <Line
+          dashFromIndex={
+            firstForecastIndex >= 0 ? firstForecastIndex : undefined
           }
+          dataKey="units"
+          fadeEdges={false}
+          stroke={seriesColor}
+          strokeWidth={2.5}
         />
-        <ChartLegend content={<ChartLegendContent />} />
-        <Line
-          dataKey="actual"
-          name="actual"
-          type="monotone"
-          stroke="var(--color-actual)"
-          strokeWidth={2}
-          dot={false}
-          activeDot={{ r: 4 }}
-          connectNulls={false}
-        />
-        <Line
-          dataKey="forecast"
-          name="forecast"
-          type="monotone"
-          stroke="var(--color-forecast)"
-          strokeWidth={2}
-          strokeDasharray="7 6"
-          dot={false}
-          activeDot={{ r: 4 }}
-          connectNulls={false}
+        <XAxis numTicks={5} />
+        <ChartTooltip
+          indicatorDasharray="3,5"
+          rows={(point) => [
+            {
+              color: seriesColor,
+              label: point.phase === "forecast" ? "Forecast" : "Net sales",
+              value: formatUnits(toNumber(point.units)),
+            },
+          ]}
         />
       </LineChart>
-    </ChartContainer>
+    </div>
   );
+}
+
+function LegendItem({
+  dashed = false,
+  label,
+}: {
+  dashed?: boolean;
+  label: string;
+}) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span
+        aria-hidden="true"
+        className={
+          dashed
+            ? "w-4 border-t-2 border-dashed"
+            : "w-4 border-t-2"
+        }
+        style={{ borderColor: seriesColor }}
+      />
+      {label}
+    </span>
+  );
+}
+
+function toNumber(value: unknown) {
+  const parsed = typeof value === "number" ? value : Number(value ?? 0);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function formatUnits(value: number) {
+  return number.format(value);
 }

@@ -8,12 +8,15 @@ import {
 
 import {
   useCreateProduct,
-  useSuppliers,
   useUpdateProduct,
   type FormData,
 } from "@/modules/products/services";
-import { useAllCategories } from "../services/category";
 import { Button } from "@/components/ui/button";
+import { useOnlineStatus } from "@/hooks/use-online-status";
+import { ReferenceDataStatus } from
+    "@/modules/offline/components/reference-data-status";
+import { useReferenceCatalog } from
+    "@/modules/offline/services/reference-data";
 
 type ProductFormProps = {
     productId?: string;
@@ -35,15 +38,15 @@ export function ProductForm({
         error: createError,
     } = useCreateProduct();
 
+    const isOnline = useOnlineStatus();
     const {
-        data: suppliersData,
-        isLoading: suppliersLoading,
-    } = useSuppliers();
+        data: referenceData,
+        isLoading: referenceDataLoading,
+    } = useReferenceCatalog();
 
-    const suppliers = suppliersData?.suppliers ?? [];
-
-    const { data: categoriesData, isLoading: isCategoriesLoading } = useAllCategories();
-	  const categories = categoriesData?.categories ?? []
+    const suppliers = referenceData?.suppliers ?? [];
+    const categories = referenceData?.categories ?? [];
+    const referenceDataAvailable = referenceData?.available ?? false;
 
     const {
         mutateAsync: updateProduct,
@@ -129,6 +132,24 @@ export function ProductForm({
                       ? "An error occurred while updating the product."
                       : "An error occurred while creating the product."}
           </div>
+      )}
+
+      <ReferenceDataStatus
+        available={referenceDataAvailable}
+        generatedAt={referenceData?.generated_at}
+        loading={referenceDataLoading}
+      />
+
+      {!isOnline && (
+        <div
+          className={
+            "rounded-2xl border border-amber-500/30 bg-amber-500/10 " +
+            "p-4 text-sm text-amber-950 dark:text-amber-100"
+          }
+        >
+          Product changes require an internet connection. Reconnect before
+          saving this form.
+        </div>
       )}
 
       <section className="space-y-4">
@@ -323,6 +344,7 @@ export function ProductForm({
                 Loaf
               </option>
             </select>
+
           </div>
 
           <div>
@@ -330,7 +352,7 @@ export function ProductForm({
               htmlFor="supplier_id"
               className="mb-1 block text-sm font-medium"
             >
-              Supplier
+              Preferred supplier
             </label>
 
             <select
@@ -338,11 +360,14 @@ export function ProductForm({
               name="supplier_id"
               value={formData.supplier_id}
               onChange={handleChange}
-              disabled={suppliersLoading}
+              disabled={
+                referenceDataLoading ||
+                !referenceDataAvailable
+              }
               className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
             >
               <option value="">
-                {suppliersLoading
+                {referenceDataLoading
                   ? "Loading suppliers..."
                   : "Select supplier (optional)"}
               </option>
@@ -356,6 +381,11 @@ export function ProductForm({
                     </option>
                 ))}
             </select>
+
+            <p className="mt-1 text-xs text-muted-foreground">
+              You can buy this product from other suppliers when creating a
+              purchase.
+            </p>
           </div>
 
           <NumberField
@@ -418,11 +448,16 @@ export function ProductForm({
 					onChange={(e) =>
             setFormData({...formData, category_id: e.target.value})
           }
-					disabled={isCategoriesLoading}
+					disabled={
+            referenceDataLoading ||
+            !referenceDataAvailable
+          }
 					className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary disabled:bg-muted disabled:cursor-not-allowed"
 				>
 					<option value="">
-						{isCategoriesLoading ? "Loading categories..." : "Select a category"}
+						{referenceDataLoading
+              ? "Loading categories..."
+              : "Select a category"}
 					</option>
 						{categories.map((category) => (
 					<option key={category.id} value={category.id}>
@@ -465,7 +500,11 @@ export function ProductForm({
 
         <Button
             type="submit"
-            disabled={isPending}
+            disabled={
+              isPending ||
+              !isOnline ||
+              !referenceDataAvailable
+            }
         >
             {isPending
                 ? "Saving..."

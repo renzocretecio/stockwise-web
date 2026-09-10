@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/use-debounce";
 import { usePagination } from "@/hooks/use-pagination";
 import { cn } from "@/lib/utils";
+import { useHasPermission } from "@/modules/auth/hooks/use-has-permission";
 import { getSupplierColumns } from "@/modules/suppliers/columns/suppliers";
 import { SupplierForm } from "@/modules/suppliers/components/supplier-form";
 import {
@@ -41,18 +42,25 @@ export default function SuppliersPage() {
     const { data, isLoading, isError, error, refetch, isFetching } =
         useSuppliers(page, pageSize, debouncedSearch);
     const { mutateAsync: deleteSupplier } = useDeleteSupplier();
+    const canCreate = useHasPermission("suppliers.create");
+    const canUpdate = useHasPermission("suppliers.update");
+    const canArchive = useHasPermission("suppliers.archive");
     const suppliers = data?.suppliers ?? [];
     const pagination = data?.pagination;
 
     const columns = getSupplierColumns({
-        onEdit: (supplier) => {
-            setSelectedSupplier(supplier);
-            setIsSupplierFormOpen(true);
-        },
-        onDelete: (supplier) => {
-            setSupplierToDelete(supplier);
-            setIsDeleteConfirmOpen(true);
-        },
+        onEdit: canUpdate
+            ? (supplier) => {
+                  setSelectedSupplier(supplier);
+                  setIsSupplierFormOpen(true);
+              }
+            : undefined,
+        onDelete: canArchive
+            ? (supplier) => {
+                  setSupplierToDelete(supplier);
+                  setIsDeleteConfirmOpen(true);
+              }
+            : undefined,
     });
 
     const closeForm = () => {
@@ -83,21 +91,23 @@ export default function SuppliersPage() {
                     </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                    <Button
-                        aria-label="Refresh suppliers"
-                        disabled={isFetching}
-                        onClick={() => void refetch()}
-                        size="icon"
-                        type="button"
-                        variant="outline"
-                    >
-                        <RefreshCw
-                            className={cn(
-                                "size-4",
-                                isFetching && "animate-spin",
-                            )}
-                        />
-                    </Button>
+                    {canCreate ? (
+                        <Button
+                            aria-label="Refresh suppliers"
+                            disabled={isFetching}
+                            onClick={() => void refetch()}
+                            size="icon"
+                            type="button"
+                            variant="outline"
+                        >
+                            <RefreshCw
+                                className={cn(
+                                    "size-4",
+                                    isFetching && "animate-spin",
+                                )}
+                            />
+                        </Button>
+                    ) : null}
                     <Button
                         onClick={() => setIsSupplierFormOpen(true)}
                         size="sm"
@@ -181,6 +191,7 @@ export default function SuppliersPage() {
                         <EmptySuppliers
                             filtered={Boolean(searchQuery)}
                             onCreate={() => setIsSupplierFormOpen(true)}
+                            showCreate={canCreate}
                         />
                     }
                     getRowId={(supplier) => supplier.id}
@@ -247,9 +258,11 @@ export default function SuppliersPage() {
 function EmptySuppliers({
     filtered,
     onCreate,
+    showCreate,
 }: {
     filtered: boolean;
     onCreate: () => void;
+    showCreate: boolean;
 }) {
     return (
         <div className="flex flex-col items-center justify-center px-6 py-14 text-center">
@@ -264,7 +277,7 @@ function EmptySuppliers({
                     ? "Try a different search or clear the current search."
                     : "Add a supplier before creating your next purchase order."}
             </p>
-            {!filtered ? (
+            {!filtered && showCreate ? (
                 <Button
                     className="mt-5"
                     onClick={onCreate}

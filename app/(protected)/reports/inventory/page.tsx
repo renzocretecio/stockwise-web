@@ -16,6 +16,8 @@ import {
     ReportHeader,
     ReportLoading,
 } from "@/modules/reports/components/report-ui";
+import { ReportAiSummary } from
+    "@/modules/reports/components/report-ai-summary";
 import { useInventoryReport } from "@/modules/reports/services/reports";
 import type { InventoryReport } from "@/modules/reports/types";
 
@@ -61,6 +63,7 @@ export default function InventoryReportPage() {
                 title="Inventory value distribution"
                 description="Current stock valuation and category distribution."
                 icon={Package}
+                exportReport="inventory"
                 isRefreshing={isFetching}
                 onRefresh={() => void refetch()}
             />
@@ -70,7 +73,10 @@ export default function InventoryReportPage() {
             ) : error || !data ? (
                 <ReportError error={error} />
             ) : (
-                <InventoryReportContent data={data} />
+                <>
+                    <ReportAiSummary report="inventory" />
+                    <InventoryReportContent data={data} />
+                </>
             )}
         </div>
     );

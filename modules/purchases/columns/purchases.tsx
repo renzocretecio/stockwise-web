@@ -28,9 +28,9 @@ const statusLabel: Record<
 
 interface GetPurchaseColumnsOptions {
     onView: (purchase: Purchase) => void;
-    onEdit: (purchase: Purchase) => void;
-    onOrder: (purchase: Purchase) => void;
-    onReceive: (purchase: Purchase) => void;
+    onEdit?: (purchase: Purchase) => void;
+    onOrder?: (purchase: Purchase) => void;
+    onReceive?: (purchase: Purchase) => void;
 }
 
 export function getPurchaseColumns({
@@ -147,36 +147,40 @@ export function getPurchaseColumns({
                         <Eye className="h-4 w-4" />
                     </Button>
 
-                    {p.status === "draft" && (
+                    {p.status === "draft" && (onEdit || onOrder) && (
                         <>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="size-8 p-0"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onEdit(p);
-                                }}
-                                aria-label={`Edit ${p.reference_number ?? p.id}`}
-                            >
-                                <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                className="gap-1.5"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onOrder(p);
-                                }}
-                            >
-                                <Send className="h-4 w-4" />
-                                Place order
-                            </Button>
+                            {onEdit ? (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="size-8 p-0"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onEdit(p);
+                                    }}
+                                    aria-label={`Edit ${p.reference_number ?? p.id}`}
+                                >
+                                    <Pencil className="h-4 w-4" />
+                                </Button>
+                            ) : null}
+                            {onOrder ? (
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="gap-1.5"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onOrder(p);
+                                    }}
+                                >
+                                    <Send className="h-4 w-4" />
+                                    Place order
+                                </Button>
+                            ) : null}
                         </>
                     )}
 
-                    {p.status === "ordered" && (
+                    {onReceive && p.status === "ordered" && (
                         <Button
                             size="sm"
                             className="gap-1.5"

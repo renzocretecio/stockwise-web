@@ -76,14 +76,25 @@ async function handler(
     cache: "no-store",
   });
 
+  const responseHeaders = new Headers();
+  responseHeaders.set(
+    "Content-Type",
+    response.headers.get(
+      "content-type",
+    ) || "application/json",
+  );
+  for (const header of [
+    "cache-control",
+    "content-disposition",
+    "x-content-type-options",
+  ]) {
+    const value = response.headers.get(header);
+    if (value) responseHeaders.set(header, value);
+  }
+
   return new Response(response.body, {
     status: response.status,
-    headers: {
-      "Content-Type":
-        response.headers.get(
-          "content-type",
-        ) || "application/json",
-    },
+    headers: responseHeaders,
   });
 }
 

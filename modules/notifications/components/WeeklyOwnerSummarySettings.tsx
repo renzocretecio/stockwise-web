@@ -113,7 +113,7 @@ function SectionHeading({
     <div className="flex items-start gap-3 border-b py-4">
       <div
         className="mt-0.5 flex size-9 shrink-0 items-center justify-center
-          bg-primary/10 text-primary rounded-md"
+          bg-primary/10 text-primary rounded-2xl"
       >
         <Icon className="size-4" />
       </div>
@@ -721,7 +721,7 @@ function MainHeading({
     <div className="flex items-start gap-3 border-b p-4">
       <div
         className="mt-0.5 flex size-8 shrink-0 items-center justify-center
-          rounded-md bg-muted text-primary"
+          rounded-2xl bg-muted text-primary"
       >
         {icon}
       </div>

@@ -1,6 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from "@/lib/api-client";
 import {ProductsResponse, OverallStatusResponse } from '../types';
+import { subscriptionKeys } from
+    "@/modules/billing/services/billing";
+import { referenceDataKeys } from
+    "@/modules/offline/services/reference-data";
 
 export const productKeys = {
     all: ['products'] as const,
@@ -77,6 +81,12 @@ export const useCreateProduct = () => {
             queryClient.invalidateQueries({
                 queryKey: ["overall-status-products"],
             });
+            queryClient.invalidateQueries({
+                queryKey: subscriptionKeys.all,
+            });
+            queryClient.invalidateQueries({
+                queryKey: referenceDataKeys.all,
+            });
         },
     });
 };
@@ -90,6 +100,7 @@ export const useProduct = (productId: string) => {
             apiClient(`/api/products/${productId}`),
         enabled: !!productId,
         staleTime: 5 * 60 * 1000,
+        refetchOnWindowFocus: false,
     });
 };
 
@@ -105,6 +116,7 @@ export const useProducts = (page: number = 1, pageSize: number = 20, search?: st
                 }`,
             ),
         staleTime: 5 * 60 * 1000,
+        refetchOnWindowFocus: false,
     });
 };
 
@@ -114,6 +126,7 @@ export const useSuppliers = () => {
         queryKey: productKeys.suppliersList(),
         queryFn: () => apiClient<SupplierResponse>('/api/suppliers'),
         staleTime: 10 * 60 * 1000,
+        refetchOnWindowFocus: false,
     });
 };
 
@@ -137,6 +150,9 @@ export const useUpdateProduct = (productId: string) => {
             queryClient.invalidateQueries({
                 queryKey: ["overall-status-products"],
             });
+            queryClient.invalidateQueries({
+                queryKey: referenceDataKeys.all,
+            });
         },
     });
 };
@@ -157,6 +173,12 @@ export const useDeleteProduct = () => {
             queryClient.invalidateQueries({
                 queryKey: ["overall-status-products"],
             });
+            queryClient.invalidateQueries({
+                queryKey: subscriptionKeys.all,
+            });
+            queryClient.invalidateQueries({
+                queryKey: referenceDataKeys.all,
+            });
         },
     });
 };
@@ -165,6 +187,7 @@ export const useProductOverallStats = () => {
     return useQuery({
         queryKey: ["overall-status-products"],
         queryFn: () => apiClient<OverallStatusResponse>('/api/products/status/overview'),
-        staleTime: 10 * 60 * 1000,
+        staleTime: 5 * 60 * 1000,
+        refetchOnWindowFocus: false,
     })
 }

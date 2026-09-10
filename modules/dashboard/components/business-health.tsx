@@ -18,7 +18,17 @@ export function BusinessHealth({
   const sales = useSalesReportByDateRange(dateRange);
   const dashboard = useDashboard();
 
-  if (sales.error || dashboard.error) {
+  if ((!sales.data && sales.isPaused) ||
+      (!dashboard.data && dashboard.isPaused)) {
+    return (
+      <section className="border-y p-5 text-sm text-muted-foreground">
+        Business health isn’t saved for this period yet.
+        Reconnect to load it.
+      </section>
+    );
+  }
+
+  if ((sales.error && !sales.data) || (dashboard.error && !dashboard.data)) {
     return (
       <section className="border-y p-5 text-sm text-destructive">
         Unable to load business health.

@@ -1,11 +1,11 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
-import { RefreshCw, Sparkles } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
 import { DailyBriefing } from
   "@/modules/briefings/components/daily-briefing";
+import { FeatureGate } from
+  "@/modules/billing/components/feature-gate";
+import { AiUsage } from
+  "@/modules/billing/components/ai-usage";
 import { AnomalyList } from
   "@/modules/dashboard/components/anomaly-list";
 import { DemandForecastCard } from
@@ -13,16 +13,9 @@ import { DemandForecastCard } from
 import { ReorderAssistant } from
   "@/modules/dashboard/components/reorder-assistant";
 import { useDashboard } from "@/modules/dashboard/services/dashboard";
-import { Card } from "@/components/ui/card";
 
 export default function DashboardIntelligencePage() {
   const { data, isLoading, error } = useDashboard();
-  const queryClient = useQueryClient();
-
-  const refreshIntelligence = () => {
-    void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-    void queryClient.invalidateQueries({ queryKey: ["briefings"] });
-  };
 
   return (
     <div className="pb-12">
@@ -40,6 +33,7 @@ export default function DashboardIntelligencePage() {
             Understand what changed, why it matters, and what to do next.
           </p>
         </div>
+        <AiUsage />
       </div>
       
 
@@ -54,28 +48,44 @@ export default function DashboardIntelligencePage() {
         <>
           <DailyBriefing />
 
-          <div
-            className={
-              "flex flex-col gap-1 border-t border-b p-4 " +
-              "sm:flex-row sm:items-center sm:gap-3"
+          <FeatureGate
+            className="border-y"
+            description={
+              "See demand forecasts and recommended purchase quantities " +
+              "with the Pro plan."
             }
+            feature="forecasting"
+            title="Demand forecasting is available on Pro"
           >
-            <h2 className="font-semibold">Demand forecasting</h2>
-            <p className="text-xs text-muted-foreground sm:border-l sm:pl-3">
-              What your recent sales suggest you should order.
-            </p>
-          </div>
-          
-          <div
-            className={
-              "grid min-w-0 grid-cols-1 " +
-              "lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x"
-            }
-          >
-            <DemandForecastCard forecast={data.forecasts[0]} />
-            <ReorderAssistant forecasts={data.forecasts} />
-          </div>
-          
+            <div>
+              <div
+                className={
+                  "flex flex-col gap-1 border-y p-4 " +
+                  "sm:flex-row sm:items-center sm:gap-3"
+                }
+              >
+                <h2 className="font-semibold">Demand forecasting</h2>
+                <p
+                  className={
+                    "text-xs text-muted-foreground sm:border-l " +
+                    "sm:pl-3"
+                  }
+                >
+                  What your recent sales suggest you should order.
+                </p>
+              </div>
+
+              <div
+                className={
+                  "grid min-w-0 grid-cols-1 divide-y " +
+                  "lg:grid-cols-2 lg:divide-x lg:divide-y-0"
+                }
+              >
+                <DemandForecastCard forecast={data.forecasts[0]} />
+                <ReorderAssistant forecasts={data.forecasts} />
+              </div>
+            </div>
+          </FeatureGate>
 
           <AnomalyList anomalies={data.anomalies} />
         </>

@@ -26,6 +26,7 @@ import {
     useReceivePurchase,
 } from "@/modules/purchases/services/purchases";
 import { OrderConfirmDialog } from "@/modules/purchases/components/order-confirm-dialog";
+import { useHasPermission } from "@/modules/auth/hooks/use-has-permission";
 
 export default function PurchaseDetailPage() {
     const params = useParams<{ id: string }>();
@@ -52,6 +53,9 @@ export default function PurchaseDetailPage() {
         useCancelPurchase(purchaseId);
 
     const purchase = data;
+    const mayCreate = useHasPermission("purchases.create");
+    const mayReceive = useHasPermission("purchases.receive");
+    const mayCancel = useHasPermission("purchases.cancel");
 
     if (isLoading) {
         return (
@@ -80,10 +84,10 @@ export default function PurchaseDetailPage() {
         );
     }
 
-    const canOrder = purchase.status === "draft";
-    const canReceive = purchase.status === "ordered";
+    const canOrder = mayCreate && purchase.status === "draft";
+    const canReceive = mayReceive && purchase.status === "ordered";
 
-    const canCancel = purchase.status === "draft";
+    const canCancel = mayCancel && purchase.status === "draft";
 
     const handleReceive = async () => {
         try {

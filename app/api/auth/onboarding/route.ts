@@ -15,7 +15,10 @@ export async function GET(request: NextRequest) {
   const apiResponse = await fetch(
     `${process.env.API_URL}/businesses/${businessId}`,
     {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "X-Business-ID": businessId,
+      },
       cache: "no-store",
     },
   );
@@ -39,6 +42,7 @@ export async function PATCH(request: NextRequest) {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
+        "X-Business-ID": businessId,
       },
       body: JSON.stringify({ ...payload, complete_onboarding: true }),
       cache: "no-store",

@@ -2,7 +2,14 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { ArrowRight, Check, RefreshCw, Sparkles, X } from "lucide-react";
+import {
+    ArrowRight,
+    Check,
+    ListChecks,
+    RefreshCw,
+    Sparkles,
+    X,
+} from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -18,6 +25,8 @@ import {
     useTodayBriefing,
 } from "@/modules/briefings/services/briefings";
 import type { BriefingRecommendation } from "@/modules/briefings/types";
+import { useAiAllowance } from
+    "@/modules/billing/components/ai-usage";
 
 type RecommendationGroup = {
     id: string;
@@ -31,6 +40,7 @@ export function DailyBriefing() {
     const { data, isLoading, error } = useTodayBriefing();
     const generate = useGenerateBriefing();
     const recommendationAction = useRecommendationAction();
+    const aiAllowance = useAiAllowance();
     const [selectedActionId, setSelectedActionId] = useState<string | null>(
         null,
     );
@@ -80,12 +90,14 @@ export function DailyBriefing() {
                             ? "Analyzing inventory…"
                             : "Generate today’s briefing"}
                     </Button>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                        Automatic daily briefing · No AI allowance used
+                    </p>
                 </div>
             </div>
         );
     }
 
-    const recap = briefing.summary.filter(Boolean).join(" ");
     const actionGroups = groupRecommendedActions(active);
     const visibleRecommendations = active.slice(0, 3);
     const selectedAction =
@@ -133,22 +145,42 @@ export function DailyBriefing() {
                                     ).toLocaleString()}
                                 </p>
                             </div>
-                            <Button
-                                className="w-full sm:w-auto"
-                                disabled={generate.isPending}
-                                onClick={() => generate.mutate(true)}
-                                size="sm"
-                                variant="outline"
-                            >
-                                <RefreshCw
-                                    className={`mr-2 h-4 w-4 ${
-                                        generate.isPending
-                                            ? "animate-spin"
-                                            : ""
-                                    }`}
-                                />
-                                Regenerate
-                            </Button>
+                            <div className="sm:text-right">
+                                <Button
+                                    className="w-full sm:w-auto"
+                                    disabled={
+                                        generate.isPending ||
+                                        aiAllowance.exhausted
+                                    }
+                                    onClick={() => generate.mutate(true)}
+                                    size="sm"
+                                    variant="outline"
+                                >
+                                    <RefreshCw
+                                        className={`mr-2 h-4 w-4 ${
+                                            generate.isPending
+                                                ? "animate-spin"
+                                                : ""
+                                        }`}
+                                    />
+                                    {aiAllowance.exhausted
+                                        ? "Weekly limit reached"
+                                        : "Regenerate"}
+                                </Button>
+                                <p
+                                    className={
+                                        "mt-1.5 text-xs " +
+                                        "text-muted-foreground"
+                                    }
+                                >
+                                    {aiAllowance.exhausted
+                                        ? `Resets ${
+                                              aiAllowance.resetLabel ??
+                                              "next week"
+                                          }`
+                                        : "Uses 1 AI action"}
+                                </p>
+                            </div>
                         </div>
 
                         <h3
@@ -250,10 +282,17 @@ export function DailyBriefing() {
                     <div className="border-b p-4 sm:p-5">
                         <div className="flex items-start justify-between gap-3">
                             <div>
-                                <h3 className="font-semibold">Next steps</h3>
+                                <div className="flex items-center gap-2">
+                                    <ListChecks
+                                        className="size-4 text-primary"
+                                    />
+                                    <h3 className="font-semibold">
+                                        Today&apos;s priorities
+                                    </h3>
+                                </div>
                                 <p className="mt-1 text-xs text-muted-foreground">
-                                    Start with the actions that have the
-                                    greatest impact.
+                                    A guided action list ordered by business
+                                    impact.
                                 </p>
                             </div>
                             <Badge variant="secondary">{active.length}</Badge>
@@ -301,7 +340,11 @@ export function DailyBriefing() {
                                                         "font-normal text-muted-foreground"
                                                     }
                                                 >
-                                                    View items and supporting evidence
+                                                    {formatItemCount(
+                                                        group.recommendations
+                                                            .length,
+                                                    )}
+                                                    {" · Review evidence and act"}
                                                 </span>
                                             </span>
                                             <ArrowRight
@@ -370,7 +413,7 @@ function RecommendationDrawer({
                     <div className="space-y-3">
                         {group?.recommendations.map((item) => (
                             <article
-                                className="border bg-muted/30 p-4 rounded-md"
+                                className="border bg-muted/30 p-4 rounded-2xl"
                                 key={item.id}
                             >
                                 <div className="flex flex-wrap items-center gap-2">
@@ -516,4 +559,8 @@ function recommendationActionLabel(
         default:
             return recommendations[0].recommended_action;
     }
+}
+
+function formatItemCount(count: number) {
+    return `${count} ${count === 1 ? "item" : "items"}`;
 }

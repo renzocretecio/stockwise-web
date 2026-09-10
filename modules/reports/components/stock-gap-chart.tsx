@@ -1,29 +1,21 @@
 "use client";
 
-import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts";
-
+import { Bar } from "@/components/charts/bar";
+import { BarChart } from "@/components/charts/bar-chart";
+import { BarValueAxis } from "@/components/charts/bar-value-axis";
+import { BarYAxis } from "@/components/charts/bar-y-axis";
+import { Grid } from "@/components/charts/grid";
+import { ChartTooltip } from
+    "@/components/charts/tooltip/chart-tooltip";
 import {
-    type ChartConfig,
-    ChartContainer,
-    ChartTooltip,
-    ChartTooltipContent,
-} from "@/components/ui/chart";
+    EmptyReportChart,
+    formatWholeChartNumber,
+    horizontalReportChartMargin,
+    reportPrimary,
+    reportSecondary,
+    toChartNumber,
+} from "@/modules/reports/components/report-chart-utils";
 import type { LowStockReport } from "@/modules/reports/types";
-
-const chartConfig = {
-    stock_gap: {
-        label: "Units below target",
-        color: "var(--chart-1)",
-    },
-} satisfies ChartConfig;
-
-const chartShades = [
-    "var(--chart-1)",
-    "var(--chart-2)",
-    "var(--chart-3)",
-    "var(--chart-4)",
-    "var(--chart-5)",
-];
 
 type StockItem = LowStockReport["items"][number];
 
@@ -37,82 +29,61 @@ export function StockGapChart({ items }: { items: StockItem[] }) {
             ),
         }))
         .sort((left, right) => right.stock_gap - left.stock_gap)
-        .slice(0, 5)
-        .map((item) => ({
-            ...item,
-            label:
-                item.product_name.length > 18
-                    ? `${item.product_name.slice(0, 17)}…`
-                    : item.product_name,
-        }));
+        .slice(0, 5);
 
     if (!data.length) {
-        return <EmptyState />;
+        return (
+            <EmptyReportChart>
+                No products currently require replenishment.
+            </EmptyReportChart>
+        );
     }
 
     return (
-        <ChartContainer
-            config={chartConfig}
-            className="h-[280px] w-full min-w-0 max-w-full"
+        <BarChart
+            aspectRatio="auto"
+            barGap={0.34}
+            className="h-[280px]"
+            data={data}
+            margin={horizontalReportChartMargin}
+            orientation="horizontal"
+            xDataKey="product_name"
         >
-            <BarChart
-                accessibilityLayer
-                data={data}
-                layout="vertical"
-                margin={{ top: 4, right: 12, left: 4, bottom: 0 }}
-            >
-                <CartesianGrid horizontal={false} strokeDasharray="3 5" />
-                <XAxis
-                    type="number"
-                    axisLine={false}
-                    tickLine={false}
-                    allowDecimals={false}
-                />
-                <YAxis
-                    type="category"
-                    dataKey="label"
-                    axisLine={false}
-                    tickLine={false}
-                    width={94}
-                    tick={{ fontSize: 11 }}
-                />
-                <ChartTooltip
-                    cursor={{ fill: "var(--muted)" }}
-                    content={
-                        <ChartTooltipContent
-                            labelKey="product_name"
-                            formatter={(value) => (
-                                <div className="flex w-full min-w-40 justify-between gap-4">
-                                    <span className="text-muted-foreground">
-                                        Units below target
-                                    </span>
-                                    <span className="font-mono font-medium">
-                                        {Number(value).toLocaleString("en-PH")}
-                                    </span>
-                                </div>
-                            )}
-                        />
-                    }
-                />
-                <Bar dataKey="stock_gap" name="stock_gap" radius={[0, 6, 6, 0]}>
-                    {data.map((item, index) => (
-                        <Cell key={item.product_id} fill={chartShades[index]} />
-                    ))}
-                </Bar>
-            </BarChart>
-        </ChartContainer>
-    );
-}
-
-function EmptyState() {
-    return (
-        <div
-            className={
-                "flex h-[280px] items-center justify-center text-sm " +
-                "text-muted-foreground"
-            }
-        >
-            No products currently require replenishment.
-        </div>
+            <Grid horizontal={false} strokeDasharray="3,5" vertical />
+            <BarValueAxis formatValue={formatWholeChartNumber} />
+            <Bar
+                dataKey="stock_gap"
+                fill={(point) =>
+                    point.status === "out_of_stock"
+                        ? reportSecondary
+                        : reportPrimary
+                }
+                lineCap={6}
+                stroke={reportPrimary}
+            />
+            <BarYAxis labelWidth={108} />
+            <ChartTooltip
+                showDatePill={false}
+                rows={(point) => [
+                    {
+                        color:
+                            point.status === "out_of_stock"
+                                ? reportSecondary
+                                : reportPrimary,
+                        label: "Units below target",
+                        value: formatWholeChartNumber(
+                            toChartNumber(point.stock_gap),
+                        ),
+                    },
+                    {
+                        color: "var(--chart-3)",
+                        label: "On hand",
+                        value: formatWholeChartNumber(
+                            toChartNumber(point.quantity),
+                        ),
+                    },
+                ]}
+            />
+        </BarChart>
     );
 }

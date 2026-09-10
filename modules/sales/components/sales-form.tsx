@@ -5,7 +5,12 @@ import { Plus, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/currency";
-import { useProducts } from "@/modules/products/services";
+import { ReferenceDataStatus } from
+    "@/modules/offline/components/reference-data-status";
+import { ReferenceCombobox } from
+    "@/modules/offline/components/reference-combobox";
+import { useReferenceCatalog } from
+    "@/modules/offline/services/reference-data";
 import { useCreateSale } from "@/modules/sales/services/sales";
 import { PaymentMethod, SaleFormData } from "@/modules/sales/types";
 
@@ -37,17 +42,36 @@ const PAYMENT_METHODS: {
 ];
 
 export function SaleForm({ onSuccess, onCancel }: SaleFormProps) {
-    const { data: productsData, isLoading: productsLoading } = useProducts(
-        1,
-        100,
-    );
+    const {
+        data: referenceData,
+        isLoading: referenceDataLoading,
+    } = useReferenceCatalog();
 
     const { mutateAsync: createSale, isPending, error } = useCreateSale();
 
-    const products = productsData?.products ?? [];
+    const products = useMemo(
+        () => referenceData?.products ?? [],
+        [referenceData?.products],
+    );
+    const referenceDataAvailable = referenceData?.available ?? false;
+
+    const productOptions = useMemo(
+        () =>
+            products.map((product) => ({
+                id: product.id,
+                label: product.name,
+                description: [
+                    product.sku,
+                    `${product.quantity} ${product.unit} available`,
+                ]
+                    .filter(Boolean)
+                    .join(" · "),
+                searchText: product.barcode ?? undefined,
+            })),
+        [products],
+    );
 
     const [formData, setFormData] = useState<SaleFormData>({
-        reference_number: "",
         items: [
             {
                 product_id: "",
@@ -142,30 +166,13 @@ export function SaleForm({ onSuccess, onCancel }: SaleFormProps) {
                 </div>
             )}
 
-            <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                    <label
-                        htmlFor="reference_number"
-                        className="mb-1 block text-sm font-medium"
-                    >
-                        Reference #
-                    </label>
+            <ReferenceDataStatus
+                available={referenceDataAvailable}
+                generatedAt={referenceData?.generated_at}
+                loading={referenceDataLoading}
+            />
 
-                    <input
-                        id="reference_number"
-                        type="text"
-                        value={formData.reference_number}
-                        onChange={(event) =>
-                            setFormData((previous) => ({
-                                ...previous,
-                                reference_number: event.target.value,
-                            }))
-                        }
-                        placeholder="SALE-2026-001"
-                        className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
-                    />
-                </div>
-
+            <section className="max-w-sm">
                 <div>
                     <label
                         htmlFor="payment_method"
@@ -220,11 +227,10 @@ export function SaleForm({ onSuccess, onCancel }: SaleFormProps) {
                                 Product
                             </label>
 
-                            <select
+                            <ReferenceCombobox
                                 value={item.product_id}
-                                onChange={(event) => {
-                                    const productId = event.target.value;
-
+                                options={productOptions}
+                                onValueChange={(productId) => {
                                     const product = products.find(
                                         (product) => product.id === productId,
                                     );
@@ -243,21 +249,16 @@ export function SaleForm({ onSuccess, onCancel }: SaleFormProps) {
                                         );
                                     }
                                 }}
-                                required
-                                disabled={productsLoading}
-                                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
-                            >
-                                <option value="">Select product</option>
-
-                                {products.map((product) => (
-                                    <option key={product.id} value={product.id}>
-                                        {product.name}
-                                        {" — "}
-                                        {product.quantity} {product.unit}{" "}
-                                        available
-                                    </option>
-                                ))}
-                            </select>
+                                disabled={
+                                    referenceDataLoading ||
+                                    !referenceDataAvailable
+                                }
+                                placeholder="Select product"
+                                searchPlaceholder={
+                                    "Search by product, SKU, or barcode..."
+                                }
+                                emptyMessage="No products found."
+                            />
                         </div>
 
                         <div>
@@ -434,7 +435,10 @@ export function SaleForm({ onSuccess, onCancel }: SaleFormProps) {
                     Cancel
                 </Button>
 
-                <Button type="submit" disabled={isPending}>
+                <Button
+                    type="submit"
+                    disabled={isPending || !referenceDataAvailable}
+                >
                     {isPending ? "Completing..." : "Complete Sale"}
                 </Button>
             </div>

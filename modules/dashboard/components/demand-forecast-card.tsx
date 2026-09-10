@@ -11,6 +11,8 @@ import { ExplanationDrawer } from
   "@/modules/intelligence/components/explanation-drawer";
 import { useForecastExplanation } from
   "@/modules/intelligence/services/intelligence";
+import { useAiAllowance } from
+  "@/modules/billing/components/ai-usage";
 
 const number = new Intl.NumberFormat("en-PH", { maximumFractionDigits: 1 });
 const dateLabel = (value: string) =>
@@ -25,6 +27,7 @@ export function DemandForecastCard({
   forecast?: DemandForecast;
 }) {
   const explanation = useForecastExplanation();
+  const aiAllowance = useAiAllowance();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   if (!forecast)
@@ -117,7 +120,7 @@ export function DemandForecastCard({
           type="button"
           variant="ghost"
           size="sm"
-          disabled={explanation.isPending}
+          disabled={explanation.isPending || aiAllowance.exhausted}
           onClick={() => {
             explanation.mutate(forecast.product_id, {
               onSuccess: () => setDrawerOpen(true),
@@ -125,7 +128,11 @@ export function DemandForecastCard({
           }}
         >
           <Sparkles className="mr-2 h-4 w-4" />
-          {explanation.isPending ? "Explaining…" : "Explain"}
+          {explanation.isPending
+            ? "Explaining…"
+            : aiAllowance.exhausted
+              ? "Weekly AI limit reached"
+              : "Explain · 1 AI action"}
         </Button>
       </div>
       {explanation.error ? (

@@ -1,144 +1,113 @@
 "use client";
 
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
-
-import {
-    type ChartConfig,
-    ChartContainer,
-    ChartTooltip,
-    ChartTooltipContent,
-} from "@/components/ui/chart";
+import { ComposedChart } from "@/components/charts/composed-chart";
+import { Grid } from "@/components/charts/grid";
+import { Line } from "@/components/charts/line";
+import { SeriesBar } from "@/components/charts/series-bar";
+import { ChartTooltip } from
+    "@/components/charts/tooltip/chart-tooltip";
+import { XAxis } from "@/components/charts/x-axis";
+import { YAxis } from "@/components/charts/y-axis";
 import { currency } from "@/lib/currency";
-import type { PurchaseReport } from "@/modules/reports/types";
-
-const chartConfig = {
-    spent: {
-        label: "Purchasing spend",
-        color: "var(--chart-1)",
-    },
-} satisfies ChartConfig;
+import {
+    formatCompactChartCurrency,
+    formatWholeChartNumber,
+    reportChartMargin,
+    ReportChartLegend,
+    reportPrimary,
+    reportSecondary,
+    toChartNumber,
+} from "@/modules/reports/components/report-chart-utils";
+import type {
+    PurchaseReport,
+    ReportDateRange,
+} from "@/modules/reports/types";
 
 type DailyPurchase = PurchaseReport["by_day"][number];
 
-const dateLabel = (value: string) =>
-    new Date(`${value}T00:00:00`).toLocaleDateString("en-PH", {
-        month: "short",
-        day: "numeric",
-    });
-
-const shortNumber = (value: number) =>
-    new Intl.NumberFormat("en-PH", {
-        notation: "compact",
-        maximumFractionDigits: 1,
-    }).format(value);
-
-function fillDates(points: DailyPurchase[], days: number): DailyPurchase[] {
+function fillDates(points: DailyPurchase[], dateRange: ReportDateRange) {
     const values = new Map(points.map((point) => [point.date, point]));
-    const today = new Date();
+    const start = new Date(`${dateRange.startDate}T00:00:00Z`);
+    const end = new Date(`${dateRange.endDate}T00:00:00Z`);
+    const dayCount =
+        Math.floor((end.getTime() - start.getTime()) / 86_400_000) + 1;
 
-    return Array.from({ length: days }, (_, index) => {
-        const date = new Date(today);
-        date.setHours(12, 0, 0, 0);
-        date.setDate(today.getDate() - days + index + 1);
-        const key = [
-            date.getFullYear(),
-            String(date.getMonth() + 1).padStart(2, "0"),
-            String(date.getDate()).padStart(2, "0"),
-        ].join("-");
+    return Array.from({ length: dayCount }, (_, index) => {
+        const date = new Date(start);
+        date.setUTCDate(date.getUTCDate() + index);
+        const key = date.toISOString().slice(0, 10);
+        const point = values.get(key);
 
-        return (
-            values.get(key) ?? {
-                date: key,
-                spent: 0,
-                purchases_count: 0,
-            }
-        );
+        return {
+            date: new Date(`${key}T12:00:00`),
+            spent: point?.spent ?? 0,
+            purchases_count: point?.purchases_count ?? 0,
+        };
     });
 }
 
 export function PurchaseSpendChart({
     points,
-    days,
+    dateRange,
 }: {
     points: DailyPurchase[];
-    days: number;
+    dateRange: ReportDateRange;
 }) {
-    const data = fillDates(points, days);
+    const data = fillDates(points, dateRange);
+    const margin = { ...reportChartMargin, right: 52 };
 
     return (
-        <ChartContainer
-            config={chartConfig}
-            className="h-[280px] w-full min-w-0 max-w-full"
-        >
-            <AreaChart
-                accessibilityLayer
+        <div className="min-w-0">
+            <ReportChartLegend
+                items={[
+                    { color: reportPrimary, label: "Purchasing spend" },
+                    { color: reportSecondary, label: "Received orders" },
+                ]}
+            />
+            <ComposedChart
+                aspectRatio="auto"
+                className="h-[280px]"
                 data={data}
-                margin={{ top: 8, right: 8, left: -4, bottom: 0 }}
+                margin={margin}
+                maxBarSize={24}
             >
-                <defs>
-                    <linearGradient
-                        id="purchase-spend-fill"
-                        x1="0"
-                        y1="0"
-                        x2="0"
-                        y2="1"
-                    >
-                        <stop
-                            offset="5%"
-                            stopColor="var(--color-spent)"
-                            stopOpacity={0.3}
-                        />
-                        <stop
-                            offset="95%"
-                            stopColor="var(--color-spent)"
-                            stopOpacity={0.02}
-                        />
-                    </linearGradient>
-                </defs>
-                <CartesianGrid vertical={false} strokeDasharray="3 5" />
-                <XAxis
-                    dataKey="date"
-                    axisLine={false}
-                    tickLine={false}
-                    tickMargin={10}
-                    minTickGap={28}
-                    tickFormatter={dateLabel}
-                />
+                <Grid horizontal strokeDasharray="3,5" />
+                <YAxis formatValue={formatCompactChartCurrency} />
                 <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    tickMargin={8}
-                    width={42}
-                    tickFormatter={shortNumber}
+                    formatLargeNumbers={false}
+                    formatValue={formatWholeChartNumber}
+                    orientation="right"
+                    yAxisId="orders"
                 />
+                <SeriesBar dataKey="spent" fill={reportPrimary} radius={4} />
+                <Line
+                    dataKey="purchases_count"
+                    fadeEdges={false}
+                    stroke={reportSecondary}
+                    strokeWidth={2.5}
+                    yAxisId="orders"
+                />
+                <XAxis numTicks={5} />
                 <ChartTooltip
-                    cursor={{ stroke: "var(--border)", strokeDasharray: "3 5" }}
-                    content={
-                        <ChartTooltipContent
-                            indicator="line"
-                            labelFormatter={(value) => dateLabel(String(value))}
-                            formatter={(value) => (
-                                <div className="flex w-full min-w-40 justify-between gap-4">
-                                    <span className="text-muted-foreground">
-                                        Spend
-                                    </span>
-                                    <span className="font-mono font-medium">
-                                        {currency.format(Number(value))}
-                                    </span>
-                                </div>
-                            )}
-                        />
-                    }
+                    indicatorDasharray="3,5"
+                    rows={(point) => [
+                        {
+                            color: reportPrimary,
+                            label: "Purchasing spend",
+                            value: currency.format(
+                                toChartNumber(point.spent),
+                            ),
+                        },
+                        {
+                            color: reportSecondary,
+                            label: "Received orders",
+                            value: formatWholeChartNumber(
+                                toChartNumber(point.purchases_count),
+                            ),
+                        },
+                    ]}
                 />
-                <Area
-                    dataKey="spent"
-                    name="spent"
-                    type="monotone"
-                    fill="url(#purchase-spend-fill)"
-                    stroke="var(--color-spent)"
-                    strokeWidth={2}
-                />
-            </AreaChart>
-        </ChartContainer>
+            </ComposedChart>
+        </div>
     );
 }

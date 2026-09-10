@@ -14,6 +14,8 @@ import {
     ReportHeader,
     ReportLoading,
 } from "@/modules/reports/components/report-ui";
+import { ReportAiSummary } from
+    "@/modules/reports/components/report-ai-summary";
 import { StockGapChart } from "@/modules/reports/components/stock-gap-chart";
 import { useLowStockReport } from "@/modules/reports/services/reports";
 import type { LowStockReport } from "@/modules/reports/types";
@@ -81,6 +83,7 @@ export default function LowStockReportPage() {
                 title="Low Stock Report"
                 description="Products requiring replenishment attention."
                 icon={AlertTriangle}
+                exportReport="low-stock"
                 isRefreshing={isFetching}
                 onRefresh={() => void refetch()}
             />
@@ -90,7 +93,10 @@ export default function LowStockReportPage() {
             ) : error || !data ? (
                 <ReportError error={error} />
             ) : (
-                <LowStockContent data={data} />
+                <>
+                    <ReportAiSummary report="low_stock" />
+                    <LowStockContent data={data} />
+                </>
             )}
         </div>
     );

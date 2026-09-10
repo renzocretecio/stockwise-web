@@ -4,7 +4,8 @@ import { useState } from "react";
 import { TrendingUp } from "lucide-react";
 
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
-import { SalesProfitChart } from "@/modules/dashboard/components/sales-profit-chart";
+import { SalesComparisonChart } from
+    "@/modules/reports/components/sales-comparison-chart";
 import {
     currency,
     number,
@@ -12,8 +13,15 @@ import {
     ReportHeader,
     ReportLoading,
 } from "@/modules/reports/components/report-ui";
-import { useSalesReport } from "@/modules/reports/services/reports";
-import type { ReportPeriod, SalesReport } from "@/modules/reports/types";
+import { ReportAiSummary } from
+    "@/modules/reports/components/report-ai-summary";
+import { createReportDateRange } from "@/modules/reports/date-range";
+import { useSalesReportByDateRange } from
+    "@/modules/reports/services/reports";
+import type {
+    ReportDateRange,
+    SalesReport,
+} from "@/modules/reports/types";
 
 type Product = SalesReport["top_products"][number];
 
@@ -48,9 +56,9 @@ const columns: DataTableColumn<Product>[] = [
 ];
 
 export default function SalesReportPage() {
-    const [period, setPeriod] = useState<ReportPeriod>(30);
+    const [dateRange, setDateRange] = useState(createReportDateRange);
     const { data, isLoading, error, refetch, isFetching } =
-        useSalesReport(period);
+        useSalesReportByDateRange(dateRange);
 
     return (
         <div className="pb-12">
@@ -61,8 +69,9 @@ export default function SalesReportPage() {
                     "and best-selling products."
                 }
                 icon={TrendingUp}
-                period={period}
-                onPeriodChange={setPeriod}
+                dateRange={dateRange}
+                exportReport="sales"
+                onDateRangeChange={setDateRange}
                 isRefreshing={isFetching}
                 onRefresh={() => void refetch()}
             />
@@ -73,7 +82,14 @@ export default function SalesReportPage() {
                 <ReportError error={error} />
             ) : (
                 <>
-                    <SalesPerformance data={data} period={period} />
+                    <ReportAiSummary
+                        dateRange={dateRange}
+                        report="sales"
+                    />
+                    <SalesPerformance
+                        data={data}
+                        dateRange={dateRange}
+                    />
 
                     <section className="p-2 sm:p-4">
                         <h2 className="mb-3 px-2 font-semibold">
@@ -95,10 +111,10 @@ export default function SalesReportPage() {
 
 function SalesPerformance({
     data,
-    period,
+    dateRange,
 }: {
     data: SalesReport;
-    period: ReportPeriod;
+    dateRange: ReportDateRange;
 }) {
     const summary = data.summary;
 
@@ -110,7 +126,10 @@ function SalesPerformance({
                 }
             >
                 <div className="min-w-0 p-4 sm:p-5">
-                    <SalesProfitChart points={data.by_day} days={period} />
+                    <SalesComparisonChart
+                        dateRange={dateRange}
+                        points={data.by_day}
+                    />
                 </div>
                 <dl
                     className={

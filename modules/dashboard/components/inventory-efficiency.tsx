@@ -211,7 +211,7 @@ export function SuggestedActions() {
               <Link
                 className={
                   "mt-4 inline-flex h-9 items-center border px-3 text-sm " +
-                  "font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/80"
+                  "font-medium rounded-2xl bg-primary text-primary-foreground hover:bg-primary/80"
                 }
                 href="/products"
               >
@@ -292,21 +292,22 @@ function AgingBuckets({
         Products grouped by how recently they sold
       </p>
       <div
-        aria-label="Inventory value by aging bucket"
-        className="mt-5 flex h-3 w-full overflow-hidden bg-muted"
-      >
-        {buckets.map((bucket) => (
-          <div
-            className={bucketDetails[bucket.key].className}
-            key={bucket.key}
-            style={{
-              width: totalValue > 0
-                ? `${bucket.inventory_value / totalValue * 100}%`
-                : "0%",
-            }}
-          />
-        ))}
-      </div>
+  aria-label="Inventory value by aging bucket"
+  className="mt-5 flex h-3 w-full overflow-hidden rounded-full bg-muted"
+>
+  {buckets
+    .filter((bucket) => bucket.inventory_value > 0)
+    .map((bucket) => (
+      <div
+        className={`${bucketDetails[bucket.key].className} first:rounded-l-full last:rounded-r-full`}
+        key={bucket.key}
+        style={{
+          width: `${(bucket.inventory_value / totalValue) * 100}%`,
+        }}
+      />
+    ))}
+</div>
+
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
         {buckets.map((bucket) => {
           const details = bucketDetails[bucket.key];

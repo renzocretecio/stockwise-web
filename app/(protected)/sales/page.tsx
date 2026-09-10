@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/use-debounce";
 import { usePagination } from "@/hooks/use-pagination";
 import { cn } from "@/lib/utils";
+import { useHasPermission } from "@/modules/auth/hooks/use-has-permission";
 import { getSaleColumns } from "@/modules/sales/columns/sales";
 import { ReturnSaleDialog } from "@/modules/sales/components/return-sale-dialog";
 import { SaleForm } from "@/modules/sales/components/sales-form";
@@ -38,15 +39,20 @@ export default function SalesPage() {
         debouncedSearch,
     );
     const { mutateAsync: voidSale } = useVoidSale();
+    const canCreate = useHasPermission("sales.create");
+    const canReturn = useHasPermission("sales.return");
+    const canVoid = useHasPermission("sales.void");
     const sales = data?.sales ?? [];
     const pagination = data?.pagination;
 
     const columns = getSaleColumns({
-        onReturn: (sale) => setSaleToReturn(sale),
-        onVoid: (sale) => {
-            setSaleToVoid(sale);
-            setIsVoidConfirmOpen(true);
-        },
+        onReturn: canReturn ? (sale) => setSaleToReturn(sale) : undefined,
+        onVoid: canVoid
+            ? (sale) => {
+                  setSaleToVoid(sale);
+                  setIsVoidConfirmOpen(true);
+              }
+            : undefined,
     });
 
     return (
@@ -72,21 +78,23 @@ export default function SalesPage() {
                     </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                    <Button
-                        aria-label="Refresh sales"
-                        disabled={isFetching}
-                        onClick={() => void refetch()}
-                        size="icon"
-                        type="button"
-                        variant="outline"
-                    >
-                        <RefreshCw
-                            className={cn(
-                                "size-4",
-                                isFetching && "animate-spin",
-                            )}
-                        />
-                    </Button>
+                    {canCreate ? (
+                        <Button
+                            aria-label="Refresh sales"
+                            disabled={isFetching}
+                            onClick={() => void refetch()}
+                            size="icon"
+                            type="button"
+                            variant="outline"
+                        >
+                            <RefreshCw
+                                className={cn(
+                                    "size-4",
+                                    isFetching && "animate-spin",
+                                )}
+                            />
+                        </Button>
+                    ) : null}
                     <Button
                         onClick={() => setIsSaleFormOpen(true)}
                         size="sm"
@@ -170,6 +178,7 @@ export default function SalesPage() {
                             <EmptySales
                                 filtered={Boolean(searchQuery)}
                                 onCreate={() => setIsSaleFormOpen(true)}
+                                showCreate={canCreate}
                             />
                         }
                         getRowId={(sale) => sale.id}
@@ -235,9 +244,11 @@ export default function SalesPage() {
 function EmptySales({
     filtered,
     onCreate,
+    showCreate,
 }: {
     filtered: boolean;
     onCreate: () => void;
+    showCreate: boolean;
 }) {
     return (
         <div className="flex flex-col items-center justify-center px-6 py-14 text-center">
@@ -252,7 +263,7 @@ function EmptySales({
                     ? "Try a different sale reference or clear the search."
                     : "Record your first completed sale to begin tracking activity."}
             </p>
-            {!filtered ? (
+            {!filtered && showCreate ? (
                 <Button
                     className="mt-5"
                     onClick={onCreate}

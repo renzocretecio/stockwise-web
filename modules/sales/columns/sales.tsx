@@ -8,8 +8,8 @@ import { cn } from "@/lib/utils";
 import { Sale, SaleStatus } from "@/modules/sales/types";
 
 type SaleColumnsOptions = {
-    onVoid: (sale: Sale) => void;
-    onReturn: (sale: Sale) => void;
+    onVoid?: (sale: Sale) => void;
+    onReturn?: (sale: Sale) => void;
 };
 
 const STATUS_STYLES: Record<SaleStatus, string> = {
@@ -23,7 +23,7 @@ export function getSaleColumns({
     onVoid,
     onReturn,
 }: SaleColumnsOptions): DataTableColumn<Sale>[] {
-    return [
+    const columns: DataTableColumn<Sale>[] = [
         {
             key: "reference_number",
             header: "Reference #",
@@ -85,22 +85,23 @@ export function getSaleColumns({
             width: "w-32",
             cell: (row) => (
                 <div className="flex justify-end">
-                    {(row.status === "completed" ||
-                        row.status === "partially_returned") && (
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 cursor-pointer px-2 text-primary hover:bg-primary/10"
-                            onClick={(event) => {
-                                event.stopPropagation();
-                                onReturn(row);
-                            }}
-                        >
-                            Return
-                        </Button>
-                    )}
-                    {row.status === "completed" && (
+                    {onReturn &&
+                        (row.status === "completed" ||
+                            row.status === "partially_returned") && (
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 cursor-pointer px-2 text-primary hover:bg-primary/10"
+                                onClick={(event) => {
+                                    event.stopPropagation();
+                                    onReturn(row);
+                                }}
+                            >
+                                Return
+                            </Button>
+                        )}
+                    {onVoid && row.status === "completed" && (
                         <Button
                             type="button"
                             variant="ghost"
@@ -118,4 +119,6 @@ export function getSaleColumns({
             ),
         },
     ];
+
+    return columns;
 }

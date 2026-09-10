@@ -86,7 +86,7 @@ export function BusinessProfileForm({
       }
       await queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
       if (mode === "onboarding") {
-        router.replace("/dashboard/overview");
+        router.replace("/dashboard");
         router.refresh();
       } else {
         setSaved(true);
@@ -137,7 +137,7 @@ export function BusinessProfileForm({
             required
             value={form.currency_code}
             onChange={(event) => update("currency_code", event.target.value)}
-            className="h-9 w-full rounded-md border bg-background px-3"
+            className="h-9 w-full rounded-2xl border bg-background px-3"
           >
             {CURRENCIES.map((currency) => (
               <option key={currency}>{currency}</option>
@@ -150,7 +150,7 @@ export function BusinessProfileForm({
             required
             value={form.timezone}
             onChange={(event) => update("timezone", event.target.value)}
-            className="h-9 w-full rounded-md border bg-background px-3"
+            className="h-9 w-full rounded-2xl border bg-background px-3"
           >
             {TIMEZONES.map((timezone) => (
               <option key={timezone}>{timezone}</option>
@@ -178,7 +178,7 @@ export function BusinessProfileForm({
             rows={3}
             value={form.address || ""}
             onChange={(event) => update("address", event.target.value)}
-            className="w-full rounded-md border bg-background px-3 py-2"
+            className="w-full rounded-2xl border bg-background px-3 py-2"
           />
         </label>
       </div>

@@ -8,8 +8,10 @@ import {
 } from "react";
 import { Button } from "@/components/ui/button";
 import { useAdjustStock } from "@/modules/inventory/services/adjustments";
-import { useProducts } from "@/modules/products/services";
-import { useDebounce } from "@/hooks/use-debounce";
+import { ReferenceDataStatus } from
+    "@/modules/offline/components/reference-data-status";
+import { useReferenceCatalog } from
+    "@/modules/offline/services/reference-data";
 
 import {
     Check,
@@ -61,13 +63,29 @@ export function AdjustStockForm({
 
     const [productOpen, setProductOpen] = useState(false);
     const [productQuery, setProductQuery] = useState("");
-    const debouncedSearchQuery = useDebounce(productQuery, 500);
-    const { data: productsData, isLoading: productsLoading } = useProducts(
-        1,
-        10,
-        debouncedSearchQuery
+    const {
+        data: referenceData,
+        isLoading: referenceDataLoading,
+    } = useReferenceCatalog();
+    const allProducts = useMemo(
+        () => referenceData?.products ?? [],
+        [referenceData?.products],
     );
-    const products = productsData?.products ?? [];
+    const referenceDataAvailable = referenceData?.available ?? false;
+    const products = useMemo(() => {
+        const search = productQuery.trim().toLowerCase();
+        if (!search) return allProducts.slice(0, 50);
+
+        return allProducts
+            .filter((product) =>
+                [product.name, product.sku, product.barcode]
+                    .filter(Boolean)
+                    .some((value) =>
+                        String(value).toLowerCase().includes(search),
+                    ),
+            )
+            .slice(0, 50);
+    }, [allProducts, productQuery]);
 
     const [formData, setFormData] = useState<AdjustStockFormData>({
         product_id: initialProductId ?? "",
@@ -77,8 +95,8 @@ export function AdjustStockForm({
     });
 
     const selectedProduct = useMemo(
-        () => products.find((p) => p.id === formData.product_id),
-        [products, formData.product_id]
+        () => allProducts.find((p) => p.id === formData.product_id),
+        [allProducts, formData.product_id]
     );
 
     const projectedQuantity =
@@ -132,6 +150,12 @@ export function AdjustStockForm({
                 </div>
             )}
 
+            <ReferenceDataStatus
+                available={referenceDataAvailable}
+                generatedAt={referenceData?.generated_at}
+                loading={referenceDataLoading}
+            />
+
             <div>
                 <label
                     htmlFor="product_id"
@@ -158,6 +182,10 @@ export function AdjustStockForm({
                             onOpenChange={setProductOpen}
                         >
                             <PopoverTrigger
+                                disabled={
+                                    referenceDataLoading ||
+                                    !referenceDataAvailable
+                                }
                                 className="flex h-10 w-full items-center justify-between rounded-lg border border-input bg-background px-4 py-2 text-sm font-normal outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
                             >
                                 {selectedProduct ? (
@@ -172,7 +200,7 @@ export function AdjustStockForm({
                                     </span>
                                 ) : (
                                     <span className="text-muted-foreground">
-                                        {productsLoading
+                                        {referenceDataLoading
                                             ? "Loading products..."
                                             : "Search or select a product"}
                                     </span>
@@ -193,7 +221,7 @@ export function AdjustStockForm({
                                     />
 
                                     <CommandList>
-                                        {productsLoading ? (
+                                        {referenceDataLoading ? (
                                             <CommandEmpty>
                                                 Searching products...
                                             </CommandEmpty>
@@ -369,6 +397,7 @@ export function AdjustStockForm({
                     type="submit"
                     disabled={
                         isPending ||
+                        !referenceDataAvailable ||
                         !formData.product_id ||
                         formData.quantity_change === 0 ||
                         isNegativeProjection

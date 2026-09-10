@@ -4,6 +4,8 @@ import { Category } from "../types/category";
 import { PaginationMeta } from "../types";
 import { useQueryClient } from "@tanstack/react-query";
 import { CategoryFormData, CategoryCreateResponse } from "../types/category";
+import { referenceDataKeys } from
+    "@/modules/offline/services/reference-data";
 
 export const categoryKeys = {
     all: ['categories'] as const,
@@ -59,6 +61,7 @@ export const useCreateCategory = () => {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: categoryKeys.listPrefix() });
             queryClient.invalidateQueries({ queryKey: categoryKeys.allFlat() });
+            queryClient.invalidateQueries({ queryKey: referenceDataKeys.all });
         }
     })
 }
@@ -75,6 +78,7 @@ export const useUpdateCategory = (categoryId: string) => {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: categoryKeys.listPrefix() });
             queryClient.invalidateQueries({ queryKey: categoryKeys.allFlat() });
+            queryClient.invalidateQueries({ queryKey: referenceDataKeys.all });
         },
     });
 }
@@ -89,6 +93,9 @@ export const useDeleteCategory = (categoryId: string) => {
             });
             queryClient.invalidateQueries({
                 queryKey: categoryKeys.allFlat(),
+            });
+            queryClient.invalidateQueries({
+                queryKey: referenceDataKeys.all,
             });
         }
     })

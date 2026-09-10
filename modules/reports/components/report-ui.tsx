@@ -2,9 +2,18 @@
 
 import { RefreshCw, type LucideIcon } from "lucide-react";
 
+import { DateRangePicker } from "@/components/DateRangePicker";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { ReportPeriod } from "@/modules/reports/types";
+import {
+    ReportExportButton,
+    type ExportableReport,
+} from "@/modules/reports/components/report-export-button";
+import {
+    fromPickerRange,
+    toPickerRange,
+} from "@/modules/reports/date-range";
+import type { ReportDateRange } from "@/modules/reports/types";
 
 export { currency } from "@/lib/currency";
 
@@ -16,18 +25,20 @@ export function ReportHeader({
     title,
     description,
     icon: Icon,
-    period,
-    onPeriodChange,
+    dateRange,
+    onDateRangeChange,
     onRefresh,
     isRefreshing = false,
+    exportReport,
 }: {
     title: string;
     description: string;
     icon: LucideIcon;
-    period?: ReportPeriod;
-    onPeriodChange?: (period: ReportPeriod) => void;
+    dateRange?: ReportDateRange;
+    onDateRangeChange?: (range: ReportDateRange) => void;
     onRefresh?: () => void;
     isRefreshing?: boolean;
+    exportReport?: ExportableReport;
 }) {
     return (
         <header
@@ -37,7 +48,12 @@ export function ReportHeader({
             }
         >
             <div className="flex items-start gap-3">
-                <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center bg-muted text-primary">
+                <div
+                    className={
+                        "mt-0.5 flex size-9 shrink-0 items-center " +
+                        "justify-center bg-muted text-primary"
+                    }
+                >
                     <Icon className="size-4" />
                 </div>
                 <div>
@@ -50,25 +66,23 @@ export function ReportHeader({
                 </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-                {period && onPeriodChange ? (
-                    <select
-                        aria-label="Report period"
-                        className={
-                            "h-9 border border-input bg-background px-3 text-sm " +
-                            "text-foreground outline-none focus:ring-2 focus:ring-primary rounded-md"
-                        }
-                        onChange={(event) =>
-                            onPeriodChange(
-                                Number(event.target.value) as ReportPeriod,
-                            )
-                        }
-                        value={period}
-                    >
-                        <option value={7}>Last 7 days</option>
-                        <option value={30}>Last 30 days</option>
-                        <option value={90}>Last 90 days</option>
-                        <option value={365}>Last year</option>
-                    </select>
+                {exportReport ? (
+                    <ReportExportButton
+                        dateRange={dateRange}
+                        report={exportReport}
+                    />
+                ) : null}
+                {dateRange && onDateRangeChange ? (
+                    <DateRangePicker
+                        maxDays={365}
+                        onChange={(range) => {
+                            const nextRange = fromPickerRange(range);
+                            if (nextRange) {
+                                onDateRangeChange(nextRange);
+                            }
+                        }}
+                        value={toPickerRange(dateRange)}
+                    />
                 ) : null}
                 {onRefresh ? (
                     <Button
@@ -94,7 +108,12 @@ export function ReportHeader({
 
 export function ReportError({ error }: { error: unknown }) {
     return (
-        <section className="border-b bg-destructive/5 p-5 text-sm text-destructive">
+        <section
+            className={
+                "border-b bg-destructive/5 p-5 text-sm " +
+                "text-destructive"
+            }
+        >
             <p className="font-medium">Unable to load this report</p>
             <p className="mt-1 text-xs text-muted-foreground">
                 {error instanceof Error ? error.message : "Please try again."}

@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { usePagination } from "@/hooks/use-pagination";
 import { cn } from "@/lib/utils";
+import { useHasPermission } from "@/modules/auth/hooks/use-has-permission";
 import { getStockMovementColumns } from "@/modules/inventory/columns/movements";
 import { AdjustStockForm } from "@/modules/inventory/components/adjust-stock-form";
 import { useStockMovements } from "@/modules/inventory/services/movements";
@@ -30,6 +31,7 @@ export default function StockAdjustmentsPage() {
     const columns = getStockMovementColumns();
     const { data, isLoading, isError, error, refetch, isFetching } =
         useStockMovements(page, pageSize, undefined, "adjustment");
+    const canAdjust = useHasPermission("inventory.adjust");
 
     const adjustments = data?.movements ?? [];
     const pagination = data?.pagination;
@@ -57,21 +59,23 @@ export default function StockAdjustmentsPage() {
                     </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                    <Button
-                        aria-label="Refresh stock adjustments"
-                        disabled={isFetching}
-                        onClick={() => void refetch()}
-                        size="icon"
-                        type="button"
-                        variant="outline"
-                    >
-                        <RefreshCw
-                            className={cn(
-                                "size-4",
-                                isFetching && "animate-spin",
-                            )}
-                        />
-                    </Button>
+                    {canAdjust ? (
+                        <Button
+                            aria-label="Refresh stock adjustments"
+                            disabled={isFetching}
+                            onClick={() => void refetch()}
+                            size="icon"
+                            type="button"
+                            variant="outline"
+                        >
+                            <RefreshCw
+                                className={cn(
+                                    "size-4",
+                                    isFetching && "animate-spin",
+                                )}
+                            />
+                        </Button>
+                    ) : null}
                     <Button
                         onClick={() => setIsAdjustFormOpen(true)}
                         size="sm"
@@ -119,6 +123,7 @@ export default function StockAdjustmentsPage() {
                         emptyState={
                             <EmptyAdjustments
                                 onCreate={() => setIsAdjustFormOpen(true)}
+                                showCreate={canAdjust}
                             />
                         }
                         getRowId={(movement) => movement.id}
@@ -155,7 +160,13 @@ export default function StockAdjustmentsPage() {
     );
 }
 
-function EmptyAdjustments({ onCreate }: { onCreate: () => void }) {
+function EmptyAdjustments({
+    onCreate,
+    showCreate,
+}: {
+    onCreate: () => void;
+    showCreate: boolean;
+}) {
     return (
         <div className="flex flex-col items-center justify-center px-6 py-14 text-center">
             <div className="mb-3 flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -166,10 +177,17 @@ function EmptyAdjustments({ onCreate }: { onCreate: () => void }) {
                 Record a correction whenever actual stock differs from the
                 system.
             </p>
-            <Button className="mt-5" onClick={onCreate} size="sm" type="button">
-                <Plus className="mr-1.5 size-4" />
-                New adjustment
-            </Button>
+            {showCreate ? (
+                <Button
+                    className="mt-5"
+                    onClick={onCreate}
+                    size="sm"
+                    type="button"
+                >
+                    <Plus className="mr-1.5 size-4" />
+                    New adjustment
+                </Button>
+            ) : null}
         </div>
     );
 }

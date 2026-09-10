@@ -1,131 +1,84 @@
 "use client";
 
-import {
-    Bar,
-    BarChart,
-    CartesianGrid,
-    Cell,
-    ReferenceLine,
-    XAxis,
-    YAxis,
-} from "recharts";
-
-import {
-    type ChartConfig,
-    ChartContainer,
-    ChartTooltip,
-    ChartTooltipContent,
-} from "@/components/ui/chart";
+import { Bar } from "@/components/charts/bar";
+import { BarChart } from "@/components/charts/bar-chart";
+import { BarValueAxis } from "@/components/charts/bar-value-axis";
+import { BarYAxis } from "@/components/charts/bar-y-axis";
+import { Grid } from "@/components/charts/grid";
+import { ChartTooltip } from
+    "@/components/charts/tooltip/chart-tooltip";
 import { currency } from "@/lib/currency";
+import {
+    EmptyReportChart,
+    formatCompactChartCurrency,
+    horizontalReportChartMargin,
+    reportPrimary,
+    reportSecondary,
+    reportTertiary,
+    toChartNumber,
+} from "@/modules/reports/components/report-chart-utils";
 import type { ProfitReport } from "@/modules/reports/types";
-
-const chartConfig = {
-    profit: {
-        label: "Gross profit",
-        color: "var(--chart-1)",
-    },
-} satisfies ChartConfig;
-
-const chartShades = [
-    "var(--chart-1)",
-    "var(--chart-2)",
-    "var(--chart-3)",
-    "var(--chart-4)",
-    "var(--chart-5)",
-];
 
 type Product = ProfitReport["by_product"][number];
 
-const shortNumber = (value: number) =>
-    new Intl.NumberFormat("en-PH", {
-        notation: "compact",
-        maximumFractionDigits: 1,
-    }).format(value);
+const positiveColors = [reportPrimary, reportSecondary, reportTertiary];
 
 export function ProductProfitChart({ products }: { products: Product[] }) {
-    const data = products.slice(0, 5).map((product) => ({
-        ...product,
-        label:
-            product.product_name.length > 18
-                ? `${product.product_name.slice(0, 17)}…`
-                : product.product_name,
-    }));
+    const data = [...products]
+        .sort((left, right) => right.profit - left.profit)
+        .slice(0, 5);
 
     if (!data.length) {
-        return <EmptyState />;
+        return (
+            <EmptyReportChart>
+                No product profit data in this period.
+            </EmptyReportChart>
+        );
     }
 
     return (
-        <ChartContainer
-            config={chartConfig}
-            className="h-[280px] w-full min-w-0 max-w-full"
+        <BarChart
+            aspectRatio="auto"
+            barGap={0.34}
+            className="h-[280px]"
+            data={data}
+            margin={horizontalReportChartMargin}
+            orientation="horizontal"
+            xDataKey="product_name"
         >
-            <BarChart
-                accessibilityLayer
-                data={data}
-                layout="vertical"
-                margin={{ top: 4, right: 12, left: 4, bottom: 0 }}
-            >
-                <CartesianGrid horizontal={false} strokeDasharray="3 5" />
-                <ReferenceLine x={0} stroke="var(--border)" />
-                <XAxis
-                    type="number"
-                    axisLine={false}
-                    tickLine={false}
-                    tickFormatter={shortNumber}
-                />
-                <YAxis
-                    type="category"
-                    dataKey="label"
-                    axisLine={false}
-                    tickLine={false}
-                    width={94}
-                    tick={{ fontSize: 11 }}
-                />
-                <ChartTooltip
-                    cursor={{ fill: "var(--muted)" }}
-                    content={
-                        <ChartTooltipContent
-                            labelKey="product_name"
-                            formatter={(value) => (
-                                <div className="flex w-full min-w-36 justify-between gap-4">
-                                    <span className="text-muted-foreground">
-                                        Gross profit
-                                    </span>
-                                    <span className="font-mono font-medium">
-                                        {currency.format(Number(value))}
-                                    </span>
-                                </div>
-                            )}
-                        />
-                    }
-                />
-                <Bar dataKey="profit" name="profit" radius={[0, 6, 6, 0]}>
-                    {data.map((product, index) => (
-                        <Cell
-                            key={product.product_id}
-                            fill={
-                                product.profit < 0
-                                    ? "var(--destructive)"
-                                    : chartShades[index]
-                            }
-                        />
-                    ))}
-                </Bar>
-            </BarChart>
-        </ChartContainer>
-    );
-}
-
-function EmptyState() {
-    return (
-        <div
-            className={
-                "flex h-[280px] items-center justify-center text-sm " +
-                "text-muted-foreground"
-            }
-        >
-            No product profit data in this period.
-        </div>
+            <Grid horizontal={false} strokeDasharray="3,5" vertical />
+            <BarValueAxis formatValue={formatCompactChartCurrency} />
+            <Bar
+                dataKey="profit"
+                fill={(point, index) =>
+                    toChartNumber(point.profit) < 0
+                        ? "var(--destructive)"
+                        : positiveColors[index % positiveColors.length]
+                }
+                lineCap={6}
+                stroke={reportPrimary}
+            />
+            <BarYAxis labelWidth={108} />
+            <ChartTooltip
+                showDatePill={false}
+                rows={(point) => [
+                    {
+                        color:
+                            toChartNumber(point.profit) < 0
+                                ? "var(--destructive)"
+                                : reportPrimary,
+                        label: "Gross profit",
+                        value: currency.format(toChartNumber(point.profit)),
+                    },
+                    {
+                        color: reportTertiary,
+                        label: "Margin",
+                        value: `${toChartNumber(
+                            point.margin_percent,
+                        ).toFixed(1)}%`,
+                    },
+                ]}
+            />
+        </BarChart>
     );
 }

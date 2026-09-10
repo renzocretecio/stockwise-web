@@ -41,7 +41,7 @@ export const menuConfig: MenuItem[] = [
         label: "Overview",
         href: "/dashboard/overview",
         icon: LayoutDashboard,
-        permission: "products.read",
+        permission: "reports.read",
       },
       {
         label: "Intelligence",
@@ -135,7 +135,6 @@ export const menuConfig: MenuItem[] = [
   {
     label: "Reports",
     icon: FileBarChart,
-    roles: ["owner", "admin", "manager"],
     permission: "reports.read",
     children: [
       {

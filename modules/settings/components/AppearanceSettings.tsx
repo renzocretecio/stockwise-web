@@ -51,7 +51,7 @@ export function AppearanceSettings() {
               <button
                 aria-pressed={selected}
                 className={cn(
-                  "flex items-center gap-4 border p-4 text-left rounded-md",
+                  "flex items-center gap-4 border p-4 text-left rounded-2xl",
                   "transition-colors hover:bg-muted/60",
                   selected && "border-primary bg-primary/5",
                 )}
@@ -61,7 +61,7 @@ export function AppearanceSettings() {
               >
                 <span
                   className="flex size-10 shrink-0 items-center justify-center
-                    rounded-md bg-muted text-primary"
+                    rounded-2xl bg-muted text-primary"
                 >
                   <Icon className="size-5" />
                 </span>
@@ -94,7 +94,7 @@ function SectionHeading({
     <div className="flex items-start gap-3 border-b p-4">
       <div
         className="mt-0.5 flex size-8 shrink-0 items-center justify-center
-          rounded-md bg-muted text-primary"
+          rounded-2xl bg-muted text-primary"
       >
         {icon}
       </div>

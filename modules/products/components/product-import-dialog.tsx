@@ -192,7 +192,7 @@ export function ProductImportDialog({
                                                 event.preventDefault();
                                                 setFile(null);
                                             }}
-                                            className="rounded-md p-1 hover:bg-muted"
+                                            className="rounded-2xl p-1 hover:bg-muted"
                                         >
                                             <X className="size-3.5" />
                                         </button>

@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 
-import { Card } from "@/components/ui/card";
 import { InventoryRiskPanel } from
   "@/modules/dashboard/components/inventory-risk-panel";
 import { SalesProfitChart } from
@@ -19,15 +18,24 @@ export function DashboardAnalytics({
 }) {
   const sales = useSalesReportByDateRange(dateRange);
 
-  if (sales.error) {
+  if (!sales.data && sales.isPaused) {
     return (
-      <Card
+      <section className="p-5 text-sm text-muted-foreground">
+        Revenue and gross-profit data isn’t saved for this period yet.
+        Reconnect to load it.
+      </section>
+    );
+  }
+
+  if (sales.error && !sales.data) {
+    return (
+      <section
         className={
           "border-destructive/30 p-5 text-sm text-destructive"
         }
       >
         Unable to load revenue and gross-profit data. Please try again.
-      </Card>
+      </section>
     );
   }
 

@@ -60,7 +60,6 @@ export type SaleFormItem = {
 };
 
 export type SaleFormData = {
-    reference_number: string;
     items: SaleFormItem[];
     payment_method: PaymentMethod;
     tax_amount: number;

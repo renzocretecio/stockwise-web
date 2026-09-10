@@ -7,15 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Supplier } from "@/modules/suppliers/types";
 
 type SupplierColumnsOptions = {
-    onEdit: (supplier: Supplier) => void;
-    onDelete: (supplier: Supplier) => void;
+    onEdit?: (supplier: Supplier) => void;
+    onDelete?: (supplier: Supplier) => void;
 };
 
 export function getSupplierColumns({
     onEdit,
     onDelete,
 }: SupplierColumnsOptions): DataTableColumn<Supplier>[] {
-    return [
+    const columns: DataTableColumn<Supplier>[] = [
         {
             key: "name",
             header: "Name",
@@ -59,37 +59,43 @@ export function getSupplierColumns({
 
                 return (
                     <div className="flex items-center justify-end gap-1">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className="size-8 p-0"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onEdit(supplier);
-                            }}
-                            aria-label={`Edit ${supplier.name}`}
-                        >
-                            <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className={
-                                "size-8 p-0 text-destructive hover:bg-destructive/10 " +
-                                "hover:text-destructive"
-                            }
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onDelete(supplier);
-                            }}
-                            aria-label={`Delete ${supplier.name}`}
-                            title="Delete Supplier"
-                        >
-                            <Trash2 className="h-4 w-4" />
-                        </Button>
+                        {onEdit ? (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="size-8 p-0"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onEdit(supplier);
+                                }}
+                                aria-label={`Edit ${supplier.name}`}
+                            >
+                                <Pencil className="h-4 w-4" />
+                            </Button>
+                        ) : null}
+                        {onDelete ? (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className={
+                                    "size-8 p-0 text-destructive hover:bg-destructive/10 " +
+                                    "hover:text-destructive"
+                                }
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onDelete(supplier);
+                                }}
+                                aria-label={`Delete ${supplier.name}`}
+                                title="Delete Supplier"
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        ) : null}
                     </div>
                 );
             },
         },
     ];
+
+    return columns;
 }

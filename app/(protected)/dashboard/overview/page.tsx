@@ -20,6 +20,8 @@ import {
 } from
   "@/modules/dashboard/components/inventory-efficiency";
 import { Button } from "@/components/ui/button";
+import { DashboardExportButton } from
+  "@/modules/dashboard/components/dashboard-export-button";
 import type { ReportDateRange } from "@/modules/reports/types";
 
 const toDateValue = (date: Date) => [
@@ -73,7 +75,8 @@ export default function DashboardOverviewPage() {
             Monitor sales performance and your current inventory health.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2" data-no-print="true">
+          <DashboardExportButton dateRange={salesRange} />
           <DateRangePicker
             maxDays={365}
             onChange={changeSalesRange}

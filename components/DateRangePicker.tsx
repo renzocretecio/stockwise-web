@@ -322,7 +322,7 @@ function CalendarHeader({
       <div className="flex items-center gap-0.5">
         <Button
           aria-label="Previous month"
-          className="size-7 rounded-lg text-muted-foreground"
+          className="size-7 rounded-2xl text-muted-foreground"
           onClick={onPrevious}
           size="icon"
           type="button"
@@ -332,7 +332,7 @@ function CalendarHeader({
         </Button>
         <Button
           aria-label="Next month"
-          className="size-7 rounded-lg text-muted-foreground"
+          className="size-7 rounded-2xl text-muted-foreground"
           disabled={disableNext}
           onClick={onNext}
           size="icon"
@@ -373,7 +373,7 @@ function CalendarDay({
     <button
       aria-label={format(day, "MMMM d, yyyy")}
       className={cn(
-        "relative flex size-8 items-center justify-center rounded-lg",
+        "relative flex size-8 items-center justify-center rounded-2xl",
         "text-xs transition-colors",
         !currentMonth && "opacity-35",
         currentMonth && !start && !end && !inRange && "hover:bg-muted",

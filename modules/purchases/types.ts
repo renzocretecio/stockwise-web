@@ -17,6 +17,7 @@ export type Purchase = {
     supplier_id: string;
     supplier_name: string;
     reference_number: string | null;
+    supplier_reference_number?: string | null;
     status: PurchaseStatus;
     expected_delivery_date?: string | null;
     items: PurchaseItem[];
@@ -33,7 +34,7 @@ export type Purchase = {
 
 export type PurchaseFormData = {
     supplier_id: string;
-    reference_number: string;
+    supplier_reference_number: string;
     expected_delivery_date: string | null;
     items: {
         product_id: string;
