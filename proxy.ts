@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 const PROTECTED_ROUTES = [
+  "/admin",
   "/dashboard",
   "/intelligence",
   "/profile",
@@ -45,6 +46,7 @@ export function proxy(request: NextRequest) {
   const isProtectedRoute = PROTECTED_ROUTES.some((route) =>
     pathname.startsWith(route),
   );
+  const isBusinessRoute = isProtectedRoute && !pathname.startsWith("/admin");
   const isAuthRoute = AUTH_ROUTES.some((route) => pathname.startsWith(route));
 
   // missing o expired ang token, redirect to login page
@@ -62,7 +64,7 @@ export function proxy(request: NextRequest) {
 
   const isOnboardingRoute = pathname.startsWith("/onboarding/business");
   if (
-    isProtectedRoute &&
+    isBusinessRoute &&
     sessionToken &&
     !isExpired &&
     onboardingCompleted === "false" &&

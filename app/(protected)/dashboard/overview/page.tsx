@@ -23,7 +23,7 @@ import { Button } from "@/components/ui/button";
 import { DashboardExportButton } from
   "@/modules/dashboard/components/dashboard-export-button";
 import type { ReportDateRange } from "@/modules/reports/types";
-
+import { DashboardDivider } from "@/modules/dashboard/components/dashboard-divider";
 const toDateValue = (date: Date) => [
   date.getFullYear(),
   String(date.getMonth() + 1).padStart(2, "0"),
@@ -95,13 +95,18 @@ export default function DashboardOverviewPage() {
             <RefreshCw className="size-4" />
           </Button>
         </div>
+        
       </div>
 
       <BusinessHealth dateRange={salesRange} />
       <DashboardAnalytics dateRange={salesRange} />
+      <DashboardDivider />
       <InventoryEfficiency compact />
+      <DashboardDivider />
       <SuggestedActions />
+      <DashboardDivider />
       <DashboardTrends dateRange={salesRange} />
+      <DashboardDivider />
     </div>
   );
 }

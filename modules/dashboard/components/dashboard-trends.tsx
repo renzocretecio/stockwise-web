@@ -94,7 +94,7 @@ export function DashboardTrends({
 
   if (trends.error) {
     return (
-      <section className="border-t p-5 text-sm text-destructive">
+      <section className="p-5 text-sm text-destructive">
         Unable to load dashboard trends.
       </section>
     );
@@ -107,7 +107,7 @@ export function DashboardTrends({
   const { data } = trends;
 
   return (
-    <section className="min-w-0 border-t">
+    <section className="min-w-0">
       <div
         className={
           "flex flex-col gap-3 p-4 lg:flex-row lg:items-end " +

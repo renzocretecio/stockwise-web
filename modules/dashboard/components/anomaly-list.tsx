@@ -23,7 +23,7 @@ export function AnomalyList({ anomalies }: { anomalies: InventoryAnomaly[] }) {
     const selectedAnomaly = anomalies.find((anomaly) => anomaly.id === selectedId);
 
     return (
-        <section className="border-t">
+        <section>
             <header className="border-b">
                 <div className={
                     "flex flex-col gap-1 p-4 " +

@@ -13,6 +13,13 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import type { UpgradeReason } from "@/modules/billing/types";
+import { useHasPermission } from "@/modules/auth/hooks/use-has-permission";
+import {
+    useCancelUpgradeRequest,
+    useCreateUpgradeRequest,
+    useCurrentUpgradeRequest,
+    useSubmitUpgradeRequestPayment,
+} from "@/modules/billing/services/billing";
 import { UPGRADE_REQUIRED_EVENT } from
     "@/modules/billing/upgrade-events";
 
@@ -46,6 +53,18 @@ const planOptions = {
 export function UpgradeDialog() {
     const [open, setOpen] = useState(false);
     const [reason, setReason] = useState<UpgradeReason>({});
+    const [billingInterval, setBillingInterval] = useState<
+        "monthly" | "yearly"
+    >("monthly");
+    const canManageBilling = useHasPermission("billing.manage");
+    const pendingRequest = useCurrentUpgradeRequest(
+        canManageBilling && open,
+    );
+    const createRequest = useCreateUpgradeRequest();
+    const submitPayment = useSubmitUpgradeRequestPayment();
+    const cancelRequest = useCancelUpgradeRequest();
+    const [paymentMethod, setPaymentMethod] = useState("");
+    const [paymentReference, setPaymentReference] = useState("");
     const targetPlan = reason.target_plan
         ? planOptions[reason.target_plan]
         : reason.current_plan === "free" || !reason.current_plan
@@ -56,6 +75,7 @@ export function UpgradeDialog() {
         const showDialog = (event: Event) => {
             const customEvent = event as CustomEvent<UpgradeReason>;
             setReason(customEvent.detail ?? {});
+            setBillingInterval("monthly");
             setOpen(true);
         };
 
@@ -64,6 +84,28 @@ export function UpgradeDialog() {
             window.removeEventListener(UPGRADE_REQUIRED_EVENT, showDialog);
         };
     }, []);
+
+    const targetPlanKey = reason.target_plan
+        ? reason.target_plan
+        : reason.current_plan === "free" || !reason.current_plan
+            ? "pro"
+            : "business";
+    const quotedAmount =
+        (targetPlanKey === "pro" ? 299 : 899) *
+        (billingInterval === "yearly" ? 12 : 1);
+    const activeRequest = pendingRequest.data;
+    const requestIsPending = activeRequest?.status === "pending";
+    const awaitingPayment = activeRequest?.status === "awaiting_payment";
+    const paymentSubmitted = activeRequest?.status === "payment_submitted";
+
+    const submitRequest = () => {
+        createRequest.mutate(
+            {
+                plan: targetPlanKey,
+                billing_interval: billingInterval,
+            },
+        );
+    };
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
@@ -112,10 +154,92 @@ export function UpgradeDialog() {
                     </ul>
                 </div>
 
+                {canManageBilling ? (
+                    <div className="space-y-2">
+                        <p className="text-xs font-medium">Billing period</p>
+                        <div className="grid grid-cols-2 gap-2">
+                            {(["monthly", "yearly"] as const).map(
+                                (interval) => (
+                                    <Button
+                                        aria-pressed={
+                                            billingInterval === interval
+                                        }
+                                        key={interval}
+                                        onClick={() =>
+                                            setBillingInterval(interval)
+                                        }
+                                        size="sm"
+                                        type="button"
+                                        variant={
+                                            billingInterval === interval
+                                                ? "secondary"
+                                                : "outline"
+                                        }
+                                    >
+                                        {interval === "monthly"
+                                            ? "Monthly"
+                                            : "Yearly"}
+                                    </Button>
+                                ),
+                            )}
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                            Total request: ₱{quotedAmount.toLocaleString("en-PH")}
+                            {billingInterval === "yearly" ? "/year" : "/month"}
+                        </p>
+                    </div>
+                ) : null}
+
                 <p className="text-xs text-muted-foreground">
-                    Online checkout is not connected yet. Plan upgrades can be
-                    activated by the StockWise administrator.
+                    Payment is handled manually. We will send payment
+                    instructions after reviewing your request. Your plan only
+                    changes when payment is confirmed.
                 </p>
+                {requestIsPending ? (
+                    <p className="text-sm font-medium text-primary">
+                        Upgrade request received. Your current plan remains
+                        active until payment is confirmed.
+                    </p>
+                ) : null}
+                {awaitingPayment && activeRequest ? (
+                    <div className="space-y-3 rounded-2xl bg-muted/50 p-3">
+                        <p className="text-sm font-medium">
+                            Payment instructions are ready.
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                            {activeRequest.admin_note ||
+                                "Complete the agreed manual payment, then " +
+                                    "submit its reference below."}
+                        </p>
+                        <input
+                            className="w-full rounded-2xl border bg-background px-3 py-2 text-sm"
+                            onChange={(event) =>
+                                setPaymentMethod(event.target.value)
+                            }
+                            placeholder="Payment method, e.g. GCash"
+                            value={paymentMethod}
+                        />
+                        <input
+                            className="w-full rounded-2xl border bg-background px-3 py-2 text-sm"
+                            onChange={(event) =>
+                                setPaymentReference(event.target.value)
+                            }
+                            placeholder="Transaction or reference number"
+                            value={paymentReference}
+                        />
+                    </div>
+                ) : null}
+                {paymentSubmitted ? (
+                    <p className="text-sm font-medium text-primary">
+                        Payment reference submitted. We will activate your
+                        plan once it has been confirmed.
+                    </p>
+                ) : null}
+                {createRequest.error ? (
+                    <p className="text-sm text-destructive">
+                        {createRequest.error.message}
+                    </p>
+                ) : null}
                 <DialogFooter>
                     <Button
                         onClick={() => setOpen(false)}
@@ -124,9 +248,60 @@ export function UpgradeDialog() {
                     >
                         Not now
                     </Button>
-                    <Button onClick={() => setOpen(false)} type="button">
-                        Got it
-                    </Button>
+                    {canManageBilling ? (
+                        <div className="flex gap-2">
+                            {awaitingPayment && activeRequest ? (
+                                <Button
+                                    disabled={
+                                        submitPayment.isPending ||
+                                        !paymentMethod.trim() ||
+                                        !paymentReference.trim()
+                                    }
+                                    onClick={() =>
+                                        submitPayment.mutate({
+                                            id: activeRequest.id,
+                                            payment_method: paymentMethod,
+                                            payment_reference: paymentReference,
+                                        })
+                                    }
+                                    type="button"
+                                >
+                                    Submit payment
+                                </Button>
+                            ) : (
+                                <Button
+                                    disabled={
+                                        createRequest.isPending ||
+                                        Boolean(activeRequest)
+                                    }
+                                    onClick={submitRequest}
+                                    type="button"
+                                >
+                                    {createRequest.isPending
+                                        ? "Sending request…"
+                                        : activeRequest
+                                            ? "Request in progress"
+                                            : "Request upgrade"}
+                                </Button>
+                            )}
+                            {activeRequest && !paymentSubmitted ? (
+                                <Button
+                                    disabled={cancelRequest.isPending}
+                                    onClick={() =>
+                                        cancelRequest.mutate(activeRequest.id)
+                                    }
+                                    type="button"
+                                    variant="outline"
+                                >
+                                    Cancel request
+                                </Button>
+                            ) : null}
+                        </div>
+                    ) : (
+                        <Button onClick={() => setOpen(false)} type="button">
+                            Got it
+                        </Button>
+                    )}
                 </DialogFooter>
             </DialogContent>
         </Dialog>

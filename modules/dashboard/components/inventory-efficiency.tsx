@@ -69,7 +69,7 @@ export function InventoryEfficiency({
   const efficiency = dashboard.data.inventory_efficiency;
 
   return (
-    <section className="min-w-0 border-t">
+    <section className="min-w-0">
       <div
         className={
           "flex flex-col gap-2 p-4 sm:flex-row sm:items-end " +
@@ -148,7 +148,7 @@ export function SuggestedActions() {
 
   if (dashboard.error) {
     return (
-      <section className="border-t p-5 text-sm text-destructive">
+      <section className="p-5 text-sm text-destructive">
         Unable to load suggested actions.
       </section>
     );
@@ -165,7 +165,7 @@ export function SuggestedActions() {
   const actions = dashboard.data.inventory_efficiency.actions.slice(0, 3);
 
   return (
-    <section className="border-t">
+    <section>
       <div className="flex items-end justify-between gap-3 p-4">
         <div>
           <h2 className="font-semibold">Recommended actions</h2>

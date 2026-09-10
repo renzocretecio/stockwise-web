@@ -13,6 +13,7 @@ import { DemandForecastCard } from
 import { ReorderAssistant } from
   "@/modules/dashboard/components/reorder-assistant";
 import { useDashboard } from "@/modules/dashboard/services/dashboard";
+import { DashboardDivider } from "@/modules/dashboard/components/dashboard-divider";
 
 export default function DashboardIntelligencePage() {
   const { data, isLoading, error } = useDashboard();
@@ -47,7 +48,7 @@ export default function DashboardIntelligencePage() {
       ) : (
         <>
           <DailyBriefing />
-
+          <DashboardDivider />
           <FeatureGate
             className="border-y"
             description={
@@ -60,7 +61,7 @@ export default function DashboardIntelligencePage() {
             <div>
               <div
                 className={
-                  "flex flex-col gap-1 border-y p-4 " +
+                  "flex flex-col gap-1 border-b p-4 " +
                   "sm:flex-row sm:items-center sm:gap-3"
                 }
               >
@@ -86,7 +87,7 @@ export default function DashboardIntelligencePage() {
               </div>
             </div>
           </FeatureGate>
-
+          <DashboardDivider />
           <AnomalyList anomalies={data.anomalies} />
         </>
       )}
