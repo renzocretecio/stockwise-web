@@ -84,7 +84,7 @@ export default function CategoriesPage() {
     };
 
     return (
-        <div className="pb-12">
+        <div className="bento-page">
             <header
                 className={
                     "flex flex-col gap-4 border-b p-4 sm:flex-row sm:items-end " +

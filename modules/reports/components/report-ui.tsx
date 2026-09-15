@@ -9,10 +9,7 @@ import {
     ReportExportButton,
     type ExportableReport,
 } from "@/modules/reports/components/report-export-button";
-import {
-    fromPickerRange,
-    toPickerRange,
-} from "@/modules/reports/date-range";
+import { fromPickerRange, toPickerRange } from "@/modules/reports/date-range";
 import type { ReportDateRange } from "@/modules/reports/types";
 
 export { currency } from "@/lib/currency";
@@ -110,8 +107,7 @@ export function ReportError({ error }: { error: unknown }) {
     return (
         <section
             className={
-                "border-b bg-destructive/5 p-5 text-sm " +
-                "text-destructive"
+                "border-b bg-destructive/5 p-5 text-sm " + "text-destructive"
             }
         >
             <p className="font-medium">Unable to load this report</p>
@@ -124,7 +120,7 @@ export function ReportError({ error }: { error: unknown }) {
 
 export function ReportLoading() {
     return (
-        <div className="space-y-px bg-border">
+        <div className="bento-surface space-y-px bg-border">
             <div className="h-16 animate-pulse bg-background" />
             <div className="h-[300px] animate-pulse bg-background" />
             <div className="h-16 animate-pulse bg-background" />

@@ -69,7 +69,7 @@ export default function SuppliersPage() {
     };
 
     return (
-        <div className="pb-12">
+        <div className="bento-page">
             <header
                 className={
                     "flex flex-col gap-4 border-b p-4 sm:flex-row " +
@@ -181,7 +181,7 @@ export default function SuppliersPage() {
                 </section>
             ) : null}
 
-            <div className="p-2 sm:p-4">
+            <div className="bento-surface p-2 sm:p-4">
                 <DataTable
                     className="rounded-none border-0 shadow-none ring-0"
                     columns={columns}

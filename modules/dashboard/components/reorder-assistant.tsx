@@ -18,21 +18,22 @@ export function ReorderAssistant({
     const recommendations = forecasts.slice(0, 5);
 
     return (
-        <section>
+        <section className="@container/reorder min-w-0">
             <header
                 className={
-                    "flex flex-col gap-3 border-b p-4 sm:flex-row " +
-                    "sm:items-center sm:justify-between"
+                    "flex flex-wrap items-start justify-between gap-3 " +
+                    "border-b bg-amber-500/5 p-5 sm:p-6"
                 }
             >
                 <div>
                     <div className="flex items-center gap-2">
-                        <PackagePlus className="size-4 text-primary" />
+                        <span className="grid size-9 shrink-0 place-items-center rounded-2xl bg-amber-500/10 text-amber-700 dark:text-amber-400">
+                            <PackagePlus className="size-4" />
+                        </span>
                         <h2 className="font-semibold">Reorder assistant</h2>
                     </div>
                     <p className="mt-1 text-xs text-muted-foreground">
-                        What to buy next, based on sales, available stock,
-                        incoming stock, and supplier lead time.
+                        Suggested quantities for your next purchase.
                     </p>
                 </div>
                 <Badge variant="secondary">
@@ -46,7 +47,7 @@ export function ReorderAssistant({
                     sales history.
                 </p>
             ) : (
-                <div className="divide-y">
+                <div className="space-y-3 p-4 sm:p-5">
                     {recommendations.map((forecast) => (
                         <RecommendationRow
                             forecast={forecast}
@@ -65,8 +66,9 @@ function RecommendationRow({ forecast }: { forecast: DemandForecast }) {
     return (
         <article
             className={
-                "flex flex-col gap-4 p-4 lg:flex-row lg:items-center " +
-                "lg:justify-between"
+                "flex flex-col gap-4 rounded-2xl border border-border/60 " +
+                "bg-muted/20 p-4 @min-[720px]/reorder:flex-row " +
+                "@min-[720px]/reorder:items-center @min-[720px]/reorder:justify-between"
             }
         >
             <div className="min-w-0">
@@ -84,7 +86,7 @@ function RecommendationRow({ forecast }: { forecast: DemandForecast }) {
                 </p>
                 <div
                     className={
-                        "mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm " +
+                        "mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs " +
                         "text-muted-foreground"
                     }
                 >
@@ -95,22 +97,24 @@ function RecommendationRow({ forecast }: { forecast: DemandForecast }) {
                         {number.format(forecast.incoming_stock)} incoming
                     </span>
                     <span>
-                        {number.format(forecast.lead_time_demand)} needed
-                        during lead time
+                        {number.format(forecast.lead_time_demand)} needed during
+                        lead time
                     </span>
                 </div>
             </div>
 
             <div
                 className={
-                    "flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center " +
-                    "lg:justify-end"
+                    "flex shrink-0 flex-wrap items-center justify-between gap-3 " +
+                    "rounded-2xl bg-primary/5 p-3 " +
+                    "@min-[720px]/reorder:justify-end"
                 }
             >
-                <div className="sm:text-right">
-                    <p className="text-sm font-semibold text-primary">
-                        Order {number.format(forecast.recommended_order_quantity)}
-                        {" "}units
+                <div className="@min-[720px]/reorder:text-right">
+                    <p className="text-lg font-semibold tabular-nums text-primary">
+                        Order{" "}
+                        {number.format(forecast.recommended_order_quantity)}{" "}
+                        units
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
                         Est. {formatCurrency(forecast.estimated_order_cost)}
@@ -135,7 +139,7 @@ function RecommendationRow({ forecast }: { forecast: DemandForecast }) {
             <p
                 className={
                     "flex items-center gap-1.5 text-xs text-muted-foreground " +
-                    "lg:hidden"
+                    "@min-[720px]/reorder:hidden"
                 }
             >
                 <CalendarClock className="size-3.5" />

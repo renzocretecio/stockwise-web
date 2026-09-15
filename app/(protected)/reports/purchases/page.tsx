@@ -57,7 +57,7 @@ export default function PurchaseReportPage() {
         usePurchaseReportByDateRange(dateRange);
 
     return (
-        <div className="pb-12">
+        <div className="bento-page">
             <ReportHeader
                 title="Purchasing performance"
                 description={

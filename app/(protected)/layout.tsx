@@ -23,19 +23,9 @@ export default function ProtectedLayout({
         <OfflineSync />
         <SyncStatus />
         <main className="w-full flex-1 overflow-auto p-4">
-          <div
-            data-print-surface="true"
-            className={
-              "rounded-2xl border border-border/70 " +
-              "bg-card/90 shadow-lg shadow-black/5 " +
-              "backdrop-blur-xl " +
-              "supports-[backdrop-filter]:bg-card"
-            }
-          >
             <ProtectedAccessBoundary>
               <OfflineAccessBoundary>{children}</OfflineAccessBoundary>
             </ProtectedAccessBoundary>
-          </div>
         </main>
         <UpgradePaymentToast />
         <UpgradeDialog />

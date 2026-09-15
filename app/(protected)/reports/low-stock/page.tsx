@@ -78,7 +78,7 @@ export default function LowStockReportPage() {
     const { data, isLoading, error, refetch, isFetching } = useLowStockReport();
 
     return (
-        <div className="pb-12">
+        <div className="bento-page">
             <ReportHeader
                 title="Low Stock Report"
                 description="Products requiring replenishment attention."

@@ -61,7 +61,7 @@ export default function SalesReportPage() {
         useSalesReportByDateRange(dateRange);
 
     return (
-        <div className="pb-12">
+        <div className="bento-page">
             <ReportHeader
                 title="Sales performance"
                 description={

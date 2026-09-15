@@ -25,8 +25,7 @@ import {
     useTodayBriefing,
 } from "@/modules/briefings/services/briefings";
 import type { BriefingRecommendation } from "@/modules/briefings/types";
-import { useAiAllowance } from
-    "@/modules/billing/components/ai-usage";
+import { useAiAllowance } from "@/modules/billing/components/ai-usage";
 
 type RecommendationGroup = {
     id: string;
@@ -36,7 +35,11 @@ type RecommendationGroup = {
 
 const ALL_RECOMMENDATIONS = "all-recommendations";
 
-export function DailyBriefing() {
+const bentoTile =
+    "min-w-0 overflow-hidden rounded-2xl border " +
+    "border-border/70 bg-card shadow-sm";
+
+export function DailyBriefing({ bento = false }: { bento?: boolean }) {
     const { data, isLoading, error } = useTodayBriefing();
     const generate = useGenerateBriefing();
     const recommendationAction = useRecommendationAction();
@@ -51,12 +54,19 @@ export function DailyBriefing() {
         ) ?? [];
 
     if (isLoading) {
-        return <div className="h-64 animate-pulse bg-muted/40" />;
+        return (
+            <div
+                className={
+                    (bento ? bentoTile + " " : "") +
+                    "h-64 animate-pulse bg-muted/40"
+                }
+            />
+        );
     }
 
     if (!briefing) {
         return (
-            <div className="p-6">
+            <div className={(bento ? bentoTile + " " : "") + "p-6"}>
                 <div className="flex flex-col items-center py-8 text-center">
                     <div
                         className={
@@ -113,12 +123,16 @@ export function DailyBriefing() {
         <>
             <div
                 className={
-                    "grid min-w-0 lg:grid-cols-[minmax(0,7fr)_minmax(0,3fr)]"
+                    bento
+                        ? "grid min-w-0 items-start gap-4 xl:grid-cols-[minmax(0,8fr)_minmax(0,4fr)] xl:gap-5"
+                        : "grid min-w-0 lg:grid-cols-[minmax(0,7fr)_minmax(0,3fr)]"
                 }
             >
                 <section
                     className={
-                        "min-w-0 border-b lg:border-r lg:border-b-0"
+                        bento
+                            ? bentoTile
+                            : "min-w-0 border-b lg:border-r lg:border-b-0"
                     }
                 >
                     <div className="p-4 sm:p-6">
@@ -130,6 +144,9 @@ export function DailyBriefing() {
                         >
                             <div className="min-w-0">
                                 <div className="flex flex-wrap items-center gap-2">
+                                    <span className="grid size-9 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
+                                        <Sparkles className="size-4" />
+                                    </span>
                                     <h2 className="font-semibold">
                                         Daily Inventory Briefing
                                     </h2>
@@ -140,7 +157,8 @@ export function DailyBriefing() {
                                     </Badge>
                                 </div>
                                 <p className="mt-1 text-xs text-muted-foreground">
-                                    Generated {new Date(
+                                    Generated{" "}
+                                    {new Date(
                                         briefing.generated_at,
                                     ).toLocaleString()}
                                 </p>
@@ -183,24 +201,29 @@ export function DailyBriefing() {
                             </div>
                         </div>
 
-                        <h3
-                            className={
-                                "mt-6 text-lg font-semibold leading-tight " +
-                                "sm:text-xl"
-                            }
-                        >
-                            {briefing.headline}
-                        </h3>
-                        <ul>
-                            {briefing.summary.map((item, index) => (
-                                <li
-                                    className="mt-2 text-sm text-muted-foreground list-disc list-inside"
-                                    key={index}
-                                >
-                                    {item}
-                                </li>
-                            ))}
-                        </ul>
+                        <div className="mt-6 rounded-2xl border border-primary/10 bg-gradient-to-br from-primary/10 to-primary/[0.02] p-5 sm:p-6">
+                            <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                                Your business at a glance
+                            </p>
+                            <h3
+                                className={
+                                    "mt-3 text-lg font-semibold leading-snug " +
+                                    "sm:text-xl"
+                                }
+                            >
+                                {briefing.headline}
+                            </h3>
+                            <ul className="mt-3 space-y-3">
+                                {briefing.summary.map((item, index) => (
+                                    <li
+                                        className="ml-4 list-disc pl-1 text-sm leading-7 text-muted-foreground marker:text-primary/60"
+                                        key={index}
+                                    >
+                                        {item}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
 
                         <div className="mt-6 border-t pt-5">
                             <div className="flex items-center justify-between gap-3">
@@ -213,19 +236,24 @@ export function DailyBriefing() {
                                         review.
                                     </p>
                                 </div>
-                                <Badge variant="secondary">{active.length}</Badge>
+                                <Badge variant="secondary">
+                                    {active.length}
+                                </Badge>
                             </div>
                             {active.length === 0 ? (
                                 <p className="mt-2 text-sm text-muted-foreground">
                                     All recommendations have been handled.
                                 </p>
                             ) : (
-                                <div className="mt-4 divide-y">
+                                <div className="mt-4 grid gap-3">
                                     {visibleRecommendations.map((item) => (
                                         <button
                                             className={
-                                                "w-full p-4 text-left transition-colors " +
-                                                "hover:bg-muted/50 cursor-pointer"
+                                                "w-full rounded-2xl border border-border/60 " +
+                                                "bg-muted/20 p-4 text-left transition-colors " +
+                                                "hover:border-primary/30 hover:bg-primary/5 " +
+                                                "focus-visible:outline-none focus-visible:ring-2 " +
+                                                "focus-visible:ring-ring cursor-pointer"
                                             }
                                             key={item.id}
                                             onClick={() =>
@@ -278,14 +306,14 @@ export function DailyBriefing() {
                     </div>
                 </section>
 
-                <aside className="min-w-0">
-                    <div className="border-b p-4 sm:p-5">
+                <aside className={bento ? bentoTile : "min-w-0"}>
+                    <div className="border-b bg-primary/5 p-5 sm:p-6">
                         <div className="flex items-start justify-between gap-3">
                             <div>
                                 <div className="flex items-center gap-2">
-                                    <ListChecks
-                                        className="size-4 text-primary"
-                                    />
+                                    <span className="grid size-9 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
+                                        <ListChecks className="size-4" />
+                                    </span>
                                     <h3 className="font-semibold">
                                         Today&apos;s priorities
                                     </h3>
@@ -304,14 +332,16 @@ export function DailyBriefing() {
                                 No urgent action is needed today.
                             </p>
                         ) : (
-                            <ol className="divide-y">
+                            <ol className="space-y-3 p-4 sm:p-5">
                                 {actionGroups.map((group, index) => (
                                     <li key={group.id} className="">
                                         <Button
                                             className={
                                                 "h-auto min-h-16 w-full justify-start " +
-                                                "whitespace-normal rounded-none p-4 sm:p-5 " +
-                                                "text-left hover:bg-muted/50 cursor-pointer"
+                                                "whitespace-normal rounded-2xl border " +
+                                                "border-border/60 bg-muted/20 p-4 " +
+                                                "text-left hover:border-primary/30 " +
+                                                "hover:bg-primary/5 cursor-pointer"
                                             }
                                             onClick={() =>
                                                 setSelectedActionId(group.id)
@@ -322,8 +352,8 @@ export function DailyBriefing() {
                                         >
                                             <span
                                                 className={
-                                                    "flex size-7 shrink-0 items-center " +
-                                                    "justify-center rounded-full bg-primary " +
+                                                    "flex size-8 shrink-0 items-center " +
+                                                    "justify-center rounded-2xl bg-primary " +
                                                     "text-xs font-semibold " +
                                                     "text-primary-foreground"
                                                 }
@@ -344,7 +374,9 @@ export function DailyBriefing() {
                                                         group.recommendations
                                                             .length,
                                                     )}
-                                                    {" · Review evidence and act"}
+                                                    {
+                                                        " · Review evidence and act"
+                                                    }
                                                 </span>
                                             </span>
                                             <ArrowRight
@@ -385,10 +417,7 @@ function RecommendationDrawer({
     group: RecommendationGroup | undefined;
     isPending: boolean;
     onOpenChange: (open: boolean) => void;
-    onRecommendationAction: (
-        id: string,
-        action: "dismiss" | "resolve",
-    ) => void;
+    onRecommendationAction: (id: string, action: "dismiss" | "resolve") => void;
 }) {
     return (
         <Drawer
@@ -403,7 +432,9 @@ function RecommendationDrawer({
                 }
             >
                 <DrawerHeader className="border-b p-5 pr-14">
-                    <DrawerTitle>{group?.label ?? "Recommendations"}</DrawerTitle>
+                    <DrawerTitle>
+                        {group?.label ?? "Recommendations"}
+                    </DrawerTitle>
                     <p className="mt-1 text-sm text-muted-foreground">
                         Review the supporting evidence, then resolve or dismiss
                         each recommendation.

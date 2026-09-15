@@ -70,7 +70,7 @@ export default function MovementReportPage() {
         useStockMovementReportByDateRange(dateRange);
 
     return (
-        <div className="pb-12">
+        <div className="bento-page">
             <ReportHeader
                 title="Stock Movement Report"
                 description={

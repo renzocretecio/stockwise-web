@@ -80,7 +80,7 @@ export default function ProfitReportPage() {
         useProfitReportByDateRange(dateRange);
 
     return (
-        <div className="pb-12">
+        <div className="bento-page">
             <ReportHeader
                 title="Profit Report"
                 description={

@@ -4,15 +4,11 @@ import { FileDown, Loader2 } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { useHasPermission } from
-    "@/modules/auth/hooks/use-has-permission";
+import { useHasPermission } from "@/modules/auth/hooks/use-has-permission";
 import { useSession } from "@/modules/auth/services/session";
-import {
-    auditDashboardPdfExport,
-    useDashboard,
-} from "@/modules/dashboard/services/dashboard";
-import { useSalesReportByDateRange } from
-    "@/modules/reports/services/reports";
+import { auditDashboardPdfExport } from "@/modules/dashboard/services/dashboard";
+import type { SalesReport } from "@/modules/reports/types";
+import type { DashboardData } from "@/modules/dashboard/types";
 import type { ReportDateRange } from "@/modules/reports/types";
 
 function downloadPdf(bytes: Uint8Array, filename: string) {
@@ -41,12 +37,14 @@ function errorMessage(error: unknown) {
 
 export function DashboardExportButton({
     dateRange,
+    sales,
+    dashboard,
 }: {
     dateRange: ReportDateRange;
+    sales?: SalesReport;
+    dashboard?: DashboardData;
 }) {
     const canExport = useHasPermission("reports.export");
-    const dashboard = useDashboard();
-    const sales = useSalesReportByDateRange(dateRange);
     const session = useSession();
     const [isExporting, setIsExporting] = useState(false);
     const [error, setError] = useState<string>();
@@ -56,7 +54,7 @@ export function DashboardExportButton({
     }
 
     const exportPdf = async () => {
-        if (!dashboard.data || !sales.data) {
+        if (!dashboard || !sales) {
             setError("Dashboard data is not ready yet.");
             return;
         }
@@ -76,14 +74,12 @@ export function DashboardExportButton({
             }).format(new Date());
             const pdfDocument = pdfModule.StockWiseOverviewPdfDocument({
                 data: {
-                    businessName:
-                        activeBusiness?.name || "StockWise business",
-                    currencyCode:
-                        activeBusiness?.currency_code || "PHP",
-                    dashboard: dashboard.data,
+                    businessName: activeBusiness?.name || "StockWise business",
+                    currencyCode: activeBusiness?.currency_code || "PHP",
+                    dashboard: dashboard,
                     dateRange,
                     generatedAt,
-                    sales: sales.data,
+                    sales: sales,
                 },
             });
             const bytes = await renderer.renderDocument(pdfDocument);
@@ -101,7 +97,7 @@ export function DashboardExportButton({
         }
     };
 
-    const isDataReady = Boolean(dashboard.data && sales.data);
+    const isDataReady = Boolean(dashboard && sales);
 
     return (
         <div className="flex flex-col items-end gap-1">
@@ -123,8 +119,7 @@ export function DashboardExportButton({
             {error ? (
                 <span
                     className={
-                        "max-w-56 text-right text-xs " +
-                        "text-destructive"
+                        "max-w-56 text-right text-xs " + "text-destructive"
                     }
                 >
                     {error}

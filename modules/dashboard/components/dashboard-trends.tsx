@@ -131,7 +131,7 @@ export function DashboardTrends({
         </Button>
       </div>
 
-      <div className="grid gap-px border-t bg-border xl:grid-cols-2">
+      <div className="grid gap-px border-t xl:grid-cols-2">
         <ChartPanel
           description="Net units sold compared with completed orders"
           title="Sales activity"
@@ -211,7 +211,7 @@ function ChartPanel({
   title: string;
 }) {
   return (
-    <div className="min-w-0 bg-background p-4 sm:p-5">
+    <div className="min-w-0 p-4 sm:p-5">
       <ChartHeading description={description} title={title} />
       {children}
     </div>

@@ -58,7 +58,7 @@ export default function InventoryReportPage() {
         useInventoryReport();
 
     return (
-        <div className="pb-12">
+        <div className="bento-page">
             <ReportHeader
                 title="Inventory value distribution"
                 description="Current stock valuation and category distribution."
