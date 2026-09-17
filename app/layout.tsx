@@ -4,6 +4,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Providers } from "@/providers";
 import { PwaRegistration } from "@/components/PwaRegistration";
+import { appearanceScript } from "@/lib/appearance";
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 const geistSans = Geist({
@@ -49,6 +50,9 @@ export default function RootLayout({
         inter.variable,
       )}
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: appearanceScript }} />
+      </head>
       <body className="min-h-full flex flex-col">
         <Providers>
           <PwaRegistration />

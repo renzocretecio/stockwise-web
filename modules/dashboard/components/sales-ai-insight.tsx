@@ -7,7 +7,7 @@ import type { InventoryBriefing } from "@/modules/briefings/types";
 
 const card =
     "h-full min-w-0 overflow-hidden rounded-2xl border " +
-    "border border-primary/10 bg-gradient-to-br from-primary/10 to-primary/[0.02] shadow-sm";
+    "border-primary/25 bg-primary/[0.12] shadow-sm";
 
 export function SalesAiInsight({
     briefing,
@@ -20,7 +20,7 @@ export function SalesAiInsight({
         return (
             <section
                 aria-busy="true"
-                aria-label="Loading yesterday's sales insight"
+                aria-label="Loading yesterday's business update"
                 className={card + " p-5"}
             >
                 <div className="h-9 w-9 animate-pulse rounded-2xl bg-muted" />
@@ -35,7 +35,7 @@ export function SalesAiInsight({
             <section className={card + " p-5"}>
                 <InsightHeading provider="template" />
                 <p className="mt-5 text-sm leading-6 text-muted-foreground">
-                    Yesterday&apos;s sales insight is not available yet.
+                    Yesterday&apos;s business update is not available yet.
                     Reconnect and refresh the dashboard to load it.
                 </p>
             </section>
@@ -82,7 +82,7 @@ function InsightHeading({ provider }: { provider: string }) {
                     className="text-sm font-semibold"
                     id="sales-ai-insight-title"
                 >
-                    Yesterday&apos;s sales
+                    Yesterday&apos;s business update
                 </h2>
                 <p className="mt-1 text-xs text-muted-foreground">
                     {source} from today&apos;s inventory briefing
@@ -90,12 +90,12 @@ function InsightHeading({ provider }: { provider: string }) {
             </div>
             <Link
                 className={
-                    "inline-flex shrink-0 gap-1 " +
+                    "ml-auto inline-flex shrink-0 gap-1 " +
                     "text-xs font-medium text-primary hover:underline " +
                     "focus-visible:outline-none focus-visible:ring-2 " +
-                    "focus-visible:ring-ring ml-auto"
+                    "focus-visible:ring-ring"
                 }
-                href="/dashboard/intelligence"
+                href="/dashboard/overview?tab=insight"
             >
                 Full briefing
                 <ArrowUpRight aria-hidden="true" className="size-3.5" />

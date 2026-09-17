@@ -18,7 +18,6 @@ import {
   TrendingDown,
   DollarSign,
   AlertTriangle,
-  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 
@@ -35,21 +34,9 @@ export interface MenuItem {
 export const menuConfig: MenuItem[] = [
   {
     label: "Dashboard",
+    href: "/dashboard/overview",
     icon: LayoutDashboard,
-    children: [
-      {
-        label: "Overview",
-        href: "/dashboard/overview",
-        icon: LayoutDashboard,
-        permission: "reports.read",
-      },
-      {
-        label: "Intelligence",
-        href: "/dashboard/intelligence",
-        icon: Sparkles,
-        permission: "reports.read",
-      },
-    ],
+    permission: "reports.read",
   },
   {
     label: "Products",

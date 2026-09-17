@@ -13,15 +13,13 @@ import {
     formatCompactChartCurrency,
     horizontalReportChartMargin,
     reportPrimary,
-    reportSecondary,
+    reportSeriesColors,
     reportTertiary,
     toChartNumber,
 } from "@/modules/reports/components/report-chart-utils";
 import type { PurchaseReport } from "@/modules/reports/types";
 
 type Supplier = PurchaseReport["by_supplier"][number];
-
-const colors = [reportPrimary, reportSecondary, reportTertiary];
 
 export function SupplierSpendChart({ suppliers }: { suppliers: Supplier[] }) {
     const data = [...suppliers]
@@ -50,7 +48,9 @@ export function SupplierSpendChart({ suppliers }: { suppliers: Supplier[] }) {
             <BarValueAxis formatValue={formatCompactChartCurrency} />
             <Bar
                 dataKey="total_spent"
-                fill={(_point, index) => colors[index % colors.length]}
+                fill={(_point, index) =>
+                    reportSeriesColors[index % reportSeriesColors.length]
+                }
                 lineCap={6}
                 stroke={reportPrimary}
             />

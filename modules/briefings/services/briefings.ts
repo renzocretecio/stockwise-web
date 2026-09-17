@@ -4,6 +4,8 @@ import { apiClient } from "@/lib/api-client";
 import { useSession } from "@/modules/auth/services/session";
 import { subscriptionKeys } from
     "@/modules/billing/services/billing";
+import { recordAiActionUsed } from
+    "@/modules/billing/components/ai-usage";
 import type { BriefingEnvelope } from "@/modules/briefings/types";
 
 export const briefingKeys = {
@@ -42,8 +44,14 @@ export const useGenerateBriefing = () => {
                 `/api/briefings/generate?force=${force}`,
                 { method: "POST" },
             ),
-        onSuccess: (data) => {
+        onSuccess: (data, force) => {
             client.setQueryData(briefingKeys.today(businessId), data);
+            if (
+                force &&
+                data.briefing?.narrator_provider === "groq"
+            ) {
+                recordAiActionUsed(client, businessId);
+            }
         },
         onSettled: () => {
             void client.invalidateQueries({

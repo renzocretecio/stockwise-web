@@ -2,6 +2,7 @@ import { type QueryClient, useQuery } from "@tanstack/react-query";
 
 import { apiClient } from "@/lib/api-client";
 import { clearReferenceData, dexieQueryPersister } from "@/lib/offline-db";
+import type { Appearance } from "@/lib/appearance";
 
 const SESSION_STALE_TIME = 5 * 60 * 1000;
 
@@ -18,6 +19,7 @@ export type SessionBusiness = {
 };
 
 export type SessionUser = {
+  appearance?: Appearance;
   id?: string;
   email?: string;
   first_name?: string;

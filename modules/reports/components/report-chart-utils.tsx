@@ -2,9 +2,16 @@ import type { ReactNode } from "react";
 
 import { getActiveCurrencyCode } from "@/lib/currency";
 
-export const reportPrimary = "var(--primary)";
-export const reportSecondary = "var(--chart-1)";
+export const reportPrimary = "var(--chart-1)";
+export const reportSecondary = "var(--chart-2)";
 export const reportTertiary = "var(--chart-3)";
+export const reportSeriesColors = [
+    reportPrimary,
+    reportSecondary,
+    reportTertiary,
+    "var(--chart-4)",
+    "var(--chart-5)",
+];
 
 export const reportChartMargin = {
     top: 12,

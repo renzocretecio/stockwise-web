@@ -1,9 +1,54 @@
 "use client";
 
+import type { QueryClient } from "@tanstack/react-query";
 import { Bot } from "lucide-react";
 
+import { toast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
-import { useSubscription } from "@/modules/billing/services/billing";
+import {
+    subscriptionKeys,
+    useSubscription,
+} from "@/modules/billing/services/billing";
+import type { SubscriptionSummary } from "@/modules/billing/types";
+
+export function recordAiActionUsed(
+    queryClient: QueryClient,
+    businessId?: string,
+) {
+    if (!businessId) {
+        toast.add({
+            description: "Your weekly AI usage has been updated.",
+            title: "AI action used",
+            type: "info",
+        });
+        return;
+    }
+
+    const queryKey = [...subscriptionKeys.all, businessId] as const;
+    const current = queryClient.getQueryData<SubscriptionSummary>(queryKey);
+    const nextUsed = (current?.usage.ai_insights ?? 0) + 1;
+    const limit = current?.limits.ai_insights_weekly;
+
+    if (current) {
+        queryClient.setQueryData<SubscriptionSummary>(queryKey, {
+            ...current,
+            usage: {
+                ...current.usage,
+                ai_insights: nextUsed,
+            },
+        });
+    }
+
+    toast.add({
+        description:
+            typeof limit === "number"
+                ? `${Math.max(limit - nextUsed, 0)} of ${limit} weekly ` +
+                  "actions remaining."
+                : "Your weekly AI usage has been updated.",
+        title: "AI action used",
+        type: "info",
+    });
+}
 
 export function useAiAllowance() {
     const subscription = useSubscription();

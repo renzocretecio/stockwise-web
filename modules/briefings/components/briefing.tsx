@@ -1,10 +1,9 @@
 "use client";
 
-import { RefreshCw, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useAiAllowance } from "@/modules/billing/components/ai-usage";
 import {
     useGenerateBriefing,
     useTodayBriefing,
@@ -14,12 +13,11 @@ const card =
     "min-w-0 overflow-hidden rounded-2xl border " +
     "border-border/70 bg-card shadow-sm";
 
-export function Briefing({ bento = false }: { bento?: boolean }) {
+export function Briefing() {
     const { data, error, isLoading } = useTodayBriefing();
     const generate = useGenerateBriefing();
-    const aiAllowance = useAiAllowance();
     const briefing = data?.briefing;
-    const surface = bento ? card : "min-w-0";
+    const surface = card;
 
     if (isLoading) {
         return (

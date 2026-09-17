@@ -40,6 +40,7 @@ export type DateRange = {
 
 type DateRangePickerProps = {
   className?: string;
+  compactOnMobile?: boolean;
   maxDays?: number;
   value?: DateRange;
   onChange?: (range: DateRange) => void;
@@ -78,6 +79,7 @@ const buildPresets = (): Preset[] => {
 
 export function DateRangePicker({
   className,
+  compactOnMobile = false,
   maxDays = 365,
   value,
   onChange,
@@ -165,13 +167,29 @@ export function DateRangePicker({
     <div className={cn("grid gap-2", className)}>
       <Popover open={open} onOpenChange={handleOpenChange}>
         <PopoverTrigger
+          aria-label={compactOnMobile ? "Select date range" : undefined}
           className={cn(
             buttonVariants({ variant: "outline" }),
-            "w-full justify-start text-left sm:w-[280px]",
+            compactOnMobile
+              ? "size-10 justify-center p-0 sm:h-9 sm:w-[280px] " +
+                  "sm:justify-start sm:px-4 sm:py-2"
+              : "w-full justify-start text-left sm:w-[280px]",
           )}
         >
-          <CalendarIcon className="mr-2 size-4 text-primary" />
-          <RangeLabel range={displayRange} />
+          <CalendarIcon
+            aria-hidden="true"
+            className={cn(
+              "size-4 text-primary",
+              compactOnMobile ? "sm:mr-2" : "mr-2",
+            )}
+          />
+          <span
+            className={cn(
+              compactOnMobile && "sr-only sm:not-sr-only",
+            )}
+          >
+            <RangeLabel range={displayRange} />
+          </span>
         </PopoverTrigger>
 
         <PopoverContent

@@ -13,15 +13,13 @@ import {
     formatCompactChartCurrency,
     horizontalReportChartMargin,
     reportPrimary,
-    reportSecondary,
+    reportSeriesColors,
     reportTertiary,
     toChartNumber,
 } from "@/modules/reports/components/report-chart-utils";
 import type { ProfitReport } from "@/modules/reports/types";
 
 type Product = ProfitReport["by_product"][number];
-
-const positiveColors = [reportPrimary, reportSecondary, reportTertiary];
 
 export function ProductProfitChart({ products }: { products: Product[] }) {
     const data = [...products]
@@ -53,7 +51,9 @@ export function ProductProfitChart({ products }: { products: Product[] }) {
                 fill={(point, index) =>
                     toChartNumber(point.profit) < 0
                         ? "var(--destructive)"
-                        : positiveColors[index % positiveColors.length]
+                        : reportSeriesColors[
+                              index % reportSeriesColors.length
+                          ]
                 }
                 lineCap={6}
                 stroke={reportPrimary}

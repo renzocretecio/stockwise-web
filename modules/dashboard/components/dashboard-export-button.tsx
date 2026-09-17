@@ -102,19 +102,26 @@ export function DashboardExportButton({
     return (
         <div className="flex flex-col items-end gap-1">
             <Button
+                aria-label={isExporting ? "Creating PDF" : "Save PDF"}
+                className="size-10 p-0 sm:h-9 sm:w-auto sm:px-3"
                 disabled={!isDataReady || isExporting}
                 onClick={exportPdf}
                 size="sm"
                 title={error}
                 type="button"
-                variant="outline"
+                variant="default"
             >
                 {isExporting ? (
-                    <Loader2 className="size-4 animate-spin" />
+                    <Loader2
+                        aria-hidden="true"
+                        className="size-4 animate-spin"
+                    />
                 ) : (
-                    <FileDown className="size-4" />
+                    <FileDown aria-hidden="true" className="size-4" />
                 )}
-                {isExporting ? "Creating PDF" : "Save PDF"}
+                <span className="hidden sm:inline">
+                    {isExporting ? "Creating PDF" : "Save PDF"}
+                </span>
             </Button>
             {error ? (
                 <span

@@ -5,10 +5,6 @@ type RoutePermission = {
 
 const ROUTE_PERMISSIONS: RoutePermission[] = [
     {
-        path: "/dashboard/intelligence",
-        permission: "reports.read",
-    },
-    {
         path: "/dashboard/overview",
         permission: "reports.read",
     },
@@ -42,10 +38,6 @@ const ROUTE_PERMISSIONS: RoutePermission[] = [
     },
     {
         path: "/reports",
-        permission: "reports.read",
-    },
-    {
-        path: "/intelligence",
         permission: "reports.read",
     },
     {

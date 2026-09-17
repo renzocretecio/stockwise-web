@@ -35,11 +35,11 @@ type RecommendationGroup = {
 
 const ALL_RECOMMENDATIONS = "all-recommendations";
 
-const bentoTile =
+const briefingTile =
     "min-w-0 overflow-hidden rounded-2xl border " +
     "border-border/70 bg-card shadow-sm";
 
-export function DailyBriefing({ bento = false }: { bento?: boolean }) {
+export function DailyBriefing() {
     const { data, isLoading, error } = useTodayBriefing();
     const generate = useGenerateBriefing();
     const recommendationAction = useRecommendationAction();
@@ -56,17 +56,14 @@ export function DailyBriefing({ bento = false }: { bento?: boolean }) {
     if (isLoading) {
         return (
             <div
-                className={
-                    (bento ? bentoTile + " " : "") +
-                    "h-64 animate-pulse bg-muted/40"
-                }
+                className={briefingTile + " h-64 animate-pulse bg-muted/40"}
             />
         );
     }
 
     if (!briefing) {
         return (
-            <div className={(bento ? bentoTile + " " : "") + "p-6"}>
+            <div className={briefingTile + " p-6"}>
                 <div className="flex flex-col items-center py-8 text-center">
                     <div
                         className={
@@ -123,18 +120,11 @@ export function DailyBriefing({ bento = false }: { bento?: boolean }) {
         <>
             <div
                 className={
-                    bento
-                        ? "grid min-w-0 items-start gap-4 xl:grid-cols-[minmax(0,8fr)_minmax(0,4fr)] xl:gap-5"
-                        : "grid min-w-0 lg:grid-cols-[minmax(0,7fr)_minmax(0,3fr)]"
+                    "grid min-w-0 items-start gap-4 " +
+                    "lg:grid-cols-[minmax(0,7fr)_minmax(0,3fr)] items-stretch"
                 }
             >
-                <section
-                    className={
-                        bento
-                            ? bentoTile
-                            : "min-w-0 border-b lg:border-r lg:border-b-0"
-                    }
-                >
+                <section className={briefingTile}>
                     <div className="p-4 sm:p-6">
                         <div
                             className={
@@ -306,7 +296,7 @@ export function DailyBriefing({ bento = false }: { bento?: boolean }) {
                     </div>
                 </section>
 
-                <aside className={bento ? bentoTile : "min-w-0"}>
+                <aside className={briefingTile}>
                     <div className="border-b bg-primary/5 p-5 sm:p-6">
                         <div className="flex items-start justify-between gap-3">
                             <div>

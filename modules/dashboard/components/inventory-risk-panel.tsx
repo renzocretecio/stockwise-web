@@ -58,13 +58,13 @@ export function InventoryRiskPanel({ compact = false }: { compact?: boolean }) {
             label: `Under ${loadedRisk.stock_days_threshold} days of stock`,
             value: loadedRisk.below_days_of_stock,
             icon: Timer,
-            href: "/dashboard/intelligence",
+            href: "/dashboard/overview?tab=demand-forecast",
         },
         {
             label: "Pending reorder suggestions",
             value: loadedRisk.pending_reorder_recommendations,
             icon: ClipboardList,
-            href: "/dashboard/intelligence",
+            href: "/dashboard/overview?tab=demand-forecast",
         },
         {
             label: "Deliveries expected today",
@@ -112,7 +112,7 @@ export function InventoryRiskPanel({ compact = false }: { compact?: boolean }) {
         },
         {
             action: "Review forecast",
-            href: "/dashboard/intelligence",
+            href: "/dashboard/overview?tab=demand-forecast",
             barClassName: "bg-primary/55",
             markerClassName: "bg-primary/55 ring-primary/10",
             label: `Under ${loadedRisk.stock_days_threshold} days`,
@@ -168,7 +168,7 @@ export function InventoryRiskPanel({ compact = false }: { compact?: boolean }) {
                             "inline-flex shrink-0 items-center gap-1 self-start " +
                             "text-xs font-medium text-primary hover:underline"
                         }
-                        href="/dashboard/intelligence"
+                        href="/dashboard/overview?tab=insight"
                     >
                         Review risks
                         <ArrowUpRight className="size-3.5" />

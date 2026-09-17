@@ -12,15 +12,24 @@ import type {
 } from "@/modules/reports/types";
 import { subscriptionKeys } from
   "@/modules/billing/services/billing";
+import { recordAiActionUsed } from
+  "@/modules/billing/components/ai-usage";
 
 export const useForecastExplanation = () => {
   const queryClient = useQueryClient();
+  const session = useSession();
+  const businessId = session.data?.active_business?.id;
 
   return useMutation({
     mutationFn: (productId: string) =>
       apiClient<IntelligenceResponse>(
         `/api/intelligence/forecasts/${productId}/explanation`,
       ),
+    onSuccess: (response) => {
+      if (response.provider === "groq") {
+        recordAiActionUsed(queryClient, businessId);
+      }
+    },
     onSettled: () => {
       void queryClient.invalidateQueries({
         queryKey: subscriptionKeys.all,
@@ -31,12 +40,19 @@ export const useForecastExplanation = () => {
 
 export const useAnomalyExplanation = () => {
   const queryClient = useQueryClient();
+  const session = useSession();
+  const businessId = session.data?.active_business?.id;
 
   return useMutation({
     mutationFn: (anomalyId: string) =>
       apiClient<IntelligenceResponse>(
         `/api/intelligence/anomalies/${anomalyId}/explanation`,
       ),
+    onSuccess: (response) => {
+      if (response.provider === "groq") {
+        recordAiActionUsed(queryClient, businessId);
+      }
+    },
     onSettled: () => {
       void queryClient.invalidateQueries({
         queryKey: subscriptionKeys.all,
@@ -116,6 +132,9 @@ export const useReportSummary = () => {
         }),
       }),
     onSuccess: (response, variables) => {
+      if (response.provider === "groq") {
+        recordAiActionUsed(queryClient, businessId);
+      }
       if (businessId) {
         queryClient.setQueryData(
           intelligenceKeys.reportSummary(

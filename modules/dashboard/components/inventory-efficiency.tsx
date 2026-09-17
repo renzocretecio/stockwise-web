@@ -264,7 +264,7 @@ export function SuggestedActions({ compact = false }: { compact?: boolean }) {
                 </div>
                 <Link
                     className="text-xs font-medium text-primary hover:underline"
-                    href="/dashboard/intelligence"
+                    href="/dashboard/overview?tab=insight"
                 >
                     View all
                     <ArrowUpRight className="ml-1 inline size-3.5" />

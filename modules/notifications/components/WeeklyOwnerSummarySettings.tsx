@@ -16,6 +16,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { toast } from "@/components/ui/toast";
 import { apiClient } from "@/lib/api-client";
 import { formatCurrency } from "@/lib/currency";
 import { cn } from "@/lib/utils";
@@ -270,7 +271,10 @@ export function WeeklyOwnerSummarySettings() {
         },
       );
       setDraft(saved);
-      setMessage("Weekly summary preferences saved.");
+      toast.add({
+        title: "Weekly summary preferences saved.",
+        type: "success",
+      });
     } catch (reason) {
       setFormError(
         reason instanceof Error

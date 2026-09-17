@@ -14,14 +14,13 @@ import {
     horizontalReportChartMargin,
     reportPrimary,
     reportSecondary,
+    reportSeriesColors,
     reportTertiary,
     toChartNumber,
 } from "@/modules/reports/components/report-chart-utils";
 import type { InventoryReport } from "@/modules/reports/types";
 
 type Category = InventoryReport["by_category"][number];
-
-const colors = [reportPrimary, reportSecondary, reportTertiary];
 
 export function InventoryCategoryValueChart({
     categories,
@@ -54,7 +53,9 @@ export function InventoryCategoryValueChart({
             <BarValueAxis formatValue={formatCompactChartCurrency} />
             <Bar
                 dataKey="stock_value"
-                fill={(_point, index) => colors[index % colors.length]}
+                fill={(_point, index) =>
+                    reportSeriesColors[index % reportSeriesColors.length]
+                }
                 lineCap={6}
                 stroke={reportPrimary}
             />

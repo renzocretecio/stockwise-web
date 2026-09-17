@@ -6,7 +6,14 @@ import { AlertTriangle, ArrowRight, ShieldCheck, Sparkles } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
 import { ExplanationDrawer } from "@/modules/intelligence/components/explanation-drawer";
 import { useAnomalyExplanation } from "@/modules/intelligence/services/intelligence";
 import type { InventoryAnomaly } from "@/modules/dashboard/types";
@@ -51,34 +58,50 @@ export function AnomalyList({ anomalies }: { anomalies: InventoryAnomaly[] }) {
                     </div>
                 </div>
             ) : (
-                <div
-                    className={
-                        "grid gap-4 p-4 sm:grid-cols-2 sm:p-6 " +
-                        "xl:grid-cols-3"
-                    }
-                >
-                    {anomalies.map((anomaly) => (
-                        <AnomalyCard
-                            anomaly={anomaly}
-                            explanationError={
-                                selectedId === anomaly.id
-                                    ? explanation.error
-                                    : undefined
-                            }
-                            isExplaining={
-                                explanation.isPending &&
-                                selectedId === anomaly.id
-                            }
-                            limitReached={aiAllowance.exhausted}
-                            key={anomaly.id}
-                            onExplain={() => {
-                                setSelectedId(anomaly.id);
-                                explanation.mutate(anomaly.id, {
-                                    onSuccess: () => setDrawerOpen(true),
-                                });
-                            }}
-                        />
-                    ))}
+                <div className="p-4 sm:p-5">
+                    <div className="overflow-hidden rounded-2xl border">
+                        <Table>
+                            <TableHeader className="bg-muted/30">
+                                <TableRow>
+                                    <TableHead>Product</TableHead>
+                                    <TableHead>Type</TableHead>
+                                    <TableHead className="text-right">
+                                        Quantity
+                                    </TableHead>
+                                    <TableHead>Severity</TableHead>
+                                    <TableHead>Detected</TableHead>
+                                    <TableHead className="text-right">
+                                        Actions
+                                    </TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {anomalies.map((anomaly) => (
+                                    <AnomalyRow
+                                        anomaly={anomaly}
+                                        explanationError={
+                                            selectedId === anomaly.id
+                                                ? explanation.error
+                                                : undefined
+                                        }
+                                        isExplaining={
+                                            explanation.isPending &&
+                                            selectedId === anomaly.id
+                                        }
+                                        key={anomaly.id}
+                                        limitReached={aiAllowance.exhausted}
+                                        onExplain={() => {
+                                            setSelectedId(anomaly.id);
+                                            explanation.mutate(anomaly.id, {
+                                                onSuccess: () =>
+                                                    setDrawerOpen(true),
+                                            });
+                                        }}
+                                    />
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
                 </div>
             )}
             <ExplanationDrawer
@@ -102,7 +125,7 @@ export function AnomalyList({ anomalies }: { anomalies: InventoryAnomaly[] }) {
     );
 }
 
-function AnomalyCard({
+function AnomalyRow({
     anomaly,
     explanationError,
     isExplaining,
@@ -116,98 +139,94 @@ function AnomalyCard({
     onExplain: () => void;
 }) {
     return (
-        <Card
-            className={
-                "h-full min-w-0 gap-4 rounded-2xl border py-5 " +
-                "shadow-sm ring-0 " +
-                (anomaly.severity === "high"
-                    ? "border-destructive/20 bg-gradient-to-b from-destructive/5 to-card"
-                    : "border-amber-500/20 bg-gradient-to-b from-amber-500/5 to-card")
-            }
-            size="sm"
-        >
-            <div className="px-4">
-                <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                            {anomalyTypeLabel(anomaly.anomaly_type)}
-                        </p>
-                        <h3 className="mt-2 break-words text-lg font-semibold">
-                            {anomaly.product_name}
-                        </h3>
-                    </div>
-                    <Badge
-                        variant={
-                            anomaly.severity === "high"
-                                ? "destructive"
-                                : "secondary"
+        <TableRow>
+            <TableCell className="max-w-72 whitespace-normal">
+                <p className="font-medium">{anomaly.product_name}</p>
+                <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                    {anomaly.title}
+                </p>
+            </TableCell>
+            <TableCell>{anomalyTypeLabel(anomaly.anomaly_type)}</TableCell>
+            <TableCell className="text-right font-medium tabular-nums">
+                {formatQuantity(anomaly.quantity)}
+                <span className="ml-1 font-normal text-muted-foreground">
+                    units
+                </span>
+            </TableCell>
+            <TableCell>
+                <Badge
+                    variant={
+                        anomaly.severity === "high"
+                            ? "destructive"
+                            : "secondary"
+                    }
+                >
+                    {anomaly.severity === "high" ? "High" : "Medium"}
+                </Badge>
+            </TableCell>
+            <TableCell className="text-muted-foreground">
+                {formatOccurredAt(anomaly.occurred_at)}
+            </TableCell>
+            <TableCell>
+                <div className="flex justify-end gap-2">
+                    <Button
+                        disabled={isExplaining || limitReached}
+                        onClick={onExplain}
+                        size="sm"
+                        title={
+                            limitReached
+                                ? "Weekly AI limit reached"
+                                : "Uses 1 AI action"
+                        }
+                        type="button"
+                        variant="outline"
+                    >
+                        <Sparkles className="size-4" />
+                        {isExplaining ? "Explaining…" : "Explain"}
+                    </Button>
+                    <Link
+                        className={
+                            "inline-flex items-center gap-1 px-2 text-sm " +
+                            "font-medium text-primary hover:underline"
+                        }
+                        href={
+                            "/inventory/movements?product_id=" +
+                            anomaly.product_id
                         }
                     >
-                        {anomaly.severity === "high"
-                            ? "High priority"
-                            : "Review needed"}
-                    </Badge>
+                        Investigate
+                        <ArrowRight className="size-4" />
+                    </Link>
                 </div>
-
-                <div className="mt-5 rounded-2xl border border-border/50 bg-card/70 p-4">
-                    <p className="text-xs text-muted-foreground">
-                        {anomaly.anomaly_type === "negative_stock"
-                            ? "Stock balance"
-                            : anomaly.anomaly_type === "count_variance"
-                              ? "Count difference"
-                              : "Quantity changed"}
+                {explanationError ? (
+                    <p className="mt-2 text-right text-xs text-destructive">
+                        {explanationError.message}
                     </p>
-                    <p className="mt-1 text-2xl font-semibold tabular-nums">
-                        {new Intl.NumberFormat("en-PH", {
-                            maximumFractionDigits: 2,
-                            signDisplay: "exceptZero",
-                        }).format(anomaly.quantity)}
-                        <span className="ml-2 text-xs font-normal text-muted-foreground">
-                            units
-                        </span>
-                    </p>
-                </div>
-                <p className="mt-4 text-sm font-medium">{anomaly.title}</p>
-                <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                    {anomaly.detail}
-                </p>
-            </div>
-
-            <div className="mt-auto flex flex-wrap gap-2 border-t px-4 pt-4">
-                <Button
-                    disabled={isExplaining || limitReached}
-                    onClick={onExplain}
-                    size="sm"
-                    type="button"
-                    variant="outline"
-                >
-                    <Sparkles className="mr-1.5 size-4" />
-                    {isExplaining
-                        ? "Explaining…"
-                        : limitReached
-                          ? "Weekly AI limit reached"
-                          : "Explain · 1 AI action"}
-                </Button>
-                <Link
-                    className={
-                        "inline-flex items-center gap-1 px-2 text-sm " +
-                        "font-medium text-primary hover:underline"
-                    }
-                    href={
-                        "/inventory/movements?product_id=" + anomaly.product_id
-                    }
-                >
-                    Investigate <ArrowRight className="size-4" />
-                </Link>
-            </div>
-
-            {explanationError ? (
-                <p className="px-4 text-sm text-destructive">
-                    {explanationError.message}
-                </p>
-            ) : null}
-        </Card>
+                ) : null}
+            </TableCell>
+        </TableRow>
     );
+}
+
+const quantityFormatter = new Intl.NumberFormat("en-PH", {
+    maximumFractionDigits: 2,
+    signDisplay: "exceptZero",
+});
+
+const dateFormatter = new Intl.DateTimeFormat("en-PH", {
+    dateStyle: "medium",
+    timeZone: "Asia/Manila",
+    timeStyle: "short",
+});
+
+function formatQuantity(value: number) {
+    return quantityFormatter.format(value);
+}
+
+function formatOccurredAt(value: string | null) {
+    if (!value) return "—";
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? "—" : dateFormatter.format(date);
 }
 
 function anomalyTypeLabel(type: InventoryAnomaly["anomaly_type"]) {

@@ -16,6 +16,7 @@ import {
   Settings,
 } from "lucide-react";
 import { SettingsHub } from "@/modules/settings/components/SettingsHub";
+import { ThemeToggle } from "./ThemeToggle";
 import type { SettingsSection } from "@/modules/settings/components/SettingsSidebar";
 import { MenuItem, menuConfig } from "@/lib/menu-config";
 import { getFilteredMenu } from "@/lib/menu-utils";
@@ -229,6 +230,7 @@ export function Header() {
           <div className="shrink-0">
             <Link
               href="/dashboard"
+              aria-label="StockWise dashboard"
               className={cn(
                 "group flex items-center gap-2.5 rounded-2xl",
                 "focus:outline-none focus-visible:ring-2",
@@ -238,7 +240,7 @@ export function Header() {
               <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-sm shadow-blue-500/20 group-hover:scale-105 transition-transform duration-200">
                 <Boxes className="h-5 w-5" />
               </div>
-              <span className="text-xl font-semibold tracking-tight">
+              <span className="hidden text-xl font-semibold tracking-tight sm:inline">
                 StockWise
               </span>
             </Link>
@@ -365,6 +367,7 @@ export function Header() {
 
           {/* 3. PROFILE */}
           <div className="flex shrink-0 items-center gap-2">
+            <ThemeToggle />
             <div ref={profileRef} className="relative">
               <button
                 type="button"
@@ -423,19 +426,20 @@ export function Header() {
               {isProfileOpen && (
                 <div
                   className={cn(
-                    "absolute right-0 z-50 mt-2 w-[min(16rem,calc(100vw-2rem))]",
-                    "animate-in rounded-xl border border-border/80",
-                    "bg-popover/98 p-2 text-popover-foreground shadow-xl",
+                    "absolute right-0 z-50 mt-2",
+                    "w-[min(20rem,calc(100vw-2rem))]",
+                    "animate-in rounded-2xl border border-border/80",
+                    "bg-popover p-2 text-popover-foreground shadow-xl",
                     "shadow-black/10 fade-in-0 zoom-in-95 duration-150",
                   )}
                 >
-                  <div className="px-3 py-2.5 border-b border-border/60 mb-1">
-                    <p className="text-sm font-semibold text-foreground truncate">
+                  <div className="mb-1 min-w-0 border-b border-border/60 px-3 py-2.5">
+                    <p className="truncate text-sm font-semibold text-foreground">
                       {user?.first_name
                         ? `${user.first_name} ${user?.last_name || ""}`.trim()
                         : "User Account"}
                     </p>
-                    <p className="text-xs text-muted-foreground truncate">
+                    <p className="truncate text-xs text-muted-foreground">
                       {user?.email || "Signed in"}
                     </p>
 
@@ -465,24 +469,32 @@ export function Header() {
                       </label>
                     )}
 
-                    <div className="mt-2 flex items-center gap-1.5">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-2xl bg-secondary text-[11px] font-medium text-secondary-foreground capitalize">
+                    <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                      <span className="inline-flex shrink-0 items-center gap-1 rounded-2xl bg-secondary px-2 py-0.5 text-[11px] font-medium capitalize text-secondary-foreground">
                         <Shield className="h-3 w-3 text-primary" />
                         {userRole}
                       </span>
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-2xl bg-primary/10 text-[11px] font-medium text-primary">
+                      <span className="inline-flex shrink-0 items-center gap-1 rounded-2xl bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
                         {subscriptionLabel(
                           activeBusiness?.plan,
                           activeBusiness?.subscription_status,
                         )}
                       </span>
-                      {activeBusiness?.name && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-2xl bg-muted text-[11px] font-medium text-muted-foreground truncate max-w-[120px]">
-                          <Building2 className="h-3 w-3" />
+                    </div>
+                    {activeBusiness?.name ? (
+                      <div
+                        className={cn(
+                          "mt-2 flex min-w-0 items-center gap-2",
+                          "text-xs text-muted-foreground",
+                        )}
+                        title={activeBusiness.name}
+                      >
+                        <Building2 className="size-3.5 shrink-0" />
+                        <span className="truncate">
                           {activeBusiness.name}
                         </span>
-                      )}
-                    </div>
+                      </div>
+                    ) : null}
                   </div>
 
                   <div className="space-y-0.5">

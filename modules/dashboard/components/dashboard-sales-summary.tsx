@@ -30,9 +30,12 @@ export function DashboardSalesSummary({
     return (
         <section
             aria-label="Business metrics and yesterday's insight"
-            className="grid min-w-0 items-stretch gap-4 lg:grid-cols-[minmax(0,7fr)_minmax(0,3fr)]"
+            className={
+                "grid min-w-0 items-stretch gap-4 " +
+                "xl:grid-cols-[minmax(0,7fr)_minmax(0,3fr)]"
+            }
         >
-            <div className="min-w-0">
+            <div className="order-2 min-w-0 xl:order-1">
                 {report ? (
                     <DashboardMetricCards
                         report={report}
@@ -66,7 +69,7 @@ export function DashboardSalesSummary({
                     </div>
                 )}
             </div>
-            <div className="min-w-0">
+            <div className="order-1 min-w-0 xl:order-2">
                 <SalesAiInsight
                     briefing={briefing}
                     isLoading={briefingLoading}
