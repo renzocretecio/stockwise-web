@@ -20,13 +20,17 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "KitaStock",
   description:
-    "Kita ang stock. Kita ang kita. Inventory clarity for Filipino small businesses.",
+    "Kita ang stock. Kita ang kita. Inventory clarity for Filipino " +
+    "small businesses.",
   icons: {
-    apple: "/logo-kitastock.png",
-    icon: "/logo-kitastock.png",
-    shortcut: "/logo-kitastock.png",
+    apple: "/kitastock-logo.png",
+    icon: {
+      type: "image/svg+xml",
+      url: "/kitastock-logo.svg",
+    },
+    shortcut: "/kitastock-logo.svg",
   },
-  manifest: "/manifest.webmanifest",
+  manifest: "/manifest.webmanifest?v=3",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -35,7 +39,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0f766e",
+  themeColor: "#0f0f0f",
 };
 
 export default function RootLayout({

@@ -30,8 +30,8 @@ export function AttentionSection() {
         <section
             aria-labelledby="attention-heading"
             className={
-                "scroll-mt-24 border-t border-[#e2edf0] bg-white " +
-                "px-4 py-16 text-[#203039] sm:px-6 lg:py-20"
+                "scroll-mt-24 border-t border-border bg-card " +
+                "px-4 py-16 text-foreground sm:px-6 lg:py-20"
             }
             id="attention"
         >
@@ -47,7 +47,7 @@ export function AttentionSection() {
                             <p
                                 className={
                                     "text-xs font-semibold uppercase " +
-                                    "tracking-[0.18em] text-[#245564]"
+                                    "tracking-[0.18em] text-accent-foreground"
                                 }
                             >
                                 Know what needs attention
@@ -61,14 +61,14 @@ export function AttentionSection() {
                                 id="attention-heading"
                             >
                                 A busy store.
-                                <span className="block text-[#376674]">
+                                <span className="block text-accent-foreground">
                                     A clear place to start.
                                 </span>
                             </h2>
                             <p
                                 className={
                                     "mt-5 max-w-lg text-sm leading-7 " +
-                                    "text-[#5e6d75] sm:text-base"
+                                    "text-muted-foreground sm:text-base"
                                 }
                             >
                                 The overview orders four stock signals by
@@ -79,8 +79,8 @@ export function AttentionSection() {
 
                         <div
                             className={
-                                "mt-8 divide-y divide-[#e2edf0] " +
-                                "border-y border-[#e2edf0]"
+                                "mt-8 divide-y divide-border " +
+                                "border-y border-border"
                             }
                         >
                             {benefits.map((benefit, index) => (
@@ -95,7 +95,7 @@ export function AttentionSection() {
                                         <p
                                             className={
                                                 "mt-1.5 max-w-md text-sm " +
-                                                "leading-6 text-[#5e6d75]"
+                                                "leading-6 text-muted-foreground"
                                             }
                                         >
                                             {benefit.description}
@@ -109,7 +109,7 @@ export function AttentionSection() {
                             className={
                                 "group mt-6 inline-flex min-h-11 " +
                                 "items-center gap-2 rounded-2xl text-sm " +
-                                "font-semibold text-[#245564] " +
+                                "font-semibold text-accent-foreground " +
                                 "focus-visible:outline-2 " +
                                 "focus-visible:outline-offset-4"
                             }

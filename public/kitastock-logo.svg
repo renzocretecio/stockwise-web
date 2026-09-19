@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">KitaStock logo mark</title>
+  <desc id="desc">A stylized K combining visibility, growth bars, and stock imagery.</desc>
+  <defs>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F8C61A"/>
+      <stop offset="1" stop-color="#E8A900"/>
+    </linearGradient>
+    <linearGradient id="charcoal" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2A2A2A"/>
+      <stop offset="1" stop-color="#171717"/>
+    </linearGradient>
+  </defs>
+
+  <!-- K stem -->
+  <rect x="76" y="78" width="82" height="356" rx="38" fill="url(#charcoal)"/>
+
+  <!-- Upper arm -->
+  <path d="M140 247 C188 195 234 143 305 91 C329 73 363 79 378 104
+           C392 128 385 158 363 176 C304 223 260 263 222 306 Z"
+        fill="url(#gold)"/>
+
+  <!-- Lower arm / stock block -->
+  <path d="M148 306 C203 305 253 321 299 354 L369 405
+           C391 421 395 451 379 472 C363 493 333 497 311 481
+           L224 418 C198 399 170 388 140 386 Z"
+        fill="url(#charcoal)"/>
+
+  <!-- Visibility sweep -->
+  <path d="M118 287 C174 234 233 212 297 219 C347 224 386 248 420 278
+           C381 322 337 344 286 345 C225 347 170 329 118 287 Z"
+        fill="#FFFDF7"/>
+
+  <!-- Growth bars -->
+  <rect x="220" y="279" width="25" height="38" rx="8" fill="#F8C61A"/>
+  <rect x="260" y="257" width="25" height="60" rx="8" fill="#F8C61A"/>
+  <rect x="300" y="234" width="25" height="83" rx="8" fill="#F8C61A"/>
+
+  <!-- Lower gold sweep -->
+  <path d="M147 330 C207 348 265 348 320 330 C350 320 378 305 405 284
+           C381 329 345 363 297 382 C245 403 192 398 147 377 Z"
+        fill="url(#gold)"/>
+</svg>

@@ -17,7 +17,6 @@ export const useDashboard = (stockDaysThreshold = 7) => {
     ),
     enabled: Boolean(businessId),
     staleTime: 10 * 60 * 1000,
-    refetchOnMount: false,
   });
 
   return {
@@ -48,7 +47,6 @@ export const useDashboardTrends = (range: ReportDateRange) => {
     ),
     enabled: Boolean(businessId),
     staleTime: 10 * 60 * 1000,
-    refetchOnMount: false,
   });
 
   return {

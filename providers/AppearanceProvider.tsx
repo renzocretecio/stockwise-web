@@ -76,7 +76,7 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
                             : (preference ?? {
                                 custom_color: defaultCustomColor,
                                 palette: "petrol",
-                                mode: "system",
+                                mode: "dark",
                             })),
                       userId,
                       pending: false,

@@ -11,6 +11,8 @@ import {
 import { referenceDataKeys } from
     "@/modules/offline/services/reference-data";
 
+const dashboardQueryKey = ["dashboard"] as const;
+
 export const purchaseKeys = {
     all: ["purchases"] as const,
 
@@ -87,7 +89,7 @@ export const useCreatePurchase = () => {
                 "purchase",
                 payload,
                 "/api/purchases",
-                [purchaseKeys.lists()],
+                [purchaseKeys.lists(), dashboardQueryKey],
             ).then((result) => {
                 if ("queued" in result) {
                     return {
@@ -103,6 +105,9 @@ export const useCreatePurchase = () => {
         onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: purchaseKeys.lists(),
+            });
+            queryClient.invalidateQueries({
+                queryKey: dashboardQueryKey,
             });
         },
     });
@@ -132,6 +137,9 @@ export const useUpdatePurchase = (purchaseId: string) => {
             queryClient.invalidateQueries({
                 queryKey: referenceDataKeys.all,
             });
+            queryClient.invalidateQueries({
+                queryKey: dashboardQueryKey,
+            });
         },
     });
 };
@@ -159,6 +167,18 @@ export const useReceivePurchase = (purchaseId: string) => {
             queryClient.invalidateQueries({
                 queryKey: referenceDataKeys.all,
             });
+            queryClient.invalidateQueries({
+                queryKey: ["inventory"],
+            });
+            queryClient.invalidateQueries({
+                queryKey: ["products"],
+            });
+            queryClient.invalidateQueries({
+                queryKey: ["reports"],
+            });
+            queryClient.invalidateQueries({
+                queryKey: dashboardQueryKey,
+            });
         },
     });
 };
@@ -178,6 +198,9 @@ export const useOrderPurchase = (purchaseId: string) => {
             });
             queryClient.invalidateQueries({
                 queryKey: purchaseKeys.detail(purchaseId),
+            });
+            queryClient.invalidateQueries({
+                queryKey: dashboardQueryKey,
             });
         },
     });
@@ -202,6 +225,9 @@ export const useCancelPurchase = (purchaseId: string) => {
 
             queryClient.invalidateQueries({
                 queryKey: purchaseKeys.detail(purchaseId),
+            });
+            queryClient.invalidateQueries({
+                queryKey: dashboardQueryKey,
             });
         },
     });

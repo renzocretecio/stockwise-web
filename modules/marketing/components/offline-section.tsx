@@ -29,8 +29,8 @@ export function OfflineSection() {
         <section
             aria-labelledby="offline-heading"
             className={
-                "scroll-mt-24 border-t border-[#dcebee] bg-[#f1f7f8] " +
-                "px-4 py-16 text-[#203039] sm:px-6 lg:py-20"
+                "scroll-mt-24 border-t border-border bg-accent " +
+                "px-4 py-16 text-foreground sm:px-6 lg:py-20"
             }
             id="offline"
         >
@@ -45,9 +45,9 @@ export function OfflineSection() {
                         <div
                             className={
                                 "inline-flex items-center gap-2 rounded-full " +
-                                "border border-[#c9dfe3] bg-white " +
+                                "border border-border bg-card " +
                                 "px-3 py-1.5 " +
-                                "text-xs font-semibold text-[#376674]"
+                                "text-xs font-semibold text-accent-foreground"
                             }
                         >
                             Pro and Business
@@ -55,7 +55,7 @@ export function OfflineSection() {
                         <p
                             className={
                                 "mt-6 text-xs font-semibold uppercase " +
-                                "tracking-[0.18em] text-[#245564]"
+                                "tracking-[0.18em] text-accent-foreground"
                             }
                         >
                             Offline operations
@@ -69,14 +69,14 @@ export function OfflineSection() {
                             id="offline-heading"
                         >
                             The connection can pause.
-                            <span className="block text-[#376674]">
+                            <span className="block text-accent-foreground">
                                 The work does not have to.
                             </span>
                         </h2>
                         <p
                             className={
                                 "mt-5 max-w-xl text-sm leading-7 " +
-                                "text-[#5e6d75] sm:text-base"
+                                "text-muted-foreground sm:text-base"
                             }
                         >
                             After reference data is saved on the device,
@@ -93,7 +93,7 @@ export function OfflineSection() {
                                     <li
                                         className={
                                             "flex items-center gap-3 text-sm " +
-                                            "font-medium text-[#33464f]"
+                                            "font-medium text-muted-foreground"
                                         }
                                         data-workflow-order={index}
                                         data-workflow-reveal
@@ -103,8 +103,8 @@ export function OfflineSection() {
                                             className={
                                                 "grid size-8 shrink-0 " +
                                                 "place-items-center " +
-                                                "rounded-xl bg-white " +
-                                                "text-[#376674] shadow-sm"
+                                                "rounded-xl bg-card " +
+                                                "text-accent-foreground shadow-sm"
                                             }
                                         >
                                             <Icon
@@ -123,7 +123,7 @@ export function OfflineSection() {
                                 "group mt-6 inline-flex min-h-11 " +
                                 "items-center " +
                                 "gap-2 rounded-2xl text-sm font-semibold " +
-                                "text-[#245564] focus-visible:outline-2 " +
+                                "text-accent-foreground focus-visible:outline-2 " +
                                 "focus-visible:outline-offset-4"
                             }
                             href="/signup"
@@ -149,7 +149,7 @@ export function OfflineSection() {
                         <p
                             className={
                                 "mt-4 text-center text-xs leading-5 " +
-                                "text-[#718087]"
+                                "text-muted-foreground"
                             }
                         >
                             Changes are validated during synchronization.

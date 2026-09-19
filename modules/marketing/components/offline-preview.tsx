@@ -47,13 +47,13 @@ export function OfflinePreview() {
         <aside
             className={
                 "min-w-0 overflow-hidden rounded-2xl border " +
-                "border-[#cfe1e5] bg-white shadow-xl shadow-[#245564]/5"
+                "border-border bg-card shadow-xl shadow-foreground/5"
             }
         >
             <header
                 className={
                     "flex flex-wrap items-center justify-between gap-4 " +
-                    "border-b border-[#dcebee] bg-[#f5fafb] px-5 py-5 " +
+                    "border-b border-border bg-muted px-5 py-5 " +
                     "sm:px-6"
                 }
             >
@@ -61,16 +61,16 @@ export function OfflinePreview() {
                     <span
                         className={
                             "grid size-10 place-items-center rounded-2xl " +
-                            "bg-[#e7f2f5] text-[#245564]"
+                            "bg-accent text-accent-foreground"
                         }
                     >
                         <WifiOff aria-hidden="true" className="size-5" />
                     </span>
                     <div>
-                        <p className="text-sm font-semibold text-[#203039]">
+                        <p className="text-sm font-semibold text-foreground">
                             Working offline
                         </p>
-                        <p className="mt-0.5 text-xs text-[#65747b]">
+                        <p className="mt-0.5 text-xs text-muted-foreground">
                             Changes remain on this device
                         </p>
                     </div>
@@ -96,7 +96,7 @@ export function OfflinePreview() {
                             <div
                                 className={
                                     "flex items-center gap-3 rounded-2xl " +
-                                    "border border-[#dcebee] bg-[#fbfdfd] " +
+                                    "border border-border bg-muted " +
                                     "p-4"
                                 }
                                 key={change.label}
@@ -105,8 +105,8 @@ export function OfflinePreview() {
                                     className={
                                         "grid size-9 shrink-0 " +
                                         "place-items-center " +
-                                        "rounded-xl bg-[#edf5f7] " +
-                                        "text-[#376674]"
+                                        "rounded-xl bg-accent " +
+                                        "text-accent-foreground"
                                     }
                                 >
                                     <Icon
@@ -118,7 +118,7 @@ export function OfflinePreview() {
                                     <span
                                         className={
                                             "block text-sm font-semibold " +
-                                            "text-[#203039]"
+                                            "text-foreground"
                                         }
                                     >
                                         {change.label}
@@ -126,7 +126,7 @@ export function OfflinePreview() {
                                     <span
                                         className={
                                             "mt-0.5 block truncate text-xs " +
-                                            "text-[#65747b]"
+                                            "text-muted-foreground"
                                         }
                                     >
                                         {change.detail}
@@ -148,14 +148,14 @@ export function OfflinePreview() {
                 <div
                     className={
                         "mt-5 flex items-start gap-3 rounded-2xl " +
-                        "bg-[#edf5f7] px-4 py-3.5"
+                        "bg-accent px-4 py-3.5"
                     }
                 >
                     <SlidersHorizontal
                         aria-hidden="true"
-                        className="mt-0.5 size-4 shrink-0 text-[#376674]"
+                        className="mt-0.5 size-4 shrink-0 text-accent-foreground"
                     />
-                    <p className="text-xs leading-5 text-[#52636b]">
+                    <p className="text-xs leading-5 text-muted-foreground">
                         Product, supplier, category, and stock references were
                         saved during the last online session.
                     </p>
@@ -165,7 +165,7 @@ export function OfflinePreview() {
             <ol
                 aria-label="Offline synchronization flow"
                 className={
-                    "grid gap-px border-t border-[#dcebee] bg-[#dcebee] " +
+                    "grid gap-px border-t border-border bg-border " +
                     "sm:grid-cols-3"
                 }
             >
@@ -175,7 +175,7 @@ export function OfflinePreview() {
                     return (
                         <li
                             className={
-                                "relative flex items-center gap-3 bg-white " +
+                                "relative flex items-center gap-3 bg-card " +
                                 "px-4 py-4 sm:block sm:min-h-28 sm:px-5"
                             }
                             key={item.label}
@@ -185,8 +185,8 @@ export function OfflinePreview() {
                                     "grid size-8 shrink-0 place-items-center " +
                                     "rounded-full " +
                                     (index === timeline.length - 1
-                                        ? "bg-[#ddefe8] text-[#2f6d5c]"
-                                        : "bg-[#e7f2f5] text-[#376674]")
+                                        ? "bg-[#17483f] text-[#087966]"
+                                        : "bg-accent text-accent-foreground")
                                 }
                             >
                                 <Icon
@@ -204,7 +204,7 @@ export function OfflinePreview() {
                                     className={
                                         "text-[0.65rem] font-semibold " +
                                         "uppercase tracking-wide " +
-                                        "text-[#819198]"
+                                        "text-muted-foreground"
                                     }
                                 >
                                     Step {index + 1}
@@ -212,7 +212,7 @@ export function OfflinePreview() {
                                 <p
                                     className={
                                         "mt-0.5 text-xs font-semibold " +
-                                        "text-[#203039]"
+                                        "text-foreground"
                                     }
                                 >
                                     {item.label}

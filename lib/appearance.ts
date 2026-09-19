@@ -1,8 +1,8 @@
 export const palettes = [
     {
         id: "petrol",
-        name: "Petrol",
-        description: "Porcelain, blue, and brass",
+        name: "KitaStock",
+        description: "Ink, warm gold, and balanced neutrals",
     },
     {
         id: "graphite",
@@ -26,7 +26,7 @@ export const palettes = [
     },
 ] as const;
 
-export const defaultCustomColor = "#245564";
+export const defaultCustomColor = "#f3bc16";
 
 export type PresetPalette = (typeof palettes)[number]["id"];
 export type Palette = PresetPalette | "custom";
@@ -100,7 +100,7 @@ function readableForeground(color: string) {
     const green = Number.parseInt(color.slice(3, 5), 16);
     const blue = Number.parseInt(color.slice(5, 7), 16);
     const brightness = (red * 299 + green * 587 + blue * 114) / 1000;
-    return brightness > 150 ? "#172126" : "#ffffff";
+    return brightness > 150 ? "#1f1f1f" : "#ffffff";
 }
 
 export function readAppearance(id: string): SavedAppearance | null {
@@ -147,20 +147,26 @@ export function storeAppearance(value: SavedAppearance) {
 
 export const appearanceScript = `
 try {
-    var saved = JSON.parse(localStorage.getItem("${currentAppearanceKey}") || "null");
+    var saved = JSON.parse(
+        localStorage.getItem("${currentAppearanceKey}") || "null"
+    );
     var palettes = ${JSON.stringify([
         ...palettes.map((palette) => palette.id),
         "custom",
     ])};
     if (saved && palettes.includes(saved.palette)) {
         document.documentElement.dataset.palette = saved.palette;
-        if (saved.palette === "custom" && /^#[0-9a-f]{6}$/i.test(saved.custom_color || "")) {
+        if (
+            saved.palette === "custom" &&
+            /^#[0-9a-f]{6}/i.test(saved.custom_color || "") &&
+            (saved.custom_color || "").length === 7
+        ) {
             var color = saved.custom_color;
             var red = parseInt(color.slice(1, 3), 16);
             var green = parseInt(color.slice(3, 5), 16);
             var blue = parseInt(color.slice(5, 7), 16);
             var foreground = (red * 299 + green * 587 + blue * 114) / 1000 > 150
-                ? "#172126"
+                ? "#1f1f1f"
                 : "#ffffff";
             var style = document.documentElement.style;
             style.setProperty("--primary", color);

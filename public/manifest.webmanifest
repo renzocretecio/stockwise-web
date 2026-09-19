@@ -5,12 +5,12 @@
     "start_url": "/",
     "scope": "/",
     "display": "standalone",
-    "background_color": "#f8fafc",
-    "theme_color": "#0f766e",
+    "background_color": "#0f0f0f",
+    "theme_color": "#0f0f0f",
     "orientation": "portrait-primary",
     "icons": [
         {
-            "src": "/logo-kitastock.png",
+            "src": "/kitastock-logo.png",
             "sizes": "1283x1226",
             "type": "image/png",
             "purpose": "any"

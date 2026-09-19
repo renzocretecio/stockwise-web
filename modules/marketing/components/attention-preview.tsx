@@ -16,16 +16,16 @@ const signals = [
         label: "Low stock",
         markerClassName: "bg-[#d99a35] ring-[#d99a35]/15",
         severity: "High",
-        severityClassName: "text-[#996619]",
+        severityClassName: "text-[#8a5a1e]",
         value: 3,
     },
     {
         action: "Plan reorder",
-        barClassName: "bg-[#376674]",
+        barClassName: "bg-[#1f6269]",
         label: "Below reorder point",
-        markerClassName: "bg-[#376674] ring-[#376674]/15",
+        markerClassName: "bg-[#1f6269] ring-[#1f6269]/15",
         severity: "Medium",
-        severityClassName: "text-[#376674]",
+        severityClassName: "text-accent-foreground",
         value: 4,
     },
     {
@@ -49,25 +49,25 @@ export function AttentionPreview() {
         <aside
             className={
                 "min-w-0 overflow-hidden rounded-2xl border " +
-                "border-[#dcebee] bg-white shadow-xl shadow-[#245564]/5"
+                "border-border bg-card shadow-xl shadow-foreground/5"
             }
         >
             <div
                 className={
                     "flex items-start justify-between gap-4 border-b " +
-                    "border-[#e2edf0] bg-[#f5fafb] px-5 py-5 sm:px-6"
+                    "border-border bg-muted px-5 py-5 sm:px-6"
                 }
             >
                 <div>
                     <p className="text-sm font-semibold">Needs attention</p>
-                    <p className="mt-1 text-xs text-[#5e6d75]">
+                    <p className="mt-1 text-xs text-muted-foreground">
                         Current stock issues that may affect sales
                     </p>
                 </div>
                 <span
                     className={
                         "inline-flex shrink-0 items-center gap-1 pt-0.5 " +
-                        "text-xs font-medium text-[#376674]"
+                        "text-xs font-medium text-accent-foreground"
                     }
                 >
                     Review risks
@@ -84,7 +84,7 @@ export function AttentionPreview() {
                         className={
                             "grid grid-cols-[4rem_1rem_minmax(0,1fr)] " +
                             "gap-x-3 rounded-2xl p-2.5 transition-colors " +
-                            "hover:bg-[#f2f8fa] " +
+                            "hover:bg-muted " +
                             "motion-reduce:transition-none"
                         }
                         key={signal.label}
@@ -106,7 +106,7 @@ export function AttentionPreview() {
                                 <span
                                     className={
                                         "absolute -top-2.5 bottom-1/2 " +
-                                        "w-px bg-[#dcebee]"
+                                        "w-px bg-border"
                                     }
                                 />
                             ) : null}
@@ -114,7 +114,7 @@ export function AttentionPreview() {
                                 <span
                                     className={
                                         "absolute top-1/2 -bottom-2.5 " +
-                                        "w-px bg-[#dcebee]"
+                                        "w-px bg-border"
                                     }
                                 />
                             ) : null}
@@ -138,7 +138,7 @@ export function AttentionPreview() {
                                 <span
                                     className={
                                         "font-semibold tabular-nums " +
-                                        "text-[#203039]"
+                                        "text-foreground"
                                     }
                                 >
                                     {signal.value}
@@ -146,7 +146,7 @@ export function AttentionPreview() {
                                 <ArrowUpRight
                                     aria-hidden="true"
                                     className={
-                                        "size-3.5 shrink-0 text-[#819198]"
+                                        "size-3.5 shrink-0 text-muted-foreground"
                                     }
                                 />
                             </span>
@@ -154,7 +154,7 @@ export function AttentionPreview() {
                                 aria-hidden="true"
                                 className={
                                     "mt-2 block h-1.5 overflow-hidden " +
-                                    "rounded-full bg-[#edf3f5]"
+                                    "rounded-full bg-muted"
                                 }
                             >
                                 <span
@@ -172,7 +172,7 @@ export function AttentionPreview() {
                             </span>
                             <span
                                 className={
-                                    "mt-1.5 block text-xs text-[#5e6d75]"
+                                    "mt-1.5 block text-xs text-muted-foreground"
                                 }
                             >
                                 {signal.action}
@@ -184,8 +184,8 @@ export function AttentionPreview() {
 
             <p
                 className={
-                    "border-t border-[#e2edf0] bg-[#f8fbfc] px-5 py-4 " +
-                    "text-xs leading-5 text-[#5e6d75] sm:px-6"
+                    "border-t border-border bg-secondary px-5 py-4 " +
+                    "text-xs leading-5 text-muted-foreground sm:px-6"
                 }
             >
                 Sample data using the compact dashboard view.

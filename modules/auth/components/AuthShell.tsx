@@ -1,5 +1,5 @@
+import Image from "next/image";
 import Link from "next/link";
-import { Boxes } from "lucide-react";
 
 export function AuthShell({
     children,
@@ -52,14 +52,14 @@ function BrandLink() {
             className="flex w-fit items-center gap-2.5"
             href="/"
         >
-            <span
-                className={
-                    "flex size-9 items-center justify-center rounded-2xl " +
-                    "bg-primary text-primary-foreground"
-                }
-            >
-                <Boxes className="size-5" />
-            </span>
+            <Image
+                alt=""
+                className="size-9 object-contain"
+                height={36}
+                priority
+                src="/kitastock-logo.svg"
+                width={36}
+            />
             <span className="text-xl font-semibold tracking-tight">
                 KitaStock
             </span>

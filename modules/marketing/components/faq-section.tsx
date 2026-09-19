@@ -54,8 +54,8 @@ export function FaqSection() {
         <section
             aria-labelledby="faq-heading"
             className={
-                "scroll-mt-24 border-t border-[#dcebee] bg-[#f8fbfc] " +
-                "px-4 py-16 text-[#203039] sm:px-6 lg:py-20"
+                "scroll-mt-24 border-t border-border bg-secondary " +
+                "px-4 py-16 text-foreground sm:px-6 lg:py-20"
             }
             id="faq"
         >
@@ -73,7 +73,7 @@ export function FaqSection() {
                         <p
                             className={
                                 "text-xs font-semibold uppercase " +
-                                "tracking-[0.18em] text-[#245564]"
+                                "tracking-[0.18em] text-accent-foreground"
                             }
                         >
                             Questions, answered
@@ -91,7 +91,7 @@ export function FaqSection() {
                         <p
                             className={
                                 "mt-5 max-w-md text-sm leading-7 " +
-                                "text-[#5e6d75] sm:text-base"
+                                "text-muted-foreground sm:text-base"
                             }
                         >
                             Clear limits, predictable billing, and no mystery
@@ -102,7 +102,7 @@ export function FaqSection() {
                                 "group mt-6 inline-flex min-h-11 " +
                                 "items-center " +
                                 "gap-2 rounded-2xl text-sm font-semibold " +
-                                "text-[#245564] focus-visible:outline-2 " +
+                                "text-accent-foreground focus-visible:outline-2 " +
                                 "focus-visible:outline-offset-4"
                             }
                             href="/signup"
@@ -122,13 +122,13 @@ export function FaqSection() {
                     <div
                         className={
                             "min-w-0 overflow-hidden rounded-2xl border " +
-                            "border-[#dcebee] bg-white"
+                            "border-border bg-card"
                         }
                     >
                         {questions.map((item, index) => (
                             <details
                                 className={
-                                    "group border-b border-[#dcebee] " +
+                                    "group border-b border-border " +
                                     "last:border-b-0"
                                 }
                                 data-workflow-order={index}
@@ -140,10 +140,10 @@ export function FaqSection() {
                                         "flex min-h-18 cursor-pointer " +
                                         "list-none items-center gap-5 px-5 " +
                                         "py-4 transition-colors " +
-                                        "hover:bg-[#f2f8fa] " +
+                                        "hover:bg-muted " +
                                         "focus-visible:outline-2 " +
                                         "focus-visible:outline-inset " +
-                                        "focus-visible:outline-[#376674] " +
+                                        "focus-visible:outline-accent-foreground " +
                                         "motion-reduce:transition-none " +
                                         "[&::-webkit-details-marker]:hidden"
                                     }
@@ -151,7 +151,7 @@ export function FaqSection() {
                                     <span
                                         className={
                                             "hidden text-xs font-semibold " +
-                                            "tabular-nums text-[#91a1a8] " +
+                                            "tabular-nums text-muted-foreground " +
                                             "sm:block"
                                         }
                                     >
@@ -169,7 +169,7 @@ export function FaqSection() {
                                         className={
                                             "grid size-8 shrink-0 " +
                                             "place-items-center rounded-full " +
-                                            "bg-[#edf5f7] text-[#376674]"
+                                            "bg-accent text-accent-foreground"
                                         }
                                     >
                                         <Plus
@@ -192,7 +192,7 @@ export function FaqSection() {
                                     <p
                                         className={
                                             "max-w-2xl text-sm leading-7 " +
-                                            "text-[#5e6d75]"
+                                            "text-muted-foreground"
                                         }
                                     >
                                         {item.answer}
