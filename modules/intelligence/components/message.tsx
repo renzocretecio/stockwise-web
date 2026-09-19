@@ -20,7 +20,7 @@ export function IntelligenceMessageView({
           {response.provider === "groq" ? "Groq" : "Rules-based"}
         </Badge>
         <span className="text-xs text-muted-foreground">
-          Calculations supplied by Stockwise
+          Calculations supplied by KitaStock
         </span>
       </div>
       <p className="text-sm leading-6">{response.message.answer}</p>

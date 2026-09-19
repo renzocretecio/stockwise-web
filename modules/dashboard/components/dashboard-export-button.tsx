@@ -74,7 +74,7 @@ export function DashboardExportButton({
             }).format(new Date());
             const pdfDocument = pdfModule.StockWiseOverviewPdfDocument({
                 data: {
-                    businessName: activeBusiness?.name || "StockWise business",
+                    businessName: activeBusiness?.name || "KitaStock business",
                     currencyCode: activeBusiness?.currency_code || "PHP",
                     dashboard: dashboard,
                     dateRange,
@@ -87,7 +87,7 @@ export function DashboardExportButton({
             await auditDashboardPdfExport(dateRange);
             downloadPdf(
                 bytes,
-                `stockwise-overview-${dateRange.startDate}` +
+                `kitastock-overview-${dateRange.startDate}` +
                     `-to-${dateRange.endDate}.pdf`,
             );
         } catch (exportError) {

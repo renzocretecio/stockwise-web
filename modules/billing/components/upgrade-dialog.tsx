@@ -34,7 +34,7 @@ const planOptions = {
             "Weekly owner summary",
             "14-day free trial for eligible businesses",
         ],
-        label: "StockWise Pro",
+        label: "KitaStock Pro",
         price: "₱299/month",
     },
     business: {
@@ -45,7 +45,7 @@ const planOptions = {
             "Everything included in Pro",
             "Custom roles",
         ],
-        label: "StockWise Business",
+        label: "KitaStock Business",
         price: "₱899/month",
     },
 };

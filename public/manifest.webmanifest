@@ -1,7 +1,7 @@
 {
-    "name": "StockWise",
-    "short_name": "StockWise",
-    "description": "Inventory and sales operations for StockWise businesses.",
+    "name": "KitaStock",
+    "short_name": "KitaStock",
+    "description": "Kita ang stock. Kita ang kita. Inventory clarity for Filipino small businesses.",
     "start_url": "/",
     "scope": "/",
     "display": "standalone",
@@ -10,10 +10,10 @@
     "orientation": "portrait-primary",
     "icons": [
         {
-        "src": "/icon.svg",
-        "sizes": "any",
-        "type": "image/svg+xml",
-        "purpose": "any maskable"
+            "src": "/logo-kitastock.png",
+            "sizes": "1283x1226",
+            "type": "image/png",
+            "purpose": "any"
         }
     ]
 }

@@ -116,7 +116,7 @@ function AcceptInvitationContent() {
                     <ShieldCheck className="size-5" />
                 </div>
                 <p className="mt-5 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-                    StockWise invitation
+                    KitaStock invitation
                 </p>
                 {loading ? (
                     <div className="flex items-center gap-2 py-8 text-sm text-muted-foreground">

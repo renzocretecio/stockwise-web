@@ -8,7 +8,7 @@ export default function OfflinePage() {
 
         <p className="mt-2 text-muted-foreground">
           This page isn&apos;t available offline yet.
-          You can still navigate to previously loaded StockWise pages.
+          You can still navigate to previously loaded KitaStock pages.
         </p>
       </div>
     </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, RefreshCw, Search, Truck } from "lucide-react";
+import { Plus, RefreshCw, Search, Truck, Upload } from "lucide-react";
 
 import { DataTable } from "@/components/DataTable";
 import { DeleteConfirmDialog } from "@/components/DeleteDialog";
@@ -22,6 +22,9 @@ import { useHasPermission } from "@/modules/auth/hooks/use-has-permission";
 import { getSupplierColumns } from "@/modules/suppliers/columns/suppliers";
 import { SupplierForm } from "@/modules/suppliers/components/supplier-form";
 import {
+    SupplierImportDialog,
+} from "@/modules/suppliers/components/supplier-import-dialog";
+import {
     useDeleteSupplier,
     useSuppliers,
 } from "@/modules/suppliers/services/suppliers";
@@ -30,6 +33,7 @@ import type { Supplier } from "@/modules/suppliers/types";
 export default function SuppliersPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [isSupplierFormOpen, setIsSupplierFormOpen] = useState(false);
+    const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
     const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(
         null,
     );
@@ -108,13 +112,26 @@ export default function SuppliersPage() {
                             />
                         </Button>
                     ) : null}
-                    <Button
-                        onClick={() => setIsSupplierFormOpen(true)}
-                        size="sm"
-                    >
-                        <Plus className="mr-1.5 size-4" />
-                        Add supplier
-                    </Button>
+                    {canCreate ? (
+                        <Button
+                            onClick={() => setIsImportDialogOpen(true)}
+                            size="sm"
+                            type="button"
+                            variant="outline"
+                        >
+                            <Upload className="mr-1.5 size-4" />
+                            Import
+                        </Button>
+                    ) : null}
+                    {canCreate ? (
+                        <Button
+                            onClick={() => setIsSupplierFormOpen(true)}
+                            size="sm"
+                        >
+                            <Plus className="mr-1.5 size-4" />
+                            Add supplier
+                        </Button>
+                    ) : null}
                 </div>
             </header>
 
@@ -250,6 +267,11 @@ export default function SuppliersPage() {
                     if (!open) setSupplierToDelete(null);
                 }}
                 open={isDeleteConfirmOpen}
+            />
+
+            <SupplierImportDialog
+                onOpenChange={setIsImportDialogOpen}
+                open={isImportDialogOpen}
             />
         </div>
     );

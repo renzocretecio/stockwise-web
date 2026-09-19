@@ -11,7 +11,6 @@ import {
   Shield,
   Menu,
   X,
-  Boxes,
   Plus,
   Settings,
 } from "lucide-react";
@@ -60,6 +59,8 @@ export function Header() {
   // Extract user role and permissions
   const user = authData?.user;
   const activeBusiness = authData?.active_business;
+  const businessDisplayName =
+    activeBusiness?.name || authData?.business_name || "Business";
 
   // Active user role (derived from active business, user object, or response root)
   const userRole =
@@ -226,22 +227,25 @@ export function Header() {
         )}
       >
         <div className="flex h-16 items-center justify-between gap-2">
-          {/* 1. LOGO */}
-          <div className="shrink-0">
+          {/* 1. ACTIVE BUSINESS */}
+          <div className="min-w-0 shrink">
             <Link
               href="/dashboard"
-              aria-label="StockWise dashboard"
+              aria-label={`${businessDisplayName} dashboard`}
+              title={businessDisplayName}
               className={cn(
-                "group flex items-center gap-2.5 rounded-2xl",
+                "flex min-w-0 items-center rounded-2xl px-1 py-2",
                 "focus:outline-none focus-visible:ring-2",
                 "focus-visible:ring-primary",
               )}
             >
-              <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-sm shadow-blue-500/20 group-hover:scale-105 transition-transform duration-200">
-                <Boxes className="h-5 w-5" />
-              </div>
-              <span className="hidden text-xl font-semibold tracking-tight sm:inline">
-                StockWise
+              <span
+                className={cn(
+                  "block max-w-36 truncate text-sm font-semibold",
+                  "tracking-tight sm:max-w-52 sm:text-base lg:max-w-64",
+                )}
+              >
+                {businessDisplayName}
               </span>
             </Link>
           </div>

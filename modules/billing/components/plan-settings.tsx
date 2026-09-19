@@ -250,7 +250,7 @@ function SeatSummary({ subscription }: { subscription: SubscriptionSummary }) {
       <p className="mt-3 text-xs text-muted-foreground">
         {subscription.status === "trialing"
           ? "Additional seats become available after activating Pro."
-          : "Seat changes are currently handled by the StockWise " +
+          : "Seat changes are currently handled by the KitaStock " +
             "administrator."}
       </p>
     </div>

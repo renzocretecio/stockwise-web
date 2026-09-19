@@ -14,7 +14,7 @@ export default function BusinessOnboardingPage() {
           <CardTitle>Tell us about your business</CardTitle>
           <p className="text-sm text-muted-foreground">
             These settings control currency, dates, and business information
-            throughout StockWise.
+            throughout KitaStock.
           </p>
         </CardHeader>
         <CardContent>

@@ -113,7 +113,7 @@ export function AnomalyList({ anomalies }: { anomalies: InventoryAnomaly[] }) {
                 description={
                     selectedAnomaly
                         ? `Explanation for ${selectedAnomaly.product_name}.`
-                        : "StockWise explanation for this inventory anomaly."
+                        : "KitaStock explanation for this inventory anomaly."
                 }
                 response={
                     selectedId === selectedAnomaly?.id

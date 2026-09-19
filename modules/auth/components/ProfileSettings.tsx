@@ -66,7 +66,7 @@ function PersonalProfile({ user }: { user: UserProfile }) {
     return (
         <section className="border-b" id="personal">
             <SectionHeading
-                description="Manage the name displayed throughout Stockwise."
+                description="Manage the name displayed throughout KitaStock."
                 icon={<UserRound className="size-4" />}
                 title="Personal profile"
             />

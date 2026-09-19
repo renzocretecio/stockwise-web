@@ -172,7 +172,7 @@ function itemText(item: Record<string, unknown>, keys: string[]) {
       return String(value);
     }
   }
-  return "Review this item in Stockwise.";
+  return "Review this item in KitaStock.";
 }
 
 const numberFormatter = new Intl.NumberFormat("en-PH");
@@ -483,7 +483,7 @@ export function WeeklyOwnerSummarySettings() {
 
         <section>
           <SectionHeading
-            description="The AI narrative uses these same Stockwise facts,
+            description="The AI narrative uses these same KitaStock facts,
               without changing them."
             eyebrow="03 / Contents"
             icon={FileText}
@@ -562,7 +562,7 @@ export function WeeklyOwnerSummarySettings() {
           <Sparkles className="size-5 text-primary" />
         </div>
         <p className="mt-3 text-sm leading-6">
-          See the exact shape of the next email before it leaves Stockwise.
+          See the exact shape of the next email before it leaves KitaStock.
         </p>
         <div className="mt-6 max-w-2xl rounded-lg border bg-card p-4">
           <div className="flex items-center justify-between gap-3 text-xs

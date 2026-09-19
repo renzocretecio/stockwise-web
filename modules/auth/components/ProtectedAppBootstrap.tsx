@@ -42,7 +42,7 @@ export function ProtectedAppBootstrap({
             <PageLoading
                 className="min-h-dvh"
                 description="Loading your business workspace"
-                label="Opening StockWise"
+                label="Opening KitaStock"
             />
         );
     }

@@ -118,7 +118,7 @@ function exportFilename(
         return match[1];
     }
 
-    return `stockwise-${report}.csv`;
+    return `kitastock-${report}.csv`;
 }
 
 function exportErrorMessage(payload: unknown) {

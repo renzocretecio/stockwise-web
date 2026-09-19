@@ -38,8 +38,8 @@ export function AuthShell({
                 </section>
 
                 <p className="mt-6 text-center text-xs text-muted-foreground">
-                    StockWise helps small businesses make clearer inventory
-                    decisions.
+                    Kita ang stock. Kita ang kita. Inventory decisions made
+                    clearer for small businesses.
                 </p>
             </div>
         </main>
@@ -61,7 +61,7 @@ function BrandLink() {
                 <Boxes className="size-5" />
             </span>
             <span className="text-xl font-semibold tracking-tight">
-                StockWise
+                KitaStock
             </span>
         </Link>
     );

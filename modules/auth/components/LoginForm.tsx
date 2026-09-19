@@ -264,7 +264,7 @@ export function LoginForm() {
             </form>
 
             <p className="mt-7 text-center text-sm text-muted-foreground">
-                New to StockWise?{" "}
+                New to KitaStock?{" "}
                 <Link
                     className="font-semibold text-primary hover:underline"
                     href={

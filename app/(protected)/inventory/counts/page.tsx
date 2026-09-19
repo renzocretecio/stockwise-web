@@ -53,7 +53,7 @@ export default function PhysicalCountsPage() {
                     </div>
                     <p className="mt-1 text-xs text-muted-foreground">
                         Compare your actual stock with the quantities in
-                        Stockwise.
+                        KitaStock.
                     </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">

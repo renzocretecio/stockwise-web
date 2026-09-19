@@ -670,9 +670,9 @@ function defaultPaymentInstructions(request: UpgradeRequest) {
   const plan = request.requested_plan === "pro" ? "Pro" : "Business";
 
   return (
-    `Your StockWise ${plan} upgrade is ready for payment. ` +
+    `Your KitaStock ${plan} upgrade is ready for payment. ` +
     `Please send ₱${amount} using the payment details provided by ` +
-    "StockWise. After payment, enter the payment method and transaction " +
+    "KitaStock. After payment, enter the payment method and transaction " +
     "reference number in the upgrade dialog. Your plan will be activated " +
     "after the payment is verified."
   );

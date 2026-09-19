@@ -1600,6 +1600,10 @@
 }
 
 @layer base {
+    html {
+        scroll-behavior: smooth;
+    }
+
     * {
         @apply border-border outline-ring/50;
         scrollbar-color: color-mix(
@@ -1640,6 +1644,12 @@
     body {
         @apply bg-background text-foreground;
         letter-spacing: var(--tracking-normal);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
     }
 }
 

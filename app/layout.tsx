@@ -18,13 +18,19 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "StockWise",
-  description: "Inventory and sales operations for StockWise businesses.",
+  title: "KitaStock",
+  description:
+    "Kita ang stock. Kita ang kita. Inventory clarity for Filipino small businesses.",
+  icons: {
+    apple: "/logo-kitastock.png",
+    icon: "/logo-kitastock.png",
+    shortcut: "/logo-kitastock.png",
+  },
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "StockWise",
+    title: "KitaStock",
   },
 };
 

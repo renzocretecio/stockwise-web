@@ -4,7 +4,7 @@ export default function Loading() {
     return (
         <PageLoading
             className="min-h-dvh"
-            description="Preparing StockWise"
+            description="Preparing KitaStock"
         />
     );
 }

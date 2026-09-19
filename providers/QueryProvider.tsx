@@ -64,7 +64,7 @@ function makeQueryClient() {
 
         /**
          * Do not refetch just because the user switches back
-         * to the Stockwise tab.
+         * to the KitaStock tab.
          */
         refetchOnWindowFocus: false,
 

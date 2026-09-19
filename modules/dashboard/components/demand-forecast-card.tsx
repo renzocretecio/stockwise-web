@@ -150,7 +150,7 @@ export function DemandForecastCard({
                 open={drawerOpen}
                 onOpenChange={setDrawerOpen}
                 title={`Why ${forecast.product_name} needs attention`}
-                description="StockWise explanation for this demand forecast."
+                description="KitaStock explanation for this demand forecast."
                 response={explanation.data}
             />
         </div>
