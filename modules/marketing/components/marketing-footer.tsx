@@ -59,7 +59,7 @@ export function MarketingFooter() {
                 alt=""
                 className="size-8 object-contain"
                 height={32}
-                src="/kitastock-logo.svg"
+                src="/kitastock-logo-image.svg"
                 width={32}
               />
               KitaStock

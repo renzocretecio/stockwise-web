@@ -10,9 +10,9 @@
     "orientation": "portrait-primary",
     "icons": [
         {
-            "src": "/kitastock-logo.png",
-            "sizes": "1283x1226",
-            "type": "image/png",
+            "src": "/kitastock-logo-image.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
             "purpose": "any"
         }
     ]

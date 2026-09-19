@@ -26,11 +26,11 @@ export const metadata: Metadata = {
     apple: "/kitastock-logo.png",
     icon: {
       type: "image/svg+xml",
-      url: "/kitastock-logo.svg",
+      url: "/kitastock-logo-image.svg",
     },
-    shortcut: "/kitastock-logo.svg",
+    shortcut: "/kitastock-logo-image.svg",
   },
-  manifest: "/manifest.webmanifest?v=3",
+  manifest: "/manifest.webmanifest?v=4",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

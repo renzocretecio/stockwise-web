@@ -349,7 +349,7 @@ function BrandLink({ compact = false }: { compact?: boolean }) {
         className="size-8 object-contain"
         height={32}
         priority
-        src="/kitastock-logo.svg"
+        src="/kitastock-logo-image.svg"
         width={32}
       />
       <span className={compact ? "text-base" : undefined}>KitaStock</span>

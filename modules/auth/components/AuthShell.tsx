@@ -57,7 +57,7 @@ function BrandLink() {
                 className="size-9 object-contain"
                 height={36}
                 priority
-                src="/kitastock-logo.svg"
+                src="/kitastock-logo-image.svg"
                 width={36}
             />
             <span className="text-xl font-semibold tracking-tight">
