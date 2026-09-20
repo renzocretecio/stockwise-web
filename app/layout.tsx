@@ -23,14 +23,25 @@ export const metadata: Metadata = {
     "Kita ang stock. Kita ang kita. Inventory clarity for Filipino " +
     "small businesses.",
   icons: {
-    apple: "/kitastock-logo.png",
-    icon: {
-      type: "image/svg+xml",
-      url: "/kitastock-logo-image.svg",
+    apple: {
+      type: "image/png",
+      url: "/icons/apple-touch-icon.png",
     },
-    shortcut: "/kitastock-logo-image.svg",
+    icon: [
+      {
+        sizes: "192x192",
+        type: "image/png",
+        url: "/icons/icon-192.png",
+      },
+      {
+        sizes: "512x512",
+        type: "image/png",
+        url: "/icons/icon-512.png",
+      },
+    ],
+    shortcut: "/icons/icon-192.png",
   },
-  manifest: "/manifest.webmanifest?v=4",
+  manifest: "/manifest.webmanifest?v=6",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

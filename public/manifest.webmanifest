@@ -1,6 +1,7 @@
 {
     "name": "KitaStock",
     "short_name": "KitaStock",
+    "id": "/",
     "description": "Kita ang stock. Kita ang kita. Inventory clarity for Filipino small businesses.",
     "start_url": "/",
     "scope": "/",
@@ -10,10 +11,16 @@
     "orientation": "portrait-primary",
     "icons": [
         {
-            "src": "/kitastock-logo-image.svg",
-            "sizes": "any",
-            "type": "image/svg+xml",
-            "purpose": "any"
+            "src": "/icons/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
         }
     ]
 }
