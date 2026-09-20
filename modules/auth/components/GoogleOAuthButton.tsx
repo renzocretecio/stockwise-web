@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 import { buttonVariants } from "@/components/ui/button";
 
 export function GoogleOAuthButton({
@@ -16,7 +14,7 @@ export function GoogleOAuthButton({
         : "/api/auth/google/start";
 
     return (
-        <Link
+        <a
             className={buttonVariants({
                 className: "h-11 w-full rounded-2xl",
                 size: "lg",
@@ -26,7 +24,7 @@ export function GoogleOAuthButton({
         >
             <GoogleIcon />
             {label}
-        </Link>
+        </a>
     );
 }
 
