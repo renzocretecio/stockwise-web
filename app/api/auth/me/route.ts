@@ -45,26 +45,23 @@ export async function GET(request: NextRequest) {
           String(business.id ?? business.business_id) === requestedBusinessId,
       ) ?? businesses[0];
 
-    if (!firstBusiness) {
-      return NextResponse.json(
-        {
-          error: "No business found",
-        },
-        {
-          status: 403,
-        },
-      );
-    }
-
     const response = NextResponse.json({
       user: data.user ?? null,
       businesses,
-      active_business: firstBusiness,
-      business_id: firstBusiness.id ?? firstBusiness.business_id,
-      business_name: firstBusiness.name ?? firstBusiness.business_name,
-      permissions: firstBusiness.permissions ?? [],
+      active_business: firstBusiness ?? null,
+      business_id: firstBusiness?.id ?? firstBusiness?.business_id,
+      business_name: firstBusiness?.name ?? firstBusiness?.business_name,
+      permissions: firstBusiness?.permissions ?? [],
       success: true,
     });
+
+    if (!firstBusiness) {
+      response.cookies.delete("active_business_id");
+      response.cookies.delete("active_business_currency");
+      response.cookies.delete("business_onboarding_completed");
+      return response;
+    }
+
     response.cookies.set({
       name: "active_business_id",
       value: String(firstBusiness.id ?? firstBusiness.business_id),

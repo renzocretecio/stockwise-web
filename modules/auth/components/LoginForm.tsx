@@ -94,7 +94,9 @@ export function LoginForm() {
                     callbackUrl?.startsWith("/") &&
                     !callbackUrl.startsWith("//")
                         ? callbackUrl
-                        : "/dashboard";
+                        : data.active_business
+                          ? "/dashboard"
+                          : "/businesses/new";
                 router.replace(destination);
                 router.refresh();
             } catch {

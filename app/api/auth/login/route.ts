@@ -70,23 +70,19 @@ export async function POST(request: Request) {
 
     const firstBusiness = businesses[0];
 
-    if (!firstBusiness) {
-      return NextResponse.json(
-        {
-          error: "No business found for this user",
-        },
-        {
-          status: 403,
-        },
-      );
-    }
-
     const response = NextResponse.json({
       user: data.user ?? null,
       businesses,
-      active_business: firstBusiness,
+      active_business: firstBusiness ?? null,
       success: true,
     });
+
+    if (!firstBusiness) {
+      response.cookies.delete("active_business_id");
+      response.cookies.delete("active_business_currency");
+      response.cookies.delete("business_onboarding_completed");
+      return response;
+    }
 
     response.cookies.set({
       name: "access_token",
