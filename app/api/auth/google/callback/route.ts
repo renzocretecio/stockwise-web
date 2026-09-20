@@ -28,10 +28,16 @@ export async function GET(request: NextRequest) {
   const redirectUri =
     process.env.GOOGLE_REDIRECT_URI ??
     new URL("/api/auth/google/callback", request.nextUrl.origin).toString();
+  const apiUrl = process.env.API_URL?.replace(/\/+$/, "");
+
+  if (!apiUrl) {
+    console.error("Google OAuth callback is missing API_URL");
+    return redirectToLogin(request, "backend_not_configured");
+  }
 
   try {
     const exchangeResponse = await fetch(
-      `${process.env.API_URL}/auth/google/exchange`,
+      `${apiUrl}/auth/google/exchange`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -50,7 +56,7 @@ export async function GET(request: NextRequest) {
 
     const accessToken = String(exchange.access_token);
     const businessesResponse = await fetch(
-      `${process.env.API_URL}/businesses/my-businesses`,
+      `${apiUrl}/businesses/my-businesses`,
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -118,7 +124,10 @@ export async function GET(request: NextRequest) {
 
     clearTemporaryCookies(response);
     return response;
-  } catch {
+  } catch (error) {
+    console.error("Google OAuth callback could not reach the API", {
+      message: error instanceof Error ? error.message : String(error),
+    });
     return redirectToLogin(request, "unavailable");
   }
 }

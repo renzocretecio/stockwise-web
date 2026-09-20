@@ -288,6 +288,8 @@ function googleOAuthError(code: string | null) {
         invalid_state: "Google sign-in expired. Please try again.",
         exchange_failed: "Google could not verify this sign-in.",
         businesses_failed: "Unable to load your businesses after sign-in.",
+        backend_not_configured:
+            "Google sign-in has not been configured for this deployment.",
         unavailable: "Google sign-in is temporarily unavailable.",
     };
     return messages[code] ?? "Google sign-in failed. Please try again.";
