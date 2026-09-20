@@ -41,7 +41,7 @@ export const metadata: Metadata = {
     ],
     shortcut: "/icons/icon-192.png",
   },
-  manifest: "/manifest.webmanifest?v=6",
+  manifest: "/manifest.webmanifest?v=8",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
