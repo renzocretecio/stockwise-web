@@ -22,13 +22,13 @@ import {
 } from "@/modules/briefings/services/briefings";
 import { FeatureGate } from "@/modules/billing/components/feature-gate";
 import { AnomalyList } from "@/modules/dashboard/components/anomaly-list";
-import { BusinessActivity } from "@/modules/dashboard/components/business-activity";
 import { DashboardAnalytics } from "@/modules/dashboard/components/dashboard-analytics";
 import { DashboardExportButton } from "@/modules/dashboard/components/dashboard-export-button";
 import { DashboardSalesSummary } from "@/modules/dashboard/components/dashboard-sales-summary";
 import { DemandForecastCard } from "@/modules/dashboard/components/demand-forecast-card";
 import { DemandPatterns } from "@/modules/dashboard/components/demand-patterns";
 import { InventoryRiskPanel } from "@/modules/dashboard/components/inventory-risk-panel";
+import { OnlineOrders } from "@/modules/dashboard/components/online-orders";
 import { ReorderAssistant } from "@/modules/dashboard/components/reorder-assistant";
 import { useDashboard } from "@/modules/dashboard/services/dashboard";
 import { useSalesReportByDateRange } from "@/modules/reports/services/reports";
@@ -375,7 +375,7 @@ function OverviewPanel({
                 }
             >
                 <div className={tile}>
-                    <BusinessActivity />
+                    <OnlineOrders />
                 </div>
                 <div className={tile}>
                     <DemandPatterns />

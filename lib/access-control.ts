@@ -41,6 +41,10 @@ const ROUTE_PERMISSIONS: RoutePermission[] = [
         permission: "reports.read",
     },
     {
+        path: "/storefront",
+        permission: "storefront.read",
+    },
+    {
         path: "/onboarding/business",
         permission: "business.update",
     },

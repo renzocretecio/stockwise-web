@@ -13,6 +13,7 @@ const PROTECTED_ROUTES = [
   "/reports",
   "/alerts",
   "/settings",
+  "/storefront",
   "/onboarding",
 ];
 const AUTH_ROUTES = ["/login", "/signup"];

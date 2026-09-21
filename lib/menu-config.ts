@@ -18,6 +18,7 @@ import {
   TrendingDown,
   DollarSign,
   AlertTriangle,
+  Store,
   type LucideIcon,
 } from "lucide-react";
 
@@ -118,6 +119,12 @@ export const menuConfig: MenuItem[] = [
     href: "/suppliers",
     icon: Truck,
     permission: "suppliers.read",
+  },
+  {
+    label: "Online store",
+    href: "/storefront",
+    icon: Store,
+    permission: "storefront.read",
   },
   {
     label: "Reports",

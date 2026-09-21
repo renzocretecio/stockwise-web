@@ -17,6 +17,7 @@ async function handler(
   const backendPath = path.join("/");
   const query = request.nextUrl.search;
   const url = `${API_URL}/${backendPath}${query}`;
+  const isPublicApi = backendPath.startsWith("public/");
 
   const headers = new Headers();
 
@@ -30,7 +31,7 @@ async function handler(
       "active_business_id",
     )?.value;
 
-  if (!token) {
+  if (!token && !isPublicApi) {
     return Response.json(
       {
         detail: "Missing access token",
@@ -41,10 +42,12 @@ async function handler(
     );
   }
 
-  headers.set(
-    "Authorization",
-    `Bearer ${token}`,
-  );
+  if (token) {
+    headers.set(
+      "Authorization",
+      `Bearer ${token}`,
+    );
+  }
 
   if (businessId) {
     headers.set(
