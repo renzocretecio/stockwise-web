@@ -128,6 +128,7 @@ export type StoreOrder = {
 
 export type StoreProductsResponse = {
     products: StoreProduct[];
+    published_count: number;
     pagination: PaginationMeta;
 };
 

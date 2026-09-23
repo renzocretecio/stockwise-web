@@ -79,6 +79,10 @@ const sectionLinks = [
     label: "How it works",
   },
   {
+    href: "#online-store",
+    label: "Online store",
+  },
+  {
     href: "#intelligence",
     label: "Intelligence",
   },
@@ -304,7 +308,7 @@ function FloatingNavigation({
       <nav
         aria-label="Floating navigation"
         className={
-          "flex w-full max-w-2xl items-center justify-between " +
+          "flex w-full max-w-4xl items-center justify-between " +
           "rounded-2xl border border-border/80 bg-background/92 " +
           "px-5 py-3 shadow-xl shadow-foreground/10 " +
           "backdrop-blur-xl"

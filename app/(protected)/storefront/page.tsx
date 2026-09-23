@@ -1,7 +1,14 @@
 "use client";
 
 import { Suspense, useState } from "react";
-import { ExternalLink, Package, Settings2, ShoppingBag, Store } from "lucide-react";
+import {
+    Check,
+    ExternalLink,
+    Package,
+    Settings2,
+    ShoppingBag,
+    Store,
+} from "lucide-react";
 import { useSearchParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -16,7 +23,10 @@ import { StorefrontProducts } from
     "@/modules/storefront/components/storefront-products";
 import { StorefrontSettings } from
     "@/modules/storefront/components/storefront-settings";
-import { useStorefront } from "@/modules/storefront/services";
+import {
+    useStorefront,
+    useStoreProducts,
+} from "@/modules/storefront/services";
 
 type Tab = "settings" | "products" | "orders";
 
@@ -52,6 +62,7 @@ function StorefrontContent() {
     });
     const session = useSession();
     const storefront = useStorefront();
+    const products = useStoreProducts(1, 1, "", Boolean(storefront.data));
     const canManage = useHasPermission("storefront.manage");
     const canManageOrders = useHasPermission("storefront.orders");
     const notCreated =
@@ -122,6 +133,14 @@ function StorefrontContent() {
                 ) : null}
             </header>
 
+            {canManage ? (
+                <StoreSetupChecklist
+                    onSelectTab={setTab}
+                    products={products}
+                    store={store}
+                />
+            ) : null}
+
             <nav className="flex gap-1 overflow-x-auto border-y bg-card p-2">
                 {tabs.map((item) => {
                     const Icon = item.icon;
@@ -150,6 +169,9 @@ function StorefrontContent() {
             {tab === "settings" ? (
                 <StorefrontSettings
                     canManage={canManage}
+                    hasPublishedProducts={
+                        (products.data?.published_count ?? 0) > 0
+                    }
                     key={store?.id ?? activeBusiness?.id ?? "new"}
                     store={store}
                     suggestedName={activeBusiness?.name ?? ""}
@@ -169,5 +191,139 @@ function StorefrontContent() {
                 />
             ) : null}
         </div>
+    );
+}
+
+function StoreSetupChecklist({
+    onSelectTab,
+    products,
+    store,
+}: {
+    onSelectTab: (tab: Tab) => void;
+    products: ReturnType<typeof useStoreProducts>;
+    store: ReturnType<typeof useStorefront>["data"];
+}) {
+    const storeExists = Boolean(store);
+    const hasProducts = (products.data?.published_count ?? 0) > 0;
+    const hasFulfillment = Boolean(
+        store?.pickup_enabled || store?.delivery_enabled,
+    );
+    const hasPayments = Boolean(
+        store?.payment_methods.length &&
+            store.payment_methods.every((method) => {
+                if (method !== "gcash" && method !== "bank_transfer") {
+                    return true;
+                }
+                return Boolean(
+                    store.payment_instructions[method]?.trim(),
+                );
+            }),
+    );
+    const steps: Array<{
+        complete: boolean;
+        label: string;
+        action: string;
+        tab: Tab;
+    }> = [
+        {
+            complete: storeExists,
+            label: "Create your store",
+            action: "Set up",
+            tab: "settings",
+        },
+        {
+            complete: hasFulfillment,
+            label: "Choose fulfillment",
+            action: "Set options",
+            tab: "settings",
+        },
+        {
+            complete: hasPayments,
+            label: "Set payment methods",
+            action: "Set payments",
+            tab: "settings",
+        },
+        {
+            complete: hasProducts,
+            label: "Publish a product",
+            action: "Choose products",
+            tab: "products",
+        },
+        {
+            complete: Boolean(store?.is_active),
+            label: "Open your store",
+            action: "Open store",
+            tab: "settings",
+        },
+    ];
+    const completeCount = steps.filter((step) => step.complete).length;
+
+    if (storeExists && products.isLoading) return null;
+    if (completeCount === steps.length) return null;
+
+    return (
+        <section className="border-t bg-card p-4 sm:p-5" aria-label="Store setup checklist">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                    <h2 className="text-sm font-semibold">Get your store ready</h2>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                        {completeCount} of {steps.length} steps complete
+                    </p>
+                </div>
+                <div
+                    aria-label={`${completeCount} of ${steps.length} steps complete`}
+                    className="flex gap-1"
+                >
+                    {steps.map((step) => (
+                        <span
+                            className={cn(
+                                "h-1.5 w-8 rounded-full bg-muted",
+                                step.complete && "bg-primary",
+                            )}
+                            key={step.label}
+                        />
+                    ))}
+                </div>
+            </div>
+
+            {products.isError && storeExists ? (
+                <p className="mt-3 text-xs text-destructive">
+                    Could not check published products. Try refreshing this page.
+                </p>
+            ) : null}
+
+            <ol className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
+                {steps.map((step, index) => (
+                    <li
+                        className="flex min-w-0 items-center gap-3 rounded-2xl border border-border/70 p-3"
+                        key={step.label}
+                    >
+                        <span
+                            className={cn(
+                                "grid size-7 shrink-0 place-items-center rounded-full bg-muted text-xs font-semibold",
+                                step.complete &&
+                                    "bg-primary/15 text-primary",
+                            )}
+                        >
+                            {step.complete ? <Check className="size-4" /> : index + 1}
+                        </span>
+                        <span className="min-w-0 flex-1 text-sm font-medium">
+                            {step.label}
+                        </span>
+                        {!step.complete &&
+                        (index === 0 || storeExists) ? (
+                            <Button
+                                onClick={() => onSelectTab(step.tab)}
+                                size="sm"
+                                type="button"
+                                variant="outline"
+                            >
+                                {step.action}
+                            </Button>
+                        ) : null}
+                    </li>
+                ))}
+            </ol>
+        </section>
     );
 }

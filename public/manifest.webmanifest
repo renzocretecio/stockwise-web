@@ -3,7 +3,7 @@
     "short_name": "KitaStock",
     "id": "/",
     "description": "Kita ang stock. Kita ang kita. Inventory clarity for Filipino small businesses.",
-    "start_url": "/",
+    "start_url": "/dashboard/overview?source=pwa",
     "scope": "/",
     "display": "standalone",
     "background_color": "#0f0f0f",

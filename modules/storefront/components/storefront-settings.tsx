@@ -95,11 +95,13 @@ function slugify(value: string) {
 
 export function StorefrontSettings({
     canManage,
+    hasPublishedProducts,
     store,
     suggestedName,
     suggestedSlug,
 }: {
     canManage: boolean;
+    hasPublishedProducts: boolean;
     store?: Storefront;
     suggestedName: string;
     suggestedSlug: string;
@@ -135,6 +137,25 @@ export function StorefrontSettings({
         }
         if (!form.payment_methods.length) {
             setError("Choose at least one payment method.");
+            return;
+        }
+        const missingPaymentInstructions = form.payment_methods.find(
+            (method) =>
+                (method === "gcash" || method === "bank_transfer") &&
+                !form.payment_instructions[method]?.trim(),
+        );
+        if (missingPaymentInstructions) {
+            setError(
+                `Add payment instructions for ${
+                    missingPaymentInstructions === "gcash"
+                        ? "GCash"
+                        : "bank transfer"
+                }.`,
+            );
+            return;
+        }
+        if (form.is_active && !hasPublishedProducts) {
+            setError("Publish at least one product before opening the store.");
             return;
         }
         try {
@@ -268,7 +289,10 @@ export function StorefrontSettings({
                         <input
                             checked={form.is_active}
                             className="size-4 accent-primary"
-                            disabled={!canManage}
+                            disabled={
+                                !canManage ||
+                                (!form.is_active && !hasPublishedProducts)
+                            }
                             onChange={(event) =>
                                 update("is_active", event.target.checked)
                             }
@@ -277,6 +301,12 @@ export function StorefrontSettings({
                         Open
                     </label>
                 </div>
+
+                {!hasPublishedProducts ? (
+                    <p className="rounded-2xl bg-muted px-3 py-2 text-xs text-muted-foreground">
+                        Publish at least one product before opening the store.
+                    </p>
+                ) : null}
 
                 <Field label="When an item is unavailable">
                     <select

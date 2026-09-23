@@ -8,6 +8,10 @@ const productLinks = [
     label: "Workflow",
   },
   {
+    href: "#online-store",
+    label: "Online store",
+  },
+  {
     href: "#attention",
     label: "Inventory risks",
   },

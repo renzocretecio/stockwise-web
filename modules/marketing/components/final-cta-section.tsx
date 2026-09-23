@@ -57,8 +57,9 @@ export function FinalCtaSection() {
                 "text-white/65 sm:text-base"
               }
             >
-              Bring sales, purchasing, inventory, reports, and practical
-              guidance into one workspace built for everyday owners.
+              Bring sales, purchasing, inventory, online orders, reports, and
+              practical guidance into one workspace built for everyday
+              owners.
             </p>
 
             <div

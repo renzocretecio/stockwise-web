@@ -5,6 +5,10 @@ import { DashboardAssemblyHero } from
     "@/modules/marketing/components/dashboard-assembly-hero";
 import { OperationsWorkflowSection } from
     "@/modules/marketing/components/operations-workflow-section";
+import { OnlineStoreSection } from
+    "@/modules/marketing/components/online-store-section";
+import { PwaAppRedirect } from
+    "@/modules/marketing/components/pwa-app-redirect";
 import { AttentionSection } from
     "@/modules/marketing/components/attention-section";
 import { IntelligenceSection } from
@@ -21,7 +25,7 @@ export const metadata: Metadata = {
   title: "KitaStock - Inventory clarity for small businesses",
   description:
     "Kita ang stock. Kita ang kita. Manage sales, purchases, inventory, " +
-    "and reports in one clear workspace.",
+    "reports, and a shareable online store in one clear workspace.",
 };
 
 const landingPalette = {
@@ -52,9 +56,11 @@ export default function HomePage() {
       }
       style={landingPalette}
     >
+      <PwaAppRedirect />
       <main id="top">
         <DashboardAssemblyHero />
         <OperationsWorkflowSection />
+        <OnlineStoreSection />
         <AttentionSection />
         <IntelligenceSection />
         <OfflineSection />

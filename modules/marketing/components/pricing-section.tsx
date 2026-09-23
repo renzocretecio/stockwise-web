@@ -31,7 +31,7 @@ const plans: Plan[] = [
     aiActions: "5 per week",
     description: "For one owner organizing a small product catalog.",
     features: [
-      "Core sales, purchasing, inventory, and reports",
+      "Sales, purchasing, inventory, reports, and online store",
       "All inventory intelligence tools",
       "Use indefinitely without a subscription",
     ],
