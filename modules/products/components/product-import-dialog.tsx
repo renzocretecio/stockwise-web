@@ -4,6 +4,7 @@ import { useState } from "react";
 import {
     FileSpreadsheet,
     Upload,
+    Download,
     CheckCircle2,
     AlertTriangle,
     X,
@@ -18,7 +19,65 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { apiClient } from "@/lib/api-client";
-import { ImportProductRow, ImportPreview, ImportPreviewResponse } from "../types/import";
+import type { ImportPreviewResponse } from "../types/import";
+
+const templateHeaders = [
+    "sku",
+    "barcode",
+    "name",
+    "description",
+    "category",
+    "brand",
+    "unit",
+    "cost_price",
+    "selling_price",
+    "reorder_point",
+    "safety_stock",
+    "lead_time_days",
+    "is_perishable",
+    "supplier_name",
+];
+
+const templateSample = [
+    "COF-001",
+    "4801234567890",
+    "Organic Coffee Beans",
+    "Freshly roasted coffee beans",
+    "Beverages",
+    "Local Roast",
+    "bag",
+    "250",
+    "420",
+    "10",
+    "5",
+    "7",
+    "false",
+    "North Supply",
+];
+
+function csvRow(values: string[]) {
+    return values
+        .map((value) => `"${value.replaceAll('"', '""')}"`)
+        .join(",");
+}
+
+function downloadProductTemplate() {
+    const contents = [
+        csvRow(templateHeaders),
+        csvRow(templateSample),
+    ].join("\n");
+    const blob = new Blob([`\ufeff${contents}\n`], {
+        type: "text/csv;charset=utf-8",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "kitastock-product-import-template.csv";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+}
 
 type ProductImportDialogProps = {
     open: boolean;
@@ -207,6 +266,36 @@ export function ProductImportDialog({
                                     className="hidden"
                                 />
                             </label>
+
+                            <div
+                                className={
+                                    "flex flex-col gap-3 rounded-2xl " +
+                                    "bg-muted/40 p-4 sm:flex-row " +
+                                    "sm:items-center sm:justify-between"
+                                }
+                            >
+                                <div className="text-xs">
+                                    <p className="font-medium">
+                                        Start with the import template
+                                    </p>
+                                    <p className="mt-1 max-w-2xl text-muted-foreground">
+                                        Required: name, unit, cost_price, and
+                                        selling_price. The remaining columns
+                                        are optional; supplier_name must match
+                                        an existing supplier when provided.
+                                    </p>
+                                </div>
+                                <Button
+                                    className="shrink-0 self-start sm:self-auto"
+                                    onClick={downloadProductTemplate}
+                                    size="sm"
+                                    type="button"
+                                    variant="outline"
+                                >
+                                    <Download className="size-4" />
+                                    Download template
+                                </Button>
+                            </div>
 
                             {error && (
                                 <div className="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
